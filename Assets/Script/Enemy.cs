@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class Enemy : MonoBehaviour
 {
@@ -9,17 +10,33 @@ public class Enemy : MonoBehaviour
     private int damage;
     [SerializeField]
     private int movementSpeed;
+    [SerializeField]
+    private SplineAnimate splineAnimate;
 
-    private void OnTriggerEnter(Collider other)
+    void Start()
     {
-        // Debug.Log("pip");
+        splineAnimate = GetComponent<SplineAnimate>();
+    }
 
-        if (other.gameObject.CompareTag("MapEnd"))
+    void Update()
+    {
+        if (splineAnimate.NormalizedTime >= 1f)
         {
-            Debug.Log("Enemy reached the end!");
+            Debug.Log("Enemy has reached the end!");
             Destroy(gameObject);
         }
     }
+
+    // private void OnTriggerEnter(Collider other)
+    // {
+    //     // Debug.Log("pip");
+
+    //     if (other.gameObject.CompareTag("MapEnd"))
+    //     {
+    //         Debug.Log("Enemy reached the end!");
+    //         Destroy(gameObject);
+    //     }
+    // }
     // public abstract void damage();
 
 }
