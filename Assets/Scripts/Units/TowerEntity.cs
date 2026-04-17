@@ -13,6 +13,7 @@ public class TowerEntity : MonoBehaviour
 
     [SerializeField] private UnitVision vision;
     [SerializeField] private AttackBehaviour attackBehaviour;
+    [SerializeField] private bool deployed = true;
     [SerializeField] private List<EntityStat> baseStats = new List<EntityStat>
     {
         new EntityStat { stat = ENTITY_STATS.GlobalDamage, value = 1f },
@@ -26,6 +27,9 @@ public class TowerEntity : MonoBehaviour
     private Transform currentTarget;
     private float nextAttackTime;
     private float activeAfterTime;
+    private bool deploymentTimersInitialized;
+
+    public bool Deployed => deployed;
 
     private void Awake()
     {
@@ -42,14 +46,39 @@ public class TowerEntity : MonoBehaviour
         CompileFinalStats();
     }
 
-    private void Start()
+    public void PrepareForDeploymentPreview()
     {
-        activeAfterTime = Time.time + GetStat(ENTITY_STATS.SetupTime);
-        nextAttackTime = activeAfterTime;
+        deployed = false;
+        deploymentTimersInitialized = false;
+        currentTarget = null;
+        activeAfterTime = float.PositiveInfinity;
+        nextAttackTime = float.PositiveInfinity;
 
         if (vision != null)
         {
+            vision.ClearTargets();
+        }
+    }
+
+    public void Deploy()
+    {
+        deployed = true;
+        currentTarget = null;
+
+        if (vision != null)
+        {
+            vision.ClearTargets();
             vision.Range = GetStat(ENTITY_STATS.VisualRange);
+        }
+
+        InitializeDeploymentTimers();
+    }
+
+    private void Start()
+    {
+        if (deployed && !deploymentTimersInitialized)
+        {
+            InitializeDeploymentTimers();
         }
     }
 
@@ -60,7 +89,7 @@ public class TowerEntity : MonoBehaviour
 
     private void Update()
     {
-        if (attackBehaviour == null || vision == null || Time.time < activeAfterTime)
+        if (!deployed || attackBehaviour == null || vision == null || Time.time < activeAfterTime)
         {
             return;
         }
@@ -192,6 +221,19 @@ public class TowerEntity : MonoBehaviour
     private float GetAttackCooldown()
     {
         return Mathf.Max(0.01f, GetStat(ENTITY_STATS.AttackSpeed));
+    }
+
+    private void InitializeDeploymentTimers()
+    {
+        activeAfterTime = Time.time + GetStat(ENTITY_STATS.SetupTime);
+        nextAttackTime = activeAfterTime;
+        deploymentTimersInitialized = true;
+
+        if (vision != null)
+        {
+            vision.Range = GetStat(ENTITY_STATS.VisualRange);
+            vision.ScanForTargetsOnce();
+        }
     }
 
     private float GetDefaultStat(ENTITY_STATS stat)

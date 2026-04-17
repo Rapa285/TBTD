@@ -57,9 +57,34 @@ public sealed class UnitVision : MonoBehaviour
         return target != null && validTargets.Contains(target);
     }
 
+    public void ClearTargets()
+    {
+        validTargets.Clear();
+    }
+
+    public void ScanForTargetsOnce()
+    {
+        ClearTargets();
+        SyncCollider();
+        Physics.SyncTransforms();
+
+        Vector3 center = GetWorldCenter();
+        float radius = GetWorldRadius();
+        Collider[] overlappingColliders = Physics.OverlapSphere(
+            center,
+            radius,
+            ~0,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < overlappingColliders.Length; i++)
+        {
+            TryAddTarget(GetTargetTransform(overlappingColliders[i]));
+        }
+    }
+
     private void TryAddTarget(Transform target)
     {
-        if (target == null || !IsInTargetLayer(target.gameObject) || validTargets.Contains(target))
+        if (target == null || IsOwnTransform(target) || !IsInTargetLayer(target.gameObject) || validTargets.Contains(target))
         {
             return;
         }
@@ -92,6 +117,11 @@ public sealed class UnitVision : MonoBehaviour
         return (targetLayers.value & (1 << target.layer)) != 0;
     }
 
+    private bool IsOwnTransform(Transform target)
+    {
+        return target == transform || target.IsChildOf(transform.root);
+    }
+
     private void PruneInvalidTargets()
     {
         for (int i = validTargets.Count - 1; i >= 0; i--)
@@ -112,5 +142,22 @@ public sealed class UnitVision : MonoBehaviour
 
         visionCollider.isTrigger = true;
         visionCollider.radius = range;
+    }
+
+    private Vector3 GetWorldCenter()
+    {
+        return visionCollider != null ? visionCollider.bounds.center : transform.position;
+    }
+
+    private float GetWorldRadius()
+    {
+        if (visionCollider == null)
+        {
+            return range;
+        }
+
+        Vector3 scale = visionCollider.transform.lossyScale;
+        float largestAxis = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+        return visionCollider.radius * largestAxis;
     }
 }
