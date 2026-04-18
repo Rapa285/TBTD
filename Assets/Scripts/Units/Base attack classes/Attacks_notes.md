@@ -5,7 +5,17 @@ Class implementations in this folder are template/base behaviours for future att
 - `AttackBehaviour` is the runtime weapon entrypoint called by `TowerEntity`.
 - Concrete weapons should implement `ExecuteAttack(Transform target, float damage)`.
 - Keep damage multiplier handling in `AttackBehaviour.Attack`; concrete attacks receive the final damage value.
+- `TowerEntity` configures the active attack behaviour with owner/root context and active on-hit effects.
 - Do not put projectile, hitscan, beam, or leading-specific logic directly into `TowerEntity`.
+
+## On-Hit Effects
+
+- Upgrade-authored on-hit effects derive from `OnHitEffectBehaviour`.
+- `AttackHitContext` carries the tower, root transform, source attack behaviour, optional projectile, target, hit collider, final damage, and hit position data.
+- Direct and hitscan-style attacks should use `TryApplyDamage()` so damage and on-hit effects stay in the same dispatch path.
+- Projectile attacks should pass `OwnerTower`, `this`, and `OnHitEffects` into projectile initialization.
+- `BaseProjectile.OnHit()` applies damage first, then dispatches the projectile's copied effect list.
+- Do not hard-code effect-specific behavior into `AttackBehaviour`, `BaseProjectile`, or `TowerEntity`.
 
 ## Leading Bases
 
@@ -30,6 +40,7 @@ Class implementations in this folder are template/base behaviours for future att
 - `BaseProjectile` owns lifetime, trigger-hit filtering, owner ignoring, and damage dispatch.
 - Movement belongs in subclasses such as `BaseStraightProjectile`, not in attack behaviours.
 - Attack behaviours should instantiate projectile prefabs, initialize damage and owner, set direction/targeting data, then call `Fire()`.
+- Upgraded projectile attacks should use the `BaseProjectile.Initialize(float, Transform, TowerEntity, AttackBehaviour, IReadOnlyList<OnHitEffectBehaviour>)` overload.
 - A straight projectile prefab must have a trigger collider and `BaseStraightProjectile`.
 
 ## Test Implementations

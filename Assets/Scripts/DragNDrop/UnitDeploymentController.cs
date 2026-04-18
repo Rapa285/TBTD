@@ -1,15 +1,23 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Owns tower deployment previews, placement validation, cancellation, and final runtime binding.
+/// </summary>
 public class UnitDeploymentController : MonoBehaviour
 {
-    [SerializeField] private UnitDeploymentChecker deploymentChecker;
-    [SerializeField] private Transform deployedTowerParent;
+    [SerializeField, Tooltip("Placement service used to convert mouse position into valid world placement results.")]
+    private UnitDeploymentChecker deploymentChecker;
+
+    [SerializeField, Tooltip("Optional parent assigned to preview and deployed tower instances.")]
+    private Transform deployedTowerParent;
 
     private GameObject currentDraggedRoot;
     private TowerEntity currentDraggedTower;
     private MaterialOverrider currentMaterialOverrider;
     private UnitDeploymentChecker.PlacementResult currentPlacementResult;
+    private UnitStateManager currentStateManager;
+    private string currentUnitId;
     private bool hasCurrentPlacement;
 
     public bool IsDragging => currentDraggedRoot != null;
@@ -58,12 +66,40 @@ public class UnitDeploymentController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Begins deployment for a direct tower prefab reference.
+    /// </summary>
     public bool BeginDeployment(TowerEntity towerPrefab)
     {
         return towerPrefab != null && BeginDeployment(towerPrefab.gameObject);
     }
 
+    /// <summary>
+    /// Begins deployment for a direct prefab that contains a TowerEntity.
+    /// </summary>
     public bool BeginDeployment(GameObject unitPrefab)
+    {
+        return BeginDeployment(unitPrefab, null, null);
+    }
+
+    /// <summary>
+    /// Begins deployment for a persistent roster unit, applying saved state before preview.
+    /// </summary>
+    public bool BeginDeployment(UnitStateManager stateManager, string unitId)
+    {
+        if (stateManager == null
+            || string.IsNullOrWhiteSpace(unitId)
+            || !stateManager.CanDeploy(unitId)
+            || !stateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit)
+            || unit.UnitPrefab == null)
+        {
+            return false;
+        }
+
+        return BeginDeployment(unit.UnitPrefab.gameObject, stateManager, unitId);
+    }
+
+    private bool BeginDeployment(GameObject unitPrefab, UnitStateManager stateManager, string unitId)
     {
         if (unitPrefab == null || IsDragging || Mouse.current == null)
         {
@@ -94,6 +130,16 @@ public class UnitDeploymentController : MonoBehaviour
             return false;
         }
 
+        if (stateManager != null && !stateManager.ApplyStateTo(unitId, currentDraggedRoot, currentDraggedTower, false))
+        {
+            Destroy(currentDraggedRoot);
+            ClearCurrentDeployment();
+            return false;
+        }
+
+        // Roster-managed previews receive saved upgrades before preview mode so placement stats match runtime stats.
+        currentStateManager = stateManager;
+        currentUnitId = unitId;
         currentDraggedTower.PrepareForDeploymentPreview();
 
         currentMaterialOverrider = currentDraggedRoot.GetComponentInChildren<MaterialOverrider>();
@@ -107,6 +153,9 @@ public class UnitDeploymentController : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Cancels the active deployment preview without mutating roster state.
+    /// </summary>
     public void CancelDeployment()
     {
         if (!IsDragging)
@@ -137,6 +186,13 @@ public class UnitDeploymentController : MonoBehaviour
 
         currentDraggedRoot.transform.position = currentPlacementResult.position;
         currentDraggedTower.Deploy();
+
+        if (currentStateManager != null)
+        {
+            // Bind only after a valid placement so canceled previews never become roster runtime instances.
+            currentStateManager.BindRuntimeInstance(currentUnitId, currentDraggedTower, currentDraggedRoot);
+        }
+
         ClearCurrentDeployment();
     }
 
@@ -177,6 +233,8 @@ public class UnitDeploymentController : MonoBehaviour
         currentDraggedTower = null;
         currentMaterialOverrider = null;
         currentPlacementResult = default;
+        currentStateManager = null;
+        currentUnitId = null;
         hasCurrentPlacement = false;
     }
 }

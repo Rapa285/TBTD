@@ -1,33 +1,447 @@
-// will contain the data of Units/towers
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
-// The plan is that the unit prefab will be plain
+/// <summary>
+/// Persistent roster state for all player-owned units.
+/// </summary>
+public class UnitStateManager : MonoBehaviour
+{
+    /// <summary>
+    /// Serialized persistent state for one owned unit plus transient runtime bindings.
+    /// </summary>
+    [Serializable]
+    public sealed class OwnedUnitState
+    {
+        [SerializeField, Tooltip("Stable roster ID used by UI, deployment, progression, and upgrades.")]
+        private string unitId;
 
-// Since units will be able to level up and upgrade their stats
-// A way to save this information is required
+        [SerializeField, Tooltip("Display name for UI that presents this owned unit.")]
+        private string displayName;
 
-// My idea is that an object (this) exists to keep track of their upgrades and information n stuff
-// Such that if the unit is to be retreated and re deployed in the future
-// This object will "help reapply" all upgrades it has received
+        [SerializeField, Tooltip("Optional UI icon for this owned unit.")]
+        private Sprite icon;
 
-// This way upgrade offers and application can be managed in a more centralized manner
-// as oposed to each units handling their own upgrade cycle
-// Top-down mindset type shit
+        [SerializeField, Tooltip("Plain tower prefab deployed for this owned unit.")]
+        private TowerEntity unitPrefab;
 
-// made with facilitating upgrades and UI information in mind
+        [SerializeField, Tooltip("XP thresholds by level; index 0 is the threshold from level 1 to 2.")]
+        private List<float> xpThresholds = new List<float>();
 
-// ADDITIONAL CONTEXT :
-/* 
+        [SerializeField, Tooltip("Current persistent level for this owned unit.")]
+        private int level = 1;
 
-In this game, all of the players units (towers) start plain
-After defeating a few enemies, it will level up
+        [SerializeField, Tooltip("Current persistent XP stored for this owned unit.")]
+        private float experience;
 
-Upon level up the player may choose one out of three upgrades
+        [SerializeField, Tooltip("Whether this unit is waiting for an upgrade selection.")]
+        private bool upgradePending;
 
-Whilst other supporting gimmicks are still in the works
-the idea is that players are to frequently swap out their units
-to develop their entire army instead of having a single super unit
+        [SerializeField, Tooltip("Append-only list of upgrades selected for this owned unit.")]
+        private List<UpgradeSO> appliedUpgrades = new List<UpgradeSO>();
 
-which is why the storing and application of upgrades need
-to be streamlined? or atleast defined
+        [NonSerialized] private TowerEntity currentRuntimeInstance;
+        [NonSerialized] private GameObject currentRuntimeRoot;
 
-*/
+        public string UnitId => unitId;
+        public string DisplayName => displayName;
+        public Sprite Icon => icon;
+        public TowerEntity UnitPrefab => unitPrefab;
+        public IReadOnlyList<float> XpThresholds => xpThresholds;
+        public int Level => Mathf.Max(1, level);
+        public float Experience => Mathf.Max(0f, experience);
+        public bool UpgradePending => upgradePending;
+        public IReadOnlyList<UpgradeSO> AppliedUpgrades => appliedUpgrades;
+        public TowerEntity CurrentRuntimeInstance => currentRuntimeInstance;
+        public GameObject CurrentRuntimeRoot => currentRuntimeRoot;
+        public bool IsDeployed => currentRuntimeInstance != null;
+        public bool HasNextExperienceThreshold => TryGetNextExperienceThreshold(out _);
+        public float NextExperienceThreshold => TryGetNextExperienceThreshold(out float threshold) ? threshold : 0f;
+
+        /// <summary>
+        /// Returns whether this unit has already selected the given upgrade asset.
+        /// </summary>
+        public bool HasAppliedUpgrade(UpgradeSO upgrade)
+        {
+            return upgrade != null && appliedUpgrades.Contains(upgrade);
+        }
+
+        /// <summary>
+        /// Reads the next XP threshold for the current level when one exists.
+        /// </summary>
+        public bool TryGetNextExperienceThreshold(out float threshold)
+        {
+            int thresholdIndex = Level - 1;
+            if (thresholdIndex >= 0 && thresholdIndex < xpThresholds.Count)
+            {
+                threshold = Mathf.Max(0f, xpThresholds[thresholdIndex]);
+                return true;
+            }
+
+            threshold = 0f;
+            return false;
+        }
+
+        internal void SetExperience(float value)
+        {
+            experience = Mathf.Max(0f, value);
+        }
+
+        internal void SetUpgradePending(bool value)
+        {
+            upgradePending = value;
+        }
+
+        internal void AdvanceLevel()
+        {
+            level = Level + 1;
+        }
+
+        internal bool AddAppliedUpgrade(UpgradeSO upgrade)
+        {
+            if (upgrade == null || appliedUpgrades.Contains(upgrade))
+            {
+                return false;
+            }
+
+            appliedUpgrades.Add(upgrade);
+            return true;
+        }
+
+        internal void SetRuntimeInstance(TowerEntity tower, GameObject root)
+        {
+            currentRuntimeInstance = tower;
+            currentRuntimeRoot = root != null ? root : tower != null ? tower.gameObject : null;
+        }
+
+        internal void ClearRuntimeInstance()
+        {
+            currentRuntimeInstance = null;
+            currentRuntimeRoot = null;
+        }
+    }
+
+    [SerializeField, Tooltip("Event bus used to mirror runtime progression changes back into roster state.")]
+    private UnitEventBus eventBus;
+
+    [SerializeField, Tooltip("Inspector-authored roster of player-owned units.")]
+    private List<OwnedUnitState> ownedUnits = new List<OwnedUnitState>();
+
+    public IReadOnlyList<OwnedUnitState> OwnedUnits => ownedUnits;
+
+    private void Awake()
+    {
+        ResolveEventBus();
+        ValidateUnitIds();
+    }
+
+    private void OnEnable()
+    {
+        ResolveEventBus();
+
+        if (eventBus != null)
+        {
+            eventBus.UnitExperienceChanged += HandleUnitExperienceChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (eventBus != null)
+        {
+            eventBus.UnitExperienceChanged -= HandleUnitExperienceChanged;
+        }
+    }
+
+    private void OnValidate()
+    {
+        ValidateUnitIds();
+    }
+
+    /// <summary>
+    /// Finds a roster unit by stable unit ID.
+    /// </summary>
+    public bool TryGetUnit(string unitId, out OwnedUnitState unit)
+    {
+        for (int i = 0; i < ownedUnits.Count; i++)
+        {
+            OwnedUnitState candidate = ownedUnits[i];
+            if (candidate != null && candidate.UnitId == unitId)
+            {
+                unit = candidate;
+                return true;
+            }
+        }
+
+        unit = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns whether the roster contains a unit with this ID.
+    /// </summary>
+    public bool HasUnit(string unitId)
+    {
+        return TryGetUnit(unitId, out _);
+    }
+
+    /// <summary>
+    /// Returns whether the unit can start a new deployment.
+    /// </summary>
+    public bool CanDeploy(string unitId)
+    {
+        return TryGetUnit(unitId, out OwnedUnitState unit)
+            && unit.UnitPrefab != null
+            && unit.CurrentRuntimeInstance == null;
+    }
+
+    /// <summary>
+    /// Applies persistent roster state to a runtime tower.
+    /// </summary>
+    public bool ApplyStateTo(string unitId, TowerEntity tower)
+    {
+        return tower != null && ApplyStateTo(unitId, tower.gameObject, tower);
+    }
+
+    /// <summary>
+    /// Applies persistent roster state to a runtime root and tower.
+    /// </summary>
+    public bool ApplyStateTo(string unitId, GameObject runtimeRoot, TowerEntity tower)
+    {
+        return ApplyStateTo(unitId, runtimeRoot, tower, true);
+    }
+
+    /// <summary>
+    /// Applies upgrades and progression state from the roster into a runtime unit instance.
+    /// </summary>
+    public bool ApplyStateTo(string unitId, GameObject runtimeRoot, TowerEntity tower, bool evaluateThreshold)
+    {
+        if (runtimeRoot == null || tower == null || !TryGetUnit(unitId, out OwnedUnitState unit))
+        {
+            return false;
+        }
+
+        // This is the roster-to-runtime bridge; TowerEntity remains responsible for compiling upgrade effects.
+        for (int i = 0; i < unit.AppliedUpgrades.Count; i++)
+        {
+            tower.AddUpgrade(unit.AppliedUpgrades[i]);
+        }
+
+        UnitProgression progression = runtimeRoot.GetComponentInChildren<UnitProgression>(true);
+        if (progression == null)
+        {
+            progression = runtimeRoot.AddComponent<UnitProgression>();
+        }
+
+        InitializeProgression(unit, progression, evaluateThreshold);
+        return true;
+    }
+
+    /// <summary>
+    /// Records the deployed tower instance for one roster unit.
+    /// </summary>
+    public bool BindRuntimeInstance(string unitId, TowerEntity tower)
+    {
+        return tower != null && BindRuntimeInstance(unitId, tower, tower.gameObject);
+    }
+
+    /// <summary>
+    /// Records the deployed tower and root instance for one roster unit.
+    /// </summary>
+    public bool BindRuntimeInstance(string unitId, TowerEntity tower, GameObject runtimeRoot)
+    {
+        if (tower == null || !TryGetUnit(unitId, out OwnedUnitState unit))
+        {
+            return false;
+        }
+
+        unit.SetRuntimeInstance(tower, runtimeRoot);
+        RefreshRuntimeProgression(unit, true);
+        return true;
+    }
+
+    /// <summary>
+    /// Clears a runtime binding only when the supplied tower matches the recorded instance.
+    /// </summary>
+    public bool ClearRuntimeInstance(string unitId, TowerEntity tower)
+    {
+        if (!TryGetUnit(unitId, out OwnedUnitState unit) || unit.CurrentRuntimeInstance != tower)
+        {
+            return false;
+        }
+
+        unit.ClearRuntimeInstance();
+        return true;
+    }
+
+    /// <summary>
+    /// Destroys the deployed runtime unit while preserving persistent XP and upgrades.
+    /// </summary>
+    public bool RecallUnit(string unitId)
+    {
+        if (!TryGetUnit(unitId, out OwnedUnitState unit) || unit.CurrentRuntimeInstance == null)
+        {
+            return false;
+        }
+
+        UnitProgression progression = FindRuntimeProgression(unit);
+        if (progression != null)
+        {
+            RecordExperience(unitId, progression.CurrentExperience);
+        }
+
+        GameObject root = unit.CurrentRuntimeRoot != null
+            ? unit.CurrentRuntimeRoot
+            : unit.CurrentRuntimeInstance.gameObject;
+
+        unit.ClearRuntimeInstance();
+
+        if (root != null)
+        {
+            Destroy(root);
+        }
+
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitRecalled(new UnitRecalledEvent(unitId));
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Stores the latest runtime XP value on the roster.
+    /// </summary>
+    public bool RecordExperience(string unitId, float currentExperience)
+    {
+        if (!TryGetUnit(unitId, out OwnedUnitState unit))
+        {
+            return false;
+        }
+
+        unit.SetExperience(currentExperience);
+        return true;
+    }
+
+    /// <summary>
+    /// Marks a unit as waiting for an upgrade offer selection.
+    /// </summary>
+    public bool TryBeginUpgradeSelection(string unitId)
+    {
+        if (!TryGetUnit(unitId, out OwnedUnitState unit) || unit.UpgradePending)
+        {
+            return false;
+        }
+
+        unit.SetUpgradePending(true);
+        return true;
+    }
+
+    /// <summary>
+    /// Records the selected upgrade, advances level, and applies it to the deployed tower when present.
+    /// </summary>
+    public bool RecordSelectedUpgrade(string unitId, UpgradeSO upgrade)
+    {
+        if (!TryGetUnit(unitId, out OwnedUnitState unit) || !unit.UpgradePending)
+        {
+            return false;
+        }
+
+        unit.SetUpgradePending(false);
+        unit.AdvanceLevel();
+
+        if (upgrade != null && unit.AddAppliedUpgrade(upgrade) && unit.CurrentRuntimeInstance != null)
+        {
+            unit.CurrentRuntimeInstance.AddUpgrade(upgrade);
+        }
+
+        RefreshRuntimeProgression(unit, true);
+        return true;
+    }
+
+    /// <summary>
+    /// Reads the next XP threshold for a roster unit.
+    /// </summary>
+    public bool TryGetNextExperienceThreshold(string unitId, out float threshold)
+    {
+        if (TryGetUnit(unitId, out OwnedUnitState unit))
+        {
+            return unit.TryGetNextExperienceThreshold(out threshold);
+        }
+
+        threshold = 0f;
+        return false;
+    }
+
+    private void HandleUnitExperienceChanged(UnitExperienceChangedEvent eventData)
+    {
+        RecordExperience(eventData.UnitId, eventData.CurrentExperience);
+    }
+
+    private void InitializeProgression(OwnedUnitState unit, UnitProgression progression, bool evaluateThreshold)
+    {
+        bool hasThreshold = unit.TryGetNextExperienceThreshold(out float threshold);
+        progression.Initialize(
+            unit.UnitId,
+            unit.Level,
+            unit.Experience,
+            threshold,
+            hasThreshold,
+            unit.UpgradePending,
+            eventBus,
+            evaluateThreshold);
+    }
+
+    private void RefreshRuntimeProgression(OwnedUnitState unit, bool evaluateThreshold)
+    {
+        UnitProgression progression = FindRuntimeProgression(unit);
+        if (progression != null)
+        {
+            InitializeProgression(unit, progression, evaluateThreshold);
+        }
+    }
+
+    private UnitProgression FindRuntimeProgression(OwnedUnitState unit)
+    {
+        if (unit.CurrentRuntimeRoot != null)
+        {
+            return unit.CurrentRuntimeRoot.GetComponentInChildren<UnitProgression>(true);
+        }
+
+        return unit.CurrentRuntimeInstance != null
+            ? unit.CurrentRuntimeInstance.GetComponentInChildren<UnitProgression>(true)
+            : null;
+    }
+
+    private void ResolveEventBus()
+    {
+        if (eventBus == null)
+        {
+            eventBus = FindAnyObjectByType<UnitEventBus>();
+        }
+    }
+
+    private void ValidateUnitIds()
+    {
+        HashSet<string> seenIds = new HashSet<string>();
+        for (int i = 0; i < ownedUnits.Count; i++)
+        {
+            OwnedUnitState unit = ownedUnits[i];
+            if (unit == null)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(unit.UnitId))
+            {
+                Debug.LogWarning($"{nameof(UnitStateManager)} has an owned unit with an empty unitId.", this);
+                continue;
+            }
+
+            if (!seenIds.Add(unit.UnitId))
+            {
+                Debug.LogError($"{nameof(UnitStateManager)} has duplicate unitId '{unit.UnitId}'.", this);
+            }
+        }
+    }
+}

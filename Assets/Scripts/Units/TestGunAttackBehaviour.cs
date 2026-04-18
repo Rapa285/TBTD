@@ -3,11 +3,19 @@
 // and exists as a wiring example for future projectile attack behaviours.
 using UnityEngine;
 
+/// <summary>
+/// Example spline-leading projectile weapon that fires a BaseStraightProjectile prefab.
+/// </summary>
 public sealed class TestGunAttackBehaviour : SplineLeadingAttackBehaviour
 {
-    [SerializeField] private GameObject bulletPrefab;
-    [SerializeField] private Transform firePoint;
-    [SerializeField] private Transform projectileParent;
+    [SerializeField, Tooltip("Projectile prefab expected to contain a BaseStraightProjectile component.")]
+    private GameObject bulletPrefab;
+
+    [SerializeField, Tooltip("Optional muzzle transform used as the projectile spawn origin.")]
+    private Transform firePoint;
+
+    [SerializeField, Tooltip("Optional parent assigned to spawned projectile instances.")]
+    private Transform projectileParent;
 
     protected override Vector3 GetAttackOrigin()
     {
@@ -33,7 +41,7 @@ public sealed class TestGunAttackBehaviour : SplineLeadingAttackBehaviour
             return;
         }
 
-        projectile.Initialize(damage, transform);
+        projectile.Initialize(damage, transform, OwnerTower, this, OnHitEffects);
         projectile.SetDirection(GetLeadPosition(target));
         projectile.Fire();
     }

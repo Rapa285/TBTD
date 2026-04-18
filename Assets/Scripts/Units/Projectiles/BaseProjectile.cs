@@ -1,18 +1,35 @@
 // Base runtime component for non-hitscan projectiles.
 // Owns shared projectile lifetime, trigger-hit filtering, owner ignoring, and damage application;
 // derived projectile classes only need to provide movement by overriding TickProjectile.
+using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Base runtime component for trigger-based projectiles with shared hit filtering and damage dispatch.
+/// </summary>
 [RequireComponent(typeof(Collider))]
 public abstract class BaseProjectile : MonoBehaviour
 {
-    [SerializeField, Min(0f)] private float damage = 1f;
-    [SerializeField, Min(0f)] private float maxAge = 5f;
-    [SerializeField] private LayerMask hitLayers = ~0;
-    [SerializeField] private bool destroyOnHit = true;
-    [SerializeField] private Collider projectileCollider;
+    [SerializeField, Min(0f), Tooltip("Damage applied when this projectile hits a valid target.")]
+    private float damage = 1f;
+
+    [SerializeField, Min(0f), Tooltip("Lifetime in seconds after firing. Zero disables age-based expiry.")]
+    private float maxAge = 5f;
+
+    [SerializeField, Tooltip("Layers this projectile is allowed to hit.")]
+    private LayerMask hitLayers = ~0;
+
+    [SerializeField, Tooltip("Destroy this projectile GameObject after a valid hit.")]
+    private bool destroyOnHit = true;
+
+    [SerializeField, Tooltip("Trigger collider used for projectile hit detection.")]
+    private Collider projectileCollider;
 
     private Transform ignoredRoot;
+    private Transform ownerRoot;
+    private TowerEntity ownerTower;
+    private AttackBehaviour sourceAttackBehaviour;
+    private readonly List<OnHitEffectBehaviour> onHitEffects = new List<OnHitEffectBehaviour>();
     private float firedAtTime;
     private bool fired;
 
@@ -86,17 +103,58 @@ public abstract class BaseProjectile : MonoBehaviour
         OnHit(other, target);
     }
 
+    /// <summary>
+    /// Initializes damage and owner ignoring for callers that do not need upgrade hit context.
+    /// </summary>
     public virtual void Initialize(float projectileDamage, Transform owner)
     {
-        Damage = projectileDamage;
-        ignoredRoot = owner != null ? owner.root : null;
+        Initialize(projectileDamage, owner, null, null, null);
     }
 
+    /// <summary>
+    /// Initializes damage, owner ignoring, and the hit-effect context used by upgraded attacks.
+    /// </summary>
+    public virtual void Initialize(
+        float projectileDamage,
+        Transform owner,
+        TowerEntity tower,
+        AttackBehaviour attackBehaviour,
+        IReadOnlyList<OnHitEffectBehaviour> effects)
+    {
+        Damage = projectileDamage;
+        ownerRoot = owner;
+        ignoredRoot = owner != null ? owner.root : null;
+        ownerTower = tower;
+        sourceAttackBehaviour = attackBehaviour;
+        onHitEffects.Clear();
+
+        // Snapshot the current effect instances so in-flight projectiles do not change when upgrades are added later.
+        if (effects == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < effects.Count; i++)
+        {
+            OnHitEffectBehaviour effect = effects[i];
+            if (effect != null)
+            {
+                onHitEffects.Add(effect);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns whether this projectile has enough setup data to be fired.
+    /// </summary>
     public virtual bool ReadyToFire()
     {
         return projectileCollider != null && maxAge >= 0f;
     }
 
+    /// <summary>
+    /// Starts projectile movement and lifetime tracking.
+    /// </summary>
     public virtual void Fire()
     {
         if (!ReadyToFire())
@@ -108,13 +166,19 @@ public abstract class BaseProjectile : MonoBehaviour
         firedAtTime = Time.time;
     }
 
+    /// <summary>
+    /// Per-frame movement hook implemented by concrete projectile types.
+    /// </summary>
     protected virtual void TickProjectile(float deltaTime)
     {
     }
 
     protected virtual void OnHit(Collider other, Transform target)
     {
-        TryApplyDamage(target, damage);
+        AttackHitContext context = CreateHitContext(other, target, damage);
+        TryApplyDamage(target, damage, context);
+        // Projectile effects run after damage, using the context captured when the shot was fired.
+        DispatchOnHitEffects(context);
 
         if (destroyOnHit)
         {
@@ -129,9 +193,21 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected bool TryApplyDamage(Transform target, float damageAmount)
     {
+        return TryApplyDamage(target, damageAmount, CreateHitContext(null, target, damageAmount));
+    }
+
+    protected bool TryApplyDamage(Transform target, float damageAmount, AttackHitContext context)
+    {
         if (target == null)
         {
             return false;
+        }
+
+        IAttackContextDamageable contextDamageable = target.GetComponentInParent<IAttackContextDamageable>();
+        if (contextDamageable != null)
+        {
+            contextDamageable.TakeDamage(damageAmount, context);
+            return true;
         }
 
         IDamageable damageable = target.GetComponentInParent<IDamageable>();
@@ -143,6 +219,45 @@ public abstract class BaseProjectile : MonoBehaviour
 
         target.SendMessage("TakeDamage", damageAmount, SendMessageOptions.DontRequireReceiver);
         return true;
+    }
+
+    protected void DispatchOnHitEffects(Collider hitCollider, Transform target, float damageAmount)
+    {
+        DispatchOnHitEffects(CreateHitContext(hitCollider, target, damageAmount));
+    }
+
+    protected void DispatchOnHitEffects(AttackHitContext context)
+    {
+        if (onHitEffects.Count == 0 || context.Target == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < onHitEffects.Count; i++)
+        {
+            OnHitEffectBehaviour effect = onHitEffects[i];
+            if (effect != null)
+            {
+                effect.ApplyHitEffect(context);
+            }
+        }
+    }
+
+    private AttackHitContext CreateHitContext(Collider hitCollider, Transform target, float damageAmount)
+    {
+        bool hasHitPosition = hitCollider != null;
+        Vector3 hitPosition = hasHitPosition ? hitCollider.ClosestPoint(transform.position) : Vector3.zero;
+
+        return new AttackHitContext(
+            ownerTower,
+            ownerRoot,
+            sourceAttackBehaviour,
+            this,
+            target,
+            hitCollider,
+            damageAmount,
+            hitPosition,
+            hasHitPosition);
     }
 
     protected Transform GetTargetTransform(Collider other)
