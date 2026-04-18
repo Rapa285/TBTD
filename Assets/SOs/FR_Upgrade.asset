@@ -12,9 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
   m_Name: FR_Upgrade
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
-  upgradeName: 
-  description: 
+  upgradeName: Flak Rounds
+  description: 'Lighter bullets deal more damage close up
+
+    ++ Damage
+
+    - Range'
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   onHitEffectPrefabs: []
-  statEffects: []
+  statEffects:
+  - stat: 0
+    type: 0
+    value: 1.5
+  - stat: 2
+    type: 0
+    value: 0.75

@@ -13,8 +13,18 @@ MonoBehaviour:
   m_Name: HVB_Upgrade
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: High Velocity Bullets
-  description: 
+  description: 'Faster bullets reach further
+
+    + Damage
+
+    ++ Range'
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   onHitEffectPrefabs: []
-  statEffects: []
+  statEffects:
+  - stat: 0
+    type: 0
+    value: 1.25
+  - stat: 2
+    type: 0
+    value: 2
