@@ -25,6 +25,9 @@ public abstract class AttackBehaviour : MonoBehaviour
     [SerializeField, Min(0f), Tooltip("Base damage before TowerEntity applies its global damage multiplier.")]
     private float baseDamage = 1f;
 
+    [SerializeField, Tooltip("World-space offset added to the final aim point after the target position or weapon-specific aiming calculation is chosen. Use (0, 1, 0) to aim one Unity unit above the target.")]
+    private Vector3 aimModifierVector = Vector3.zero;
+
     private IReadOnlyList<OnHitEffectBehaviour> onHitEffects;
     private TowerEntity ownerTower;
     private Transform ownerRoot;
@@ -33,6 +36,12 @@ public abstract class AttackBehaviour : MonoBehaviour
     {
         get => baseDamage;
         set => baseDamage = Mathf.Max(0f, value);
+    }
+
+    public Vector3 AimModifierVector
+    {
+        get => aimModifierVector;
+        set => aimModifierVector = value;
     }
 
     protected TowerEntity OwnerTower => ownerTower;
@@ -66,6 +75,23 @@ public abstract class AttackBehaviour : MonoBehaviour
     }
 
     protected abstract void ExecuteAttack(Transform target, float damage);
+
+    /// <summary>
+    /// Returns the target's current world position with the final aim offset applied.
+    /// </summary>
+    protected Vector3 GetAimPoint(Transform target)
+    {
+        return target != null ? ApplyAimModifier(target.position) : Vector3.zero;
+    }
+
+    /// <summary>
+    /// Adds the shared final aim offset to weapon-specific aim calculations.
+    /// </summary>
+    protected Vector3 ApplyAimModifier(Vector3 aimPoint)
+    {
+        // Keep this as the final aiming step so direct aim, predictive aim, and future weapons offset consistently.
+        return aimPoint + aimModifierVector;
+    }
 
     /// <summary>
     /// Applies damage to a target and dispatches active on-hit effects when the hit resolves.

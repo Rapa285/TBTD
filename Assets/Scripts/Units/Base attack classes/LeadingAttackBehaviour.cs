@@ -5,21 +5,32 @@ using UnityEngine;
 
 public abstract class LeadingAttackBehaviour : AttackBehaviour
 {
-    [SerializeField, Min(0f)]
+    [SerializeField, Min(0f), Tooltip("Seconds of lead time added per Unity unit of horizontal distance to the target.")]
     private float distanceFactor = 0.05f;
 
-    [SerializeField]
+    [SerializeField, Tooltip("When enabled, lead calculations ignore movement along the configured vertical axis.")]
     private bool ignoreVerticalAxis = true;
 
-    [SerializeField]
+    [SerializeField, Tooltip("Axis treated as vertical when flattening lead calculations. Defaults to world up.")]
     private Vector3 verticalAxis = Vector3.up;
 
-    [SerializeField] private bool drawLeadGizmos = true;
-    [SerializeField, Min(0f)] private float enemyPositionGizmoRadius = 0.2f;
-    [SerializeField, Min(0f)] private float aimPointGizmoRadius = 0.25f;
-    [SerializeField] private Color enemyPositionGizmoColor = Color.yellow;
-    [SerializeField] private Color leadDirectionGizmoColor = Color.cyan;
-    [SerializeField] private Color aimPointGizmoColor = Color.magenta;
+    [SerializeField, Tooltip("Draws the most recent enemy position, final aim point, and aim direction while this object is selected.")]
+    private bool drawLeadGizmos = true;
+
+    [SerializeField, Min(0f), Tooltip("Radius of the gizmo drawn at the target's unmodified position.")]
+    private float enemyPositionGizmoRadius = 0.2f;
+
+    [SerializeField, Min(0f), Tooltip("Radius of the gizmo drawn at the final aim point, including Aim Modifier Vector.")]
+    private float aimPointGizmoRadius = 0.25f;
+
+    [SerializeField, Tooltip("Color used for the target's unmodified position gizmo.")]
+    private Color enemyPositionGizmoColor = Color.yellow;
+
+    [SerializeField, Tooltip("Color used for the line from attack origin to final aim point.")]
+    private Color leadDirectionGizmoColor = Color.cyan;
+
+    [SerializeField, Tooltip("Color used for the final aim point gizmo after lead and Aim Modifier Vector are applied.")]
+    private Color aimPointGizmoColor = Color.magenta;
 
     private bool hasLeadGizmoData;
     private Vector3 lastShotOrigin;
@@ -67,6 +78,7 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
         if (distance <= Mathf.Epsilon)
         {
             Debug.Log("Epsilon point hit");
+            leadPosition = ApplyAimModifier(leadPosition);
             RecordLeadGizmoData(origin, enemyPosition, leadPosition);
             return leadPosition;
         }
@@ -84,6 +96,8 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
             leadPosition = target.position + perpendicularVelocity * leadTime;
         }
 
+        // Apply the shared aim offset after predictive leading has selected the final raw aim point.
+        leadPosition = ApplyAimModifier(leadPosition);
         RecordLeadGizmoData(origin, enemyPosition, leadPosition);
         return leadPosition;
     }
@@ -100,7 +114,8 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
 
         if (ignoreVerticalAxis)
         {
-            direction = Vector3.ProjectOnPlane(direction, verticalAxis);
+            // Flatten the predictive direction first, then reapply the final aim offset unchanged.
+            direction = Vector3.ProjectOnPlane(direction - AimModifierVector, verticalAxis) + AimModifierVector;
         }
 
         return direction.sqrMagnitude > Mathf.Epsilon

@@ -8,10 +8,10 @@ using UnityEngine.Splines;
 
 public abstract class SplineLeadingAttackBehaviour : LeadingAttackBehaviour
 {
-    [SerializeField, Min(SplineUtility.PickResolutionMin)]
+    [SerializeField, Min(SplineUtility.PickResolutionMin), Tooltip("Sampling resolution used when finding the target's nearest point on its spline.")]
     private int nearestPointResolution = SplineUtility.PickResolutionDefault;
 
-    [SerializeField, Range(1, 10)]
+    [SerializeField, Range(1, 10), Tooltip("Refinement passes used when finding the target's nearest point on its spline.")]
     private int nearestPointIterations = 2;
 
     protected override void OnValidate()

@@ -29,6 +29,12 @@ public class TowerEntity : MonoBehaviour
     [SerializeField, Tooltip("Whether this tower starts active instead of in deployment preview mode.")]
     private bool deployed = true;
 
+    [SerializeField, Tooltip("Debug only: periodically rescan nearby colliders for valid targets while deployed.")]
+    private bool activelyPollEnemies;
+
+    [SerializeField, Min(0.01f), Tooltip("Seconds between debug target scans when active polling is enabled.")]
+    private float enemyPollPeriod = 0.5f;
+
     [SerializeField, Tooltip("Base stat values before upgrade modifiers are applied.")]
     private List<EntityStat> baseStats = new List<EntityStat>
     {
@@ -51,6 +57,7 @@ public class TowerEntity : MonoBehaviour
     private Transform currentTarget;
     private float nextAttackTime;
     private float activeAfterTime;
+    private float nextEnemyPollTime;
     private bool deploymentTimersInitialized;
 
     public bool Deployed => deployed;
@@ -85,6 +92,7 @@ public class TowerEntity : MonoBehaviour
         currentTarget = null;
         activeAfterTime = float.PositiveInfinity;
         nextAttackTime = float.PositiveInfinity;
+        nextEnemyPollTime = float.PositiveInfinity;
 
         if (vision != null)
         {
@@ -129,6 +137,8 @@ public class TowerEntity : MonoBehaviour
         {
             return;
         }
+
+        PollEnemiesForDebugIfNeeded();
 
         if (currentTarget == null || !vision.Contains(currentTarget))
         {
@@ -307,6 +317,25 @@ public class TowerEntity : MonoBehaviour
             vision.Range = GetStat(ENTITY_STATS.VisualRange);
             vision.ScanForTargetsOnce();
         }
+
+        nextEnemyPollTime = Time.time + GetEnemyPollPeriod();
+    }
+
+    private void PollEnemiesForDebugIfNeeded()
+    {
+        if (!activelyPollEnemies || Time.time < nextEnemyPollTime)
+        {
+            return;
+        }
+
+        // Debug polling supports spawned/test enemies that may not enter vision through trigger events.
+        vision.ScanForTargetsOnce();
+        nextEnemyPollTime = Time.time + GetEnemyPollPeriod();
+    }
+
+    private float GetEnemyPollPeriod()
+    {
+        return Mathf.Max(0.01f, enemyPollPeriod);
     }
 
     private void ApplyRuntimeComposition(

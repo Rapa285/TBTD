@@ -3,9 +3,14 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class DebugAttackBehaviour : AttackBehaviour
 {
-    [SerializeField] private LineRenderer lineRenderer;
-    [SerializeField] private Transform firePoint;
-    [SerializeField, Min(0f)] private float beamDuration = 1.5f;
+    [SerializeField, Tooltip("Line renderer used to draw the temporary debug beam.")]
+    private LineRenderer lineRenderer;
+
+    [SerializeField, Tooltip("Optional muzzle transform used as the beam start. Falls back to this transform.")]
+    private Transform firePoint;
+
+    [SerializeField, Min(0f), Tooltip("How long the debug beam remains visible after each attack.")]
+    private float beamDuration = 1.5f;
 
     private Coroutine activeBeam;
 
@@ -56,7 +61,8 @@ public class DebugAttackBehaviour : AttackBehaviour
         {
             Vector3 start = firePoint != null ? firePoint.position : transform.position;
             lineRenderer.SetPosition(0, start);
-            lineRenderer.SetPosition(1, target.position);
+            // The beam endpoint follows the live target position plus AttackBehaviour's shared final aim offset.
+            lineRenderer.SetPosition(1, GetAimPoint(target));
 
             elapsed += Time.deltaTime;
             yield return null;

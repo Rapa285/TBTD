@@ -160,10 +160,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BaseStraightProjectile
   damage: 1
-  maxAge: 10
+  maxAge: 1
   hitLayers:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 320
   destroyOnHit: 1
   projectileCollider: {fileID: 3854019325215764389}
-  bulletSpeed: 50
+  bulletSpeed: 45
