@@ -1,0 +1,190 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1613147869587731745
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7629151031867247004}
+  - component: {fileID: 978773871382648577}
+  - component: {fileID: 8624410826663696689}
+  - component: {fileID: 1184777081935150925}
+  m_Layer: 6
+  m_Name: Vision
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7629151031867247004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613147869587731745}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2771550917122636549}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &978773871382648577
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613147869587731745}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 8
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8624410826663696689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613147869587731745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780dd85432a34db484ff48b76a01860a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UnitVision
+  range: 8
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 512
+--- !u!135 &1184777081935150925
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613147869587731745}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 8
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &1410146842187057095
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: stats.damage
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: stats.movementSpeed
+      value: 2.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: m_Name
+      value: Sniper
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7629151031867247004}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1149656879204220257}
+  m_SourcePrefab: {fileID: 100100000, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+--- !u!4 &2771550917122636549 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+  m_PrefabInstance: {fileID: 1410146842187057095}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7474991938346100898 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+  m_PrefabInstance: {fileID: 1410146842187057095}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1149656879204220257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7474991938346100898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb13f9706d8f9e848afc46e10a100c41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SniperAttacker
+  attackDamage: 30
+  attackCooldown: 2
+  vision: {fileID: 8624410826663696689}
