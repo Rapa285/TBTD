@@ -25,6 +25,12 @@ public class EnemyEntity : MonoBehaviour
     private HealthComponent health;
     private EnemyMover mover;
 
+    public Transform BaseTarget 
+    { 
+        get { return baseTarget; } 
+        set { baseTarget = value; } 
+    }
+
     private void Awake()
     {
         health = GetComponent<HealthComponent>();
