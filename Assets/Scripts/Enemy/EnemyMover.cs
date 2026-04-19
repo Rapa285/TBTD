@@ -22,6 +22,7 @@ public class EnemyMover : MonoBehaviour
     {
         baseSpeed = Mathf.Max(0.1f, speed);
         UpdateSpeed();
+        
         if (splineAnimate != null && !splineAnimate.IsPlaying)
         {
             splineAnimate.Play();
@@ -30,16 +31,23 @@ public class EnemyMover : MonoBehaviour
 
     public void ApplyTemporarySpeedBuff(float multiplier, float duration)
     {
+        if (buffTimer < duration) 
+        {
+            buffTimer = duration;
+        }
+        
         speedMultiplier = multiplier;
-        buffTimer = duration;
         UpdateSpeed();
     }
 
+    // --- PERBAIKAN DI SINI ---
     private void UpdateSpeed()
     {
         if (splineAnimate != null)
         {
-            splineAnimate.MaxSpeed = baseSpeed * speedMultiplier;
+            float currentProgress = splineAnimate.NormalizedTime;
+            splineAnimate.MaxSpeed = baseSpeed * speedMultiplier;            
+            splineAnimate.NormalizedTime = currentProgress;
         }
     }
 
