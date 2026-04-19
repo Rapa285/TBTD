@@ -3,6 +3,10 @@ using UnityEngine.Events;
 
 public class HealthComponent : MonoBehaviour, IDamageable
 {
+    [Header("Auto Initialization")]
+    [SerializeField] private bool initializeOnStart = false;
+    [SerializeField] private float startingHealth = 100f;
+
     private float maxHealth;
     private float currentHealth;
     private float currentShield;
@@ -12,7 +16,10 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
     private void Start()
     {
-        Initialize(100f);
+        if (initializeOnStart)
+        {
+            Initialize(startingHealth);
+        }
     }
 
     public void Initialize(float health, float shield = 0f)
@@ -29,6 +36,7 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
         if (currentShield > 0)
         {
+            Debug.Log($"{gameObject.name} absorbed {Mathf.Min(amount, currentShield)} damage with its shield. Remaining Shield: {currentShield - Mathf.Min(amount, currentShield)}");
             float absorbed = Mathf.Min(amount, currentShield);
             currentShield -= absorbed;
             amount -= absorbed;
