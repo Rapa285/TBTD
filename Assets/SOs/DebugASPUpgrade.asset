@@ -16,7 +16,8 @@ MonoBehaviour:
   description: 
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
+  projectileModifierPrefabs: []
   statEffects:
   - stat: 1
     type: 0
-    value: 2
+    value: 0.25

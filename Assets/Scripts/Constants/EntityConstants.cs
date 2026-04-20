@@ -9,5 +9,6 @@ public enum ENTITY_STATS
 
 public enum STAT_TYPE
 {
-    Mult, Add
+    Mult = 0,
+    Add = 1
 }

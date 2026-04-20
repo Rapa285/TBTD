@@ -1,0 +1,175 @@
+using System;
+using UnityEngine;
+
+/// <summary>
+/// Raised when a deployed unit gains experience.
+/// </summary>
+public struct UnitExperienceChangedEvent
+{
+    public string UnitId { get; }
+    public float PreviousExperience { get; }
+    public float CurrentExperience { get; }
+    public float Delta { get; }
+    public int Level { get; }
+
+    public UnitExperienceChangedEvent(string unitId, float previousExperience, float currentExperience, float delta, int level)
+    {
+        UnitId = unitId;
+        PreviousExperience = previousExperience;
+        CurrentExperience = currentExperience;
+        Delta = delta;
+        Level = level;
+    }
+}
+
+/// <summary>
+/// Raised when a deployed unit reaches its next upgrade threshold.
+/// </summary>
+public struct UnitUpgradeThresholdReachedEvent
+{
+    public string UnitId { get; }
+    public float CurrentExperience { get; }
+    public float Threshold { get; }
+    public int Level { get; }
+
+    public UnitUpgradeThresholdReachedEvent(string unitId, float currentExperience, float threshold, int level)
+    {
+        UnitId = unitId;
+        CurrentExperience = currentExperience;
+        Threshold = threshold;
+        Level = level;
+    }
+}
+
+/// <summary>
+/// Raised when upgrade choices are available for a unit.
+/// </summary>
+public struct UnitUpgradeChoicesOfferedEvent
+{
+    public string UnitId { get; }
+    public UpgradeSO[] Choices { get; }
+
+    public UnitUpgradeChoicesOfferedEvent(string unitId, UpgradeSO[] choices)
+    {
+        UnitId = unitId;
+        Choices = choices;
+    }
+}
+
+/// <summary>
+/// Raised by UI when a player requests one pending upgrade choice.
+/// </summary>
+public struct UnitUpgradeChoiceRequestedEvent
+{
+    public string UnitId { get; }
+    public int ChoiceIndex { get; }
+
+    public UnitUpgradeChoiceRequestedEvent(string unitId, int choiceIndex)
+    {
+        UnitId = unitId;
+        ChoiceIndex = choiceIndex;
+    }
+}
+
+/// <summary>
+/// Raised after a pending upgrade choice has been recorded on the roster.
+/// </summary>
+public struct UnitUpgradeSelectedEvent
+{
+    public string UnitId { get; }
+    public UpgradeSO SelectedUpgrade { get; }
+    public int NewLevel { get; }
+    public float CurrentExperience { get; }
+    public bool HasNextExperienceThreshold { get; }
+    public float NextExperienceThreshold { get; }
+
+    public UnitUpgradeSelectedEvent(
+        string unitId,
+        UpgradeSO selectedUpgrade,
+        int newLevel,
+        float currentExperience,
+        bool hasNextExperienceThreshold,
+        float nextExperienceThreshold)
+    {
+        UnitId = unitId;
+        SelectedUpgrade = selectedUpgrade;
+        NewLevel = newLevel;
+        CurrentExperience = currentExperience;
+        HasNextExperienceThreshold = hasNextExperienceThreshold;
+        NextExperienceThreshold = nextExperienceThreshold;
+    }
+}
+
+/// <summary>
+/// Raised after a deployed unit has been recalled and its runtime instance removed.
+/// </summary>
+public struct UnitRecalledEvent
+{
+    public string UnitId { get; }
+
+    public UnitRecalledEvent(string unitId)
+    {
+        UnitId = unitId;
+    }
+}
+
+/// <summary>
+/// Lightweight scene event hub for unit progression, upgrade, and recall notifications.
+/// </summary>
+public class UnitEventBus : MonoBehaviour
+{
+    public event Action<UnitExperienceChangedEvent> UnitExperienceChanged;
+    public event Action<UnitUpgradeThresholdReachedEvent> UnitUpgradeThresholdReached;
+    public event Action<UnitUpgradeChoicesOfferedEvent> UnitUpgradeChoicesOffered;
+    public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
+    public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
+    public event Action<UnitRecalledEvent> UnitRecalled;
+
+    /// <summary>
+    /// Publishes a unit experience change.
+    /// </summary>
+    public void RaiseUnitExperienceChanged(UnitExperienceChangedEvent eventData)
+    {
+        UnitExperienceChanged?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a unit has reached an upgrade threshold.
+    /// </summary>
+    public void RaiseUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
+    {
+        UnitUpgradeThresholdReached?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes the generated upgrade choices for a unit.
+    /// </summary>
+    public void RaiseUnitUpgradeChoicesOffered(UnitUpgradeChoicesOfferedEvent eventData)
+    {
+        UnitUpgradeChoicesOffered?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that UI requested one pending upgrade choice.
+    /// </summary>
+    public void RaiseUnitUpgradeChoiceRequested(UnitUpgradeChoiceRequestedEvent eventData)
+    {
+        UnitUpgradeChoiceRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes the selected upgrade and resulting progression state.
+    /// </summary>
+    public void RaiseUnitUpgradeSelected(UnitUpgradeSelectedEvent eventData)
+    {
+        UnitUpgradeSelected?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a unit was recalled.
+    /// </summary>
+    public void RaiseUnitRecalled(UnitRecalledEvent eventData)
+    {
+        UnitRecalled?.Invoke(eventData);
+    }
+}

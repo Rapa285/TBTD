@@ -37,12 +37,12 @@ public sealed class UnitVision : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        TryAddTarget(GetTargetTransform(other));
+        TryAddTarget(ColliderTargetUtility.GetTargetTransform(other));
     }
 
     private void OnTriggerExit(Collider other)
     {
-        RemoveTarget(GetTargetTransform(other));
+        RemoveTarget(ColliderTargetUtility.GetTargetTransform(other));
     }
 
     public Transform GetFirstValidTarget()
@@ -57,9 +57,34 @@ public sealed class UnitVision : MonoBehaviour
         return target != null && validTargets.Contains(target);
     }
 
+    public void ClearTargets()
+    {
+        validTargets.Clear();
+    }
+
+    public void ScanForTargetsOnce()
+    {
+        ClearTargets();
+        SyncCollider();
+        Physics.SyncTransforms();
+
+        Vector3 center = GetWorldCenter();
+        float radius = GetWorldRadius();
+        Collider[] overlappingColliders = Physics.OverlapSphere(
+            center,
+            radius,
+            ~0,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < overlappingColliders.Length; i++)
+        {
+            TryAddTarget(ColliderTargetUtility.GetTargetTransform(overlappingColliders[i]));
+        }
+    }
+
     private void TryAddTarget(Transform target)
     {
-        if (target == null || !IsInTargetLayer(target.gameObject) || validTargets.Contains(target))
+        if (target == null || IsOwnTransform(target) || !IsInTargetLayer(target.gameObject) || validTargets.Contains(target))
         {
             return;
         }
@@ -77,19 +102,14 @@ public sealed class UnitVision : MonoBehaviour
         validTargets.Remove(target);
     }
 
-    private Transform GetTargetTransform(Collider other)
-    {
-        if (other == null)
-        {
-            return null;
-        }
-
-        return other.attachedRigidbody != null ? other.attachedRigidbody.transform : other.transform;
-    }
-
     private bool IsInTargetLayer(GameObject target)
     {
         return (targetLayers.value & (1 << target.layer)) != 0;
+    }
+
+    private bool IsOwnTransform(Transform target)
+    {
+        return target == transform || target.IsChildOf(transform.root);
     }
 
     private void PruneInvalidTargets()
@@ -112,5 +132,22 @@ public sealed class UnitVision : MonoBehaviour
 
         visionCollider.isTrigger = true;
         visionCollider.radius = range;
+    }
+
+    private Vector3 GetWorldCenter()
+    {
+        return visionCollider != null ? visionCollider.bounds.center : transform.position;
+    }
+
+    private float GetWorldRadius()
+    {
+        if (visionCollider == null)
+        {
+            return range;
+        }
+
+        Vector3 scale = visionCollider.transform.lossyScale;
+        float largestAxis = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+        return visionCollider.radius * largestAxis;
     }
 }
