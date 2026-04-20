@@ -28,7 +28,8 @@ public abstract class AttackBehaviour : MonoBehaviour
     [SerializeField, Tooltip("World-space offset added to the final aim point after the target position or weapon-specific aiming calculation is chosen. Use (0, 1, 0) to aim one Unity unit above the target.")]
     private Vector3 aimModifierVector = Vector3.zero;
 
-    private IReadOnlyList<OnHitEffectBehaviour> onHitEffects;
+    private IReadOnlyList<ProjectileModifierBehaviour> activeHitModifiers;
+    private IReadOnlyList<ProjectileModifierBehaviour> projectileModifiers;
     private TowerEntity ownerTower;
     private Transform ownerRoot;
 
@@ -46,19 +47,21 @@ public abstract class AttackBehaviour : MonoBehaviour
 
     protected TowerEntity OwnerTower => ownerTower;
     protected Transform OwnerRoot => ownerRoot != null ? ownerRoot : transform;
-    protected IReadOnlyList<OnHitEffectBehaviour> OnHitEffects => onHitEffects;
+    protected IReadOnlyList<ProjectileModifierBehaviour> ProjectileModifiers => projectileModifiers;
 
     /// <summary>
-    /// Configures tower ownership and active on-hit effects for this runtime weapon.
+    /// Configures tower ownership and active modifier hooks for this runtime weapon.
     /// </summary>
     public void ConfigureRuntime(
         TowerEntity tower,
         Transform root,
-        IReadOnlyList<OnHitEffectBehaviour> effects)
+        IReadOnlyList<ProjectileModifierBehaviour> hitModifiers,
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
     {
         ownerTower = tower;
         ownerRoot = root != null ? root : transform;
-        onHitEffects = effects;
+        activeHitModifiers = hitModifiers;
+        projectileModifiers = projectileModifierPrefabs;
     }
 
     /// <summary>
@@ -94,7 +97,7 @@ public abstract class AttackBehaviour : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies damage to a target and dispatches active on-hit effects when the hit resolves.
+    /// Applies damage to a target and dispatches active hit modifiers when the hit resolves.
     /// </summary>
     protected bool TryApplyDamage(Transform target, float damage)
     {
@@ -115,57 +118,40 @@ public abstract class AttackBehaviour : MonoBehaviour
 
         AttackHitContext context = CreateHitContext(target, damage, hitCollider, hitPosition, hasHitPosition);
 
-        // Prefer context-aware damage receivers, then fall back to legacy damage and SendMessage support.
-        IAttackContextDamageable contextDamageable = target.GetComponentInParent<IAttackContextDamageable>();
-        if (contextDamageable != null)
-        {
-            contextDamageable.TakeDamage(damage, context);
-            DispatchOnHitEffects(context);
-            return true;
-        }
-
-        IDamageable damageable = target.GetComponentInParent<IDamageable>();
-        if (damageable != null)
-        {
-            damageable.TakeDamage(damage);
-            DispatchOnHitEffects(context);
-            return true;
-        }
-
-        target.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
-        DispatchOnHitEffects(context);
+        CombatDamageUtility.TryApplyDamage(target, damage, context);
+        DispatchHitModifiers(CreateProjectileModifierContext(target, damage, hitCollider, hitPosition, hasHitPosition));
         return true;
     }
 
     /// <summary>
-    /// Dispatches active on-hit effects for custom attack implementations that create their own hit context.
+    /// Dispatches active hit modifiers for custom attack implementations that create their own hit context.
     /// </summary>
-    protected void DispatchOnHitEffects(
+    protected void DispatchHitModifiers(
         Transform target,
         float damage,
         Collider hitCollider,
         Vector3 hitPosition,
         bool hasHitPosition)
     {
-        DispatchOnHitEffects(CreateHitContext(target, damage, hitCollider, hitPosition, hasHitPosition));
+        DispatchHitModifiers(CreateProjectileModifierContext(target, damage, hitCollider, hitPosition, hasHitPosition));
     }
 
     /// <summary>
-    /// Dispatches active on-hit effects with a prebuilt context.
+    /// Dispatches active hit modifiers with a prebuilt context.
     /// </summary>
-    protected void DispatchOnHitEffects(AttackHitContext context)
+    protected void DispatchHitModifiers(ProjectileModifierContext context)
     {
-        if (onHitEffects == null || onHitEffects.Count == 0 || context.Target == null)
+        if (activeHitModifiers == null || activeHitModifiers.Count == 0 || context.Target == null)
         {
             return;
         }
 
-        for (int i = 0; i < onHitEffects.Count; i++)
+        for (int i = 0; i < activeHitModifiers.Count; i++)
         {
-            OnHitEffectBehaviour effect = onHitEffects[i];
-            if (effect != null)
+            ProjectileModifierBehaviour modifier = activeHitModifiers[i];
+            if (modifier != null)
             {
-                effect.ApplyHitEffect(context);
+                modifier.ApplyProjectileHit(context);
             }
         }
     }
@@ -187,5 +173,25 @@ public abstract class AttackBehaviour : MonoBehaviour
             damage,
             hitPosition,
             hasHitPosition);
+    }
+
+    private ProjectileModifierContext CreateProjectileModifierContext(
+        Transform target,
+        float damage,
+        Collider hitCollider,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        return new ProjectileModifierContext(
+            null,
+            ownerTower,
+            this,
+            OwnerRoot,
+            target,
+            hitCollider,
+            damage,
+            hitPosition,
+            hasHitPosition,
+            0f);
     }
 }

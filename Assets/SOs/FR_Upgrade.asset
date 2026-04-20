@@ -20,7 +20,7 @@ MonoBehaviour:
     - Range'
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
-  onHitEffectPrefabs: []
+  projectileModifierPrefabs: []
   statEffects:
   - stat: 0
     type: 0

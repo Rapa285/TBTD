@@ -37,12 +37,12 @@ public sealed class UnitVision : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        TryAddTarget(GetTargetTransform(other));
+        TryAddTarget(ColliderTargetUtility.GetTargetTransform(other));
     }
 
     private void OnTriggerExit(Collider other)
     {
-        RemoveTarget(GetTargetTransform(other));
+        RemoveTarget(ColliderTargetUtility.GetTargetTransform(other));
     }
 
     public Transform GetFirstValidTarget()
@@ -78,7 +78,7 @@ public sealed class UnitVision : MonoBehaviour
 
         for (int i = 0; i < overlappingColliders.Length; i++)
         {
-            TryAddTarget(GetTargetTransform(overlappingColliders[i]));
+            TryAddTarget(ColliderTargetUtility.GetTargetTransform(overlappingColliders[i]));
         }
     }
 
@@ -100,16 +100,6 @@ public sealed class UnitVision : MonoBehaviour
         }
 
         validTargets.Remove(target);
-    }
-
-    private Transform GetTargetTransform(Collider other)
-    {
-        if (other == null)
-        {
-            return null;
-        }
-
-        return other.attachedRigidbody != null ? other.attachedRigidbody.transform : other.transform;
     }
 
     private bool IsInTargetLayer(GameObject target)

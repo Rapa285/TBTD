@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Runtime authority for tower stats, targeting, attack timing, weapon replacement, and on-hit effects.
+/// Runtime authority for tower stats, targeting, attack timing, weapon replacement, and upgrade modifiers.
 /// </summary>
 public class TowerEntity : MonoBehaviour
 {
@@ -47,9 +47,13 @@ public class TowerEntity : MonoBehaviour
     private List<UpgradeSO> upgrades = new List<UpgradeSO>();
 
     private readonly Dictionary<ENTITY_STATS, float> finalStats = new Dictionary<ENTITY_STATS, float>();
-    private readonly List<OnHitEffectBehaviour> compiledOnHitEffectPrefabs = new List<OnHitEffectBehaviour>();
-    private readonly List<OnHitEffectBehaviour> currentOnHitEffectPrefabs = new List<OnHitEffectBehaviour>();
-    private readonly List<OnHitEffectBehaviour> activeOnHitEffects = new List<OnHitEffectBehaviour>();
+    private readonly List<ProjectileModifierBehaviour> compiledProjectileModifierPrefabs = new List<ProjectileModifierBehaviour>();
+    private readonly List<AttackBehaviour> compiledAugmentWeaponPrefabs = new List<AttackBehaviour>();
+    private readonly List<ProjectileModifierBehaviour> currentProjectileModifierPrefabs = new List<ProjectileModifierBehaviour>();
+    private readonly List<AttackBehaviour> currentAugmentWeaponPrefabs = new List<AttackBehaviour>();
+    private readonly List<ProjectileModifierBehaviour> activeProjectileModifiers = new List<ProjectileModifierBehaviour>();
+    private readonly List<AttackBehaviour> runtimeAugmentAttackBehaviours = new List<AttackBehaviour>();
+    private readonly List<AttackBehaviour> activeAttackBehaviours = new List<AttackBehaviour>();
     private AttackBehaviour defaultAttackBehaviour;
     private AttackBehaviour activeAttackBehaviour;
     private AttackBehaviour runtimeReplacementAttackBehaviour;
@@ -62,7 +66,8 @@ public class TowerEntity : MonoBehaviour
 
     public bool Deployed => deployed;
     public AttackBehaviour ActiveAttackBehaviour => GetActiveAttackBehaviour();
-    public IReadOnlyList<OnHitEffectBehaviour> ActiveOnHitEffects => activeOnHitEffects;
+    public IReadOnlyList<AttackBehaviour> ActiveAttackBehaviours => activeAttackBehaviours;
+    public IReadOnlyList<ProjectileModifierBehaviour> ActiveProjectileModifiers => activeProjectileModifiers;
 
     private void Awake()
     {
@@ -78,6 +83,7 @@ public class TowerEntity : MonoBehaviour
 
         defaultAttackBehaviour = attackBehaviour;
         activeAttackBehaviour = defaultAttackBehaviour;
+        RebuildActiveAttackBehaviourList();
 
         CompileFinalStats();
     }
@@ -150,7 +156,7 @@ public class TowerEntity : MonoBehaviour
             return;
         }
 
-        currentAttackBehaviour.Attack(currentTarget, GetStat(ENTITY_STATS.GlobalDamage));
+        AttackWithActiveBehaviours(currentTarget, GetStat(ENTITY_STATS.GlobalDamage));
         nextAttackTime = Time.time + GetAttackCooldown();
     }
 
@@ -192,7 +198,7 @@ public class TowerEntity : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds one upgrade asset and recompiles runtime stats, weapon, and on-hit effects.
+    /// Adds one upgrade asset and recompiles runtime stats, weapon, and modifier composition.
     /// </summary>
     public void AddUpgrade(UpgradeSO upgrade)
     {
@@ -224,7 +230,8 @@ public class TowerEntity : MonoBehaviour
     public void CompileFinalStats()
     {
         finalStats.Clear();
-        compiledOnHitEffectPrefabs.Clear();
+        compiledProjectileModifierPrefabs.Clear();
+        compiledAugmentWeaponPrefabs.Clear();
 
         foreach (ENTITY_STATS stat in Enum.GetValues(typeof(ENTITY_STATS)))
         {
@@ -246,7 +253,7 @@ public class TowerEntity : MonoBehaviour
             multValues[stat] = 1f;
         }
 
-        // Weapon replacement is latest-wins, while on-hit effects from all upgrades remain additive.
+        // Weapon replacement is latest-wins, while augments and modifiers are additive.
         AttackBehaviour latestReplacementPrefab = null;
 
         for (int upgradeIndex = 0; upgradeIndex < upgrades.Count; upgradeIndex++)
@@ -261,14 +268,18 @@ public class TowerEntity : MonoBehaviour
             {
                 latestReplacementPrefab = upgrade.WeaponBehaviourPrefab;
             }
-
-            IReadOnlyList<OnHitEffectBehaviour> onHitEffectPrefabs = upgrade.OnHitEffectPrefabs;
-            for (int effectIndex = 0; effectIndex < onHitEffectPrefabs.Count; effectIndex++)
+            else if (upgrade.HasWeaponAugment)
             {
-                OnHitEffectBehaviour effectPrefab = onHitEffectPrefabs[effectIndex];
-                if (effectPrefab != null)
+                compiledAugmentWeaponPrefabs.Add(upgrade.WeaponBehaviourPrefab);
+            }
+
+            IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs = upgrade.ProjectileModifierPrefabs;
+            for (int modifierIndex = 0; modifierIndex < projectileModifierPrefabs.Count; modifierIndex++)
+            {
+                ProjectileModifierBehaviour modifierPrefab = projectileModifierPrefabs[modifierIndex];
+                if (modifierPrefab != null)
                 {
-                    compiledOnHitEffectPrefabs.Add(effectPrefab);
+                    compiledProjectileModifierPrefabs.Add(modifierPrefab);
                 }
             }
 
@@ -298,12 +309,47 @@ public class TowerEntity : MonoBehaviour
             vision.Range = GetStat(ENTITY_STATS.VisualRange);
         }
 
-        ApplyRuntimeComposition(latestReplacementPrefab, compiledOnHitEffectPrefabs);
+        ApplyRuntimeComposition(
+            latestReplacementPrefab,
+            compiledAugmentWeaponPrefabs,
+            compiledProjectileModifierPrefabs);
     }
 
     private float GetAttackCooldown()
     {
         return Mathf.Max(0.01f, GetStat(ENTITY_STATS.AttackSpeed));
+    }
+
+    private void AttackWithActiveBehaviours(Transform target, float damageMultiplier)
+    {
+        AttackBehaviour primaryAttackBehaviour = GetActiveAttackBehaviour();
+        if (primaryAttackBehaviour == null)
+        {
+            return;
+        }
+
+        primaryAttackBehaviour.Attack(target, damageMultiplier);
+
+        for (int i = 0; i < runtimeAugmentAttackBehaviours.Count; i++)
+        {
+            if (!IsAttackTargetStillValid(target))
+            {
+                break;
+            }
+
+            AttackBehaviour augmentAttackBehaviour = runtimeAugmentAttackBehaviours[i];
+            if (augmentAttackBehaviour != null)
+            {
+                augmentAttackBehaviour.Attack(target, damageMultiplier);
+            }
+        }
+    }
+
+    private bool IsAttackTargetStillValid(Transform target)
+    {
+        return target != null
+            && target.gameObject.activeInHierarchy
+            && (vision == null || vision.Contains(target));
     }
 
     private void InitializeDeploymentTimers()
@@ -340,7 +386,8 @@ public class TowerEntity : MonoBehaviour
 
     private void ApplyRuntimeComposition(
         AttackBehaviour replacementPrefab,
-        IReadOnlyList<OnHitEffectBehaviour> onHitEffectPrefabs)
+        IReadOnlyList<AttackBehaviour> augmentWeaponPrefabs,
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
     {
         if (!Application.isPlaying)
         {
@@ -349,16 +396,30 @@ public class TowerEntity : MonoBehaviour
 
         ResolveAttackBehaviourReferences();
         UpdateRuntimeReplacement(replacementPrefab);
-        UpdateRuntimeOnHitEffects(onHitEffectPrefabs);
+        UpdateRuntimeAugments(augmentWeaponPrefabs);
+        UpdateRuntimeProjectileModifiers(projectileModifierPrefabs);
 
         // Preserve the serialized default weapon unless an applied upgrade provides an override.
         activeAttackBehaviour = runtimeReplacementAttackBehaviour != null
             ? runtimeReplacementAttackBehaviour
             : defaultAttackBehaviour;
 
-        if (activeAttackBehaviour != null)
+        ConfigureAttackBehaviour(activeAttackBehaviour, projectileModifierPrefabs);
+        for (int i = 0; i < runtimeAugmentAttackBehaviours.Count; i++)
         {
-            activeAttackBehaviour.ConfigureRuntime(this, transform, activeOnHitEffects);
+            ConfigureAttackBehaviour(runtimeAugmentAttackBehaviours[i], projectileModifierPrefabs);
+        }
+
+        RebuildActiveAttackBehaviourList();
+    }
+
+    private void ConfigureAttackBehaviour(
+        AttackBehaviour behaviour,
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
+    {
+        if (behaviour != null)
+        {
+            behaviour.ConfigureRuntime(this, transform, activeProjectileModifiers, projectileModifierPrefabs);
         }
     }
 
@@ -369,7 +430,9 @@ public class TowerEntity : MonoBehaviour
             attackBehaviour = GetComponent<AttackBehaviour>();
         }
 
-        if (defaultAttackBehaviour == null || defaultAttackBehaviour == runtimeReplacementAttackBehaviour)
+        if (defaultAttackBehaviour == null
+            || defaultAttackBehaviour == runtimeReplacementAttackBehaviour
+            || runtimeAugmentAttackBehaviours.Contains(defaultAttackBehaviour))
         {
             defaultAttackBehaviour = attackBehaviour;
         }
@@ -410,70 +473,140 @@ public class TowerEntity : MonoBehaviour
         }
     }
 
-    private void UpdateRuntimeOnHitEffects(IReadOnlyList<OnHitEffectBehaviour> onHitEffectPrefabs)
+    private void UpdateRuntimeAugments(IReadOnlyList<AttackBehaviour> augmentWeaponPrefabs)
     {
-        if (HasSameOnHitEffectPrefabs(onHitEffectPrefabs) && HasLiveRuntimeOnHitEffects())
+        if (HasSameAugmentWeaponPrefabs(augmentWeaponPrefabs) && HasLiveRuntimeAugments())
         {
             return;
         }
 
-        if (IsCurrentOnHitEffectPrefix(onHitEffectPrefabs))
+        DestroyRuntimeAugments();
+        currentAugmentWeaponPrefabs.Clear();
+
+        for (int i = 0; i < augmentWeaponPrefabs.Count; i++)
         {
-            // Append-only upgrade flow can add new effect instances without rebuilding existing state.
-            for (int i = currentOnHitEffectPrefabs.Count; i < onHitEffectPrefabs.Count; i++)
+            AddRuntimeAugment(augmentWeaponPrefabs[i]);
+        }
+    }
+
+    private void AddRuntimeAugment(AttackBehaviour augmentPrefab)
+    {
+        if (augmentPrefab == null)
+        {
+            return;
+        }
+
+        currentAugmentWeaponPrefabs.Add(augmentPrefab);
+        AttackBehaviour augmentInstance = Instantiate(augmentPrefab, transform);
+        augmentInstance.name = $"{augmentPrefab.name} (Augment Runtime)";
+        runtimeAugmentAttackBehaviours.Add(augmentInstance);
+    }
+
+    private void DestroyRuntimeAugments()
+    {
+        for (int i = 0; i < runtimeAugmentAttackBehaviours.Count; i++)
+        {
+            AttackBehaviour augment = runtimeAugmentAttackBehaviours[i];
+            if (augment != null)
             {
-                AddRuntimeOnHitEffect(onHitEffectPrefabs[i]);
+                Destroy(augment.gameObject);
+            }
+        }
+
+        runtimeAugmentAttackBehaviours.Clear();
+    }
+
+    private void UpdateRuntimeProjectileModifiers(IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
+    {
+        if (HasSameProjectileModifierPrefabs(projectileModifierPrefabs) && HasLiveRuntimeProjectileModifiers())
+        {
+            return;
+        }
+
+        if (IsCurrentProjectileModifierPrefix(projectileModifierPrefabs))
+        {
+            // Append-only upgrade flow can add new modifier instances without rebuilding existing state.
+            for (int i = currentProjectileModifierPrefabs.Count; i < projectileModifierPrefabs.Count; i++)
+            {
+                AddRuntimeProjectileModifier(projectileModifierPrefabs[i]);
             }
 
             return;
         }
 
-        DestroyRuntimeOnHitEffects();
-        currentOnHitEffectPrefabs.Clear();
+        DestroyRuntimeProjectileModifiers();
+        currentProjectileModifierPrefabs.Clear();
 
-        for (int i = 0; i < onHitEffectPrefabs.Count; i++)
+        for (int i = 0; i < projectileModifierPrefabs.Count; i++)
         {
-            AddRuntimeOnHitEffect(onHitEffectPrefabs[i]);
+            AddRuntimeProjectileModifier(projectileModifierPrefabs[i]);
         }
     }
 
-    private void AddRuntimeOnHitEffect(OnHitEffectBehaviour effectPrefab)
+    private void AddRuntimeProjectileModifier(ProjectileModifierBehaviour modifierPrefab)
     {
-        if (effectPrefab == null)
+        if (modifierPrefab == null)
         {
             return;
         }
 
-        currentOnHitEffectPrefabs.Add(effectPrefab);
-        OnHitEffectBehaviour effectInstance = Instantiate(effectPrefab, transform);
-        effectInstance.name = $"{effectPrefab.name} (On Hit Runtime)";
-        activeOnHitEffects.Add(effectInstance);
+        currentProjectileModifierPrefabs.Add(modifierPrefab);
+        ProjectileModifierBehaviour modifierInstance = Instantiate(modifierPrefab, transform);
+        modifierInstance.name = $"{modifierPrefab.name} (Tower Modifier Runtime)";
+        activeProjectileModifiers.Add(modifierInstance);
     }
 
-    private void DestroyRuntimeOnHitEffects()
+    private void DestroyRuntimeProjectileModifiers()
     {
-        for (int i = 0; i < activeOnHitEffects.Count; i++)
+        for (int i = 0; i < activeProjectileModifiers.Count; i++)
         {
-            OnHitEffectBehaviour effect = activeOnHitEffects[i];
-            if (effect != null)
+            ProjectileModifierBehaviour modifier = activeProjectileModifiers[i];
+            if (modifier != null)
             {
-                Destroy(effect.gameObject);
+                Destroy(modifier.gameObject);
             }
         }
 
-        activeOnHitEffects.Clear();
+        activeProjectileModifiers.Clear();
     }
 
-    private bool HasSameOnHitEffectPrefabs(IReadOnlyList<OnHitEffectBehaviour> onHitEffectPrefabs)
+    private bool HasSameProjectileModifierPrefabs(IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
     {
-        if (currentOnHitEffectPrefabs.Count != onHitEffectPrefabs.Count)
+        return HasSamePrefabList(currentProjectileModifierPrefabs, projectileModifierPrefabs);
+    }
+
+    private bool IsCurrentProjectileModifierPrefix(IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
+    {
+        return IsPrefabListPrefix(currentProjectileModifierPrefabs, projectileModifierPrefabs)
+            && HasLiveRuntimeProjectileModifiers();
+    }
+
+    private bool HasLiveRuntimeProjectileModifiers()
+    {
+        return HasLiveRuntimeList(activeProjectileModifiers, currentProjectileModifierPrefabs.Count);
+    }
+
+    private bool HasSameAugmentWeaponPrefabs(IReadOnlyList<AttackBehaviour> augmentWeaponPrefabs)
+    {
+        return HasSamePrefabList(currentAugmentWeaponPrefabs, augmentWeaponPrefabs);
+    }
+
+    private bool HasLiveRuntimeAugments()
+    {
+        return HasLiveRuntimeList(runtimeAugmentAttackBehaviours, currentAugmentWeaponPrefabs.Count);
+    }
+
+    private static bool HasSamePrefabList<T>(IReadOnlyList<T> currentPrefabs, IReadOnlyList<T> targetPrefabs)
+        where T : UnityEngine.Object
+    {
+        if (currentPrefabs.Count != targetPrefabs.Count)
         {
             return false;
         }
 
-        for (int i = 0; i < onHitEffectPrefabs.Count; i++)
+        for (int i = 0; i < targetPrefabs.Count; i++)
         {
-            if (currentOnHitEffectPrefabs[i] != onHitEffectPrefabs[i])
+            if (currentPrefabs[i] != targetPrefabs[i])
             {
                 return false;
             }
@@ -482,40 +615,62 @@ public class TowerEntity : MonoBehaviour
         return true;
     }
 
-    private bool IsCurrentOnHitEffectPrefix(IReadOnlyList<OnHitEffectBehaviour> onHitEffectPrefabs)
+    private static bool IsPrefabListPrefix<T>(IReadOnlyList<T> currentPrefabs, IReadOnlyList<T> targetPrefabs)
+        where T : UnityEngine.Object
     {
-        if (currentOnHitEffectPrefabs.Count > onHitEffectPrefabs.Count)
+        if (currentPrefabs.Count > targetPrefabs.Count)
         {
             return false;
         }
 
-        for (int i = 0; i < currentOnHitEffectPrefabs.Count; i++)
+        for (int i = 0; i < currentPrefabs.Count; i++)
         {
-            if (currentOnHitEffectPrefabs[i] != onHitEffectPrefabs[i])
-            {
-                return false;
-            }
-        }
-
-        return activeOnHitEffects.Count == currentOnHitEffectPrefabs.Count && HasLiveRuntimeOnHitEffects();
-    }
-
-    private bool HasLiveRuntimeOnHitEffects()
-    {
-        if (activeOnHitEffects.Count != currentOnHitEffectPrefabs.Count)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < activeOnHitEffects.Count; i++)
-        {
-            if (activeOnHitEffects[i] == null)
+            if (currentPrefabs[i] != targetPrefabs[i])
             {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private static bool HasLiveRuntimeList<T>(IReadOnlyList<T> runtimeInstances, int expectedCount)
+        where T : UnityEngine.Object
+    {
+        if (runtimeInstances.Count != expectedCount)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < runtimeInstances.Count; i++)
+        {
+            if (runtimeInstances[i] == null)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void RebuildActiveAttackBehaviourList()
+    {
+        activeAttackBehaviours.Clear();
+
+        AttackBehaviour primaryAttackBehaviour = GetActiveAttackBehaviour();
+        if (primaryAttackBehaviour != null)
+        {
+            activeAttackBehaviours.Add(primaryAttackBehaviour);
+        }
+
+        for (int i = 0; i < runtimeAugmentAttackBehaviours.Count; i++)
+        {
+            AttackBehaviour augmentAttackBehaviour = runtimeAugmentAttackBehaviours[i];
+            if (augmentAttackBehaviour != null)
+            {
+                activeAttackBehaviours.Add(augmentAttackBehaviour);
+            }
+        }
     }
 
     private AttackBehaviour GetActiveAttackBehaviour()

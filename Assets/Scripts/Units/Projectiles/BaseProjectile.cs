@@ -29,9 +29,10 @@ public abstract class BaseProjectile : MonoBehaviour
     private Transform ownerRoot;
     private TowerEntity ownerTower;
     private AttackBehaviour sourceAttackBehaviour;
-    private readonly List<OnHitEffectBehaviour> onHitEffects = new List<OnHitEffectBehaviour>();
+    private readonly List<ProjectileModifierBehaviour> projectileModifiers = new List<ProjectileModifierBehaviour>();
     private float firedAtTime;
     private bool fired;
+    private bool expired;
 
     public float Damage
     {
@@ -51,7 +52,14 @@ public abstract class BaseProjectile : MonoBehaviour
         set => hitLayers = value;
     }
 
+    public bool DestroyOnHit
+    {
+        get => destroyOnHit;
+        set => destroyOnHit = value;
+    }
+
     public bool Fired => fired;
+    public Collider CollisionCollider => projectileCollider;
 
     protected Collider ProjectileCollider => projectileCollider;
 
@@ -84,7 +92,9 @@ public abstract class BaseProjectile : MonoBehaviour
             return;
         }
 
-        TickProjectile(Time.deltaTime);
+        float deltaTime = Time.deltaTime;
+        DispatchProjectileTickModifiers(deltaTime);
+        TickProjectile(deltaTime);
     }
 
     protected virtual void OnTriggerEnter(Collider other)
@@ -94,7 +104,7 @@ public abstract class BaseProjectile : MonoBehaviour
             return;
         }
 
-        Transform target = GetTargetTransform(other);
+        Transform target = ColliderTargetUtility.GetTargetTransform(other);
         if (IsIgnoredTarget(target) || !IsInHitLayers(target.gameObject))
         {
             return;
@@ -112,35 +122,45 @@ public abstract class BaseProjectile : MonoBehaviour
     }
 
     /// <summary>
-    /// Initializes damage, owner ignoring, and the hit-effect context used by upgraded attacks.
+    /// Initializes damage, owner ignoring, and projectile modifiers used by upgraded attacks.
     /// </summary>
     public virtual void Initialize(
         float projectileDamage,
         Transform owner,
         TowerEntity tower,
         AttackBehaviour attackBehaviour,
-        IReadOnlyList<OnHitEffectBehaviour> effects)
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
     {
         Damage = projectileDamage;
         ownerRoot = owner;
         ignoredRoot = owner != null ? owner.root : null;
         ownerTower = tower;
         sourceAttackBehaviour = attackBehaviour;
-        onHitEffects.Clear();
+        expired = false;
+        DestroyProjectileModifiers();
 
-        // Snapshot the current effect instances so in-flight projectiles do not change when upgrades are added later.
-        if (effects == null)
+        InstantiateProjectileModifiers(projectileModifierPrefabs);
+        DispatchProjectileInitializedModifiers();
+    }
+
+    private void InstantiateProjectileModifiers(IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
+    {
+        if (projectileModifierPrefabs == null)
         {
             return;
         }
 
-        for (int i = 0; i < effects.Count; i++)
+        for (int i = 0; i < projectileModifierPrefabs.Count; i++)
         {
-            OnHitEffectBehaviour effect = effects[i];
-            if (effect != null)
+            ProjectileModifierBehaviour modifierPrefab = projectileModifierPrefabs[i];
+            if (modifierPrefab == null)
             {
-                onHitEffects.Add(effect);
+                continue;
             }
+
+            ProjectileModifierBehaviour modifierInstance = Instantiate(modifierPrefab, transform);
+            modifierInstance.name = $"{modifierPrefab.name} (Projectile Modifier Runtime)";
+            projectileModifiers.Add(modifierInstance);
         }
     }
 
@@ -177,8 +197,8 @@ public abstract class BaseProjectile : MonoBehaviour
     {
         AttackHitContext context = CreateHitContext(other, target, damage);
         TryApplyDamage(target, damage, context);
-        // Projectile effects run after damage, using the context captured when the shot was fired.
-        DispatchOnHitEffects(context);
+        // Projectile modifiers run after damage, using the context captured when the shot was fired.
+        DispatchProjectileHitModifiers(other, target, damage);
 
         if (destroyOnHit)
         {
@@ -188,6 +208,13 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected virtual void Expire()
     {
+        if (expired)
+        {
+            return;
+        }
+
+        expired = true;
+        DispatchProjectileExpiredModifiers();
         Destroy(gameObject);
     }
 
@@ -203,44 +230,74 @@ public abstract class BaseProjectile : MonoBehaviour
             return false;
         }
 
-        IAttackContextDamageable contextDamageable = target.GetComponentInParent<IAttackContextDamageable>();
-        if (contextDamageable != null)
-        {
-            contextDamageable.TakeDamage(damageAmount, context);
-            return true;
-        }
-
-        IDamageable damageable = target.GetComponentInParent<IDamageable>();
-        if (damageable != null)
-        {
-            damageable.TakeDamage(damageAmount);
-            return true;
-        }
-
-        target.SendMessage("TakeDamage", damageAmount, SendMessageOptions.DontRequireReceiver);
-        return true;
+        return CombatDamageUtility.TryApplyDamage(target, damageAmount, context);
     }
 
-    protected void DispatchOnHitEffects(Collider hitCollider, Transform target, float damageAmount)
+    private void DispatchProjectileInitializedModifiers()
     {
-        DispatchOnHitEffects(CreateHitContext(hitCollider, target, damageAmount));
+        DispatchProjectileModifiers(CreateProjectileModifierContext(null, null, Damage, 0f), ProjectileModifierPhase.Initialized);
     }
 
-    protected void DispatchOnHitEffects(AttackHitContext context)
+    private void DispatchProjectileTickModifiers(float deltaTime)
     {
-        if (onHitEffects.Count == 0 || context.Target == null)
+        DispatchProjectileModifiers(CreateProjectileModifierContext(null, null, Damage, deltaTime), ProjectileModifierPhase.Tick);
+    }
+
+    private void DispatchProjectileHitModifiers(Collider hitCollider, Transform target, float damageAmount)
+    {
+        DispatchProjectileModifiers(CreateProjectileModifierContext(hitCollider, target, damageAmount, 0f), ProjectileModifierPhase.Hit);
+    }
+
+    private void DispatchProjectileExpiredModifiers()
+    {
+        DispatchProjectileModifiers(CreateProjectileModifierContext(null, null, Damage, 0f), ProjectileModifierPhase.Expired);
+    }
+
+    private void DispatchProjectileModifiers(ProjectileModifierContext context, ProjectileModifierPhase phase)
+    {
+        if (projectileModifiers.Count == 0)
         {
             return;
         }
 
-        for (int i = 0; i < onHitEffects.Count; i++)
+        for (int i = 0; i < projectileModifiers.Count; i++)
         {
-            OnHitEffectBehaviour effect = onHitEffects[i];
-            if (effect != null)
+            ProjectileModifierBehaviour modifier = projectileModifiers[i];
+            if (modifier == null)
             {
-                effect.ApplyHitEffect(context);
+                continue;
+            }
+
+            switch (phase)
+            {
+                case ProjectileModifierPhase.Initialized:
+                    modifier.ApplyProjectileInitialized(context);
+                    break;
+                case ProjectileModifierPhase.Tick:
+                    modifier.ApplyProjectileTick(context);
+                    break;
+                case ProjectileModifierPhase.Hit:
+                    modifier.ApplyProjectileHit(context);
+                    break;
+                case ProjectileModifierPhase.Expired:
+                    modifier.ApplyProjectileExpired(context);
+                    break;
             }
         }
+    }
+
+    private void DestroyProjectileModifiers()
+    {
+        for (int i = 0; i < projectileModifiers.Count; i++)
+        {
+            ProjectileModifierBehaviour modifier = projectileModifiers[i];
+            if (modifier != null)
+            {
+                Destroy(modifier.gameObject);
+            }
+        }
+
+        projectileModifiers.Clear();
     }
 
     private AttackHitContext CreateHitContext(Collider hitCollider, Transform target, float damageAmount)
@@ -260,14 +317,34 @@ public abstract class BaseProjectile : MonoBehaviour
             hasHitPosition);
     }
 
-    protected Transform GetTargetTransform(Collider other)
+    private ProjectileModifierContext CreateProjectileModifierContext(
+        Collider hitCollider,
+        Transform target,
+        float damageAmount,
+        float deltaTime)
     {
-        if (other == null)
-        {
-            return null;
-        }
+        bool hasHitPosition = hitCollider != null;
+        Vector3 hitPosition = hasHitPosition ? hitCollider.ClosestPoint(transform.position) : Vector3.zero;
 
-        return other.attachedRigidbody != null ? other.attachedRigidbody.transform : other.transform;
+        return new ProjectileModifierContext(
+            this,
+            ownerTower,
+            sourceAttackBehaviour,
+            ownerRoot,
+            target,
+            hitCollider,
+            damageAmount,
+            hitPosition,
+            hasHitPosition,
+            deltaTime);
+    }
+
+    private enum ProjectileModifierPhase
+    {
+        Initialized,
+        Tick,
+        Hit,
+        Expired
     }
 
     protected bool IsIgnoredTarget(Transform target)

@@ -5,7 +5,7 @@
 
 Each owned unit lives inside a nested serializable `OwnedUnitState` record keyed by a stable `unitId`. The record stores identity, progression config, XP, applied upgrades, pending upgrade state, and transient references to that unit's deployed runtime tower/root.
 
-The manager applies persistent per-unit state to `TowerEntity` through `ApplyStateTo` and `TowerEntity.AddUpgrade`. Stat compilation, weapon replacement, on-hit effect composition, targeting, and attack execution stay inside the tower/combat system.
+The manager applies persistent per-unit state to `TowerEntity` through `ApplyStateTo` and `TowerEntity.AddUpgrade`. Stat compilation, weapon override/augment composition, projectile modifier composition, targeting, and attack execution stay inside the tower/combat system.
 
 ## Design Smells To Watch
 - God object / manager bloat: avoid letting this class become responsible for every unit-related feature.
@@ -30,5 +30,5 @@ The manager applies persistent per-unit state to `TowerEntity` through `ApplySta
 - Keep `OwnedUnitState` as the per-unit state boundary.
 - Keep `ApplyStateTo(string unitId, TowerEntity tower)` as the main bridge into combat.
 - Keep upgrade offer generation and selection in `UpgradesManager`.
-- Let `TowerEntity` remain the runtime authority for base stats, compiled final stats, deployed state, targeting, and attacks.
+- Let `TowerEntity` remain the runtime authority for base stats, compiled final stats, deployed state, targeting, active weapons, projectile modifiers, and attacks.
 - Extract upgrade-offer generation later only if the rules become complex enough to justify it.

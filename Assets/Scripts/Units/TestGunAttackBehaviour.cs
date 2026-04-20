@@ -41,7 +41,7 @@ public sealed class TestGunAttackBehaviour : SplineLeadingAttackBehaviour
             return;
         }
 
-        projectile.Initialize(damage, transform, OwnerTower, this, OnHitEffects);
+        projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
         // GetLeadPosition includes the shared Aim Modifier Vector as the final endpoint offset.
         projectile.SetDirection(GetLeadPosition(target));
         projectile.Fire();

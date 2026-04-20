@@ -1,48 +1,45 @@
 using UnityEngine;
 
 /// <summary>
-/// Immutable data passed to context-aware damage receivers when an attack connects.
+/// Runtime data passed to projectile modifier hooks.
 /// </summary>
-public struct AttackHitContext
+public readonly struct ProjectileModifierContext
 {
-    /// <summary>
-    /// Creates a hit context for direct, hitscan-style, or projectile attacks.
-    /// </summary>
-    public AttackHitContext(
-        TowerEntity attacker,
-        Transform attackerRoot,
-        AttackBehaviour attackBehaviour,
+    public ProjectileModifierContext(
         BaseProjectile projectile,
+        TowerEntity attacker,
+        AttackBehaviour sourceAttackBehaviour,
+        Transform ownerRoot,
         Transform target,
         Collider hitCollider,
         float damage,
         Vector3 hitPosition,
-        bool hasHitPosition)
+        bool hasHitPosition,
+        float deltaTime)
     {
-        Attacker = attacker;
-        AttackerRoot = attackerRoot;
-        AttackBehaviour = attackBehaviour;
         Projectile = projectile;
+        Attacker = attacker;
+        SourceAttackBehaviour = sourceAttackBehaviour;
+        OwnerRoot = ownerRoot;
         Target = target;
         HitCollider = hitCollider;
         Damage = damage;
         HitPosition = hitPosition;
         HasHitPosition = hasHitPosition;
+        DeltaTime = deltaTime;
     }
 
-    public TowerEntity Attacker { get; }
-    public Transform AttackerRoot { get; }
-    public AttackBehaviour AttackBehaviour { get; }
     public BaseProjectile Projectile { get; }
+    public TowerEntity Attacker { get; }
+    public AttackBehaviour SourceAttackBehaviour { get; }
+    public Transform OwnerRoot { get; }
     public Transform Target { get; }
     public Collider HitCollider { get; }
     public float Damage { get; }
     public Vector3 HitPosition { get; }
     public bool HasHitPosition { get; }
+    public float DeltaTime { get; }
 
-    /// <summary>
-    /// Returns the explicit hit position when available, otherwise the current target position.
-    /// </summary>
     public Vector3 BestHitPosition => HasHitPosition
         ? HitPosition
         : Target != null ? Target.position : Vector3.zero;

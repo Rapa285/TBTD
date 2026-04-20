@@ -19,7 +19,7 @@ This Unity project is currently a small tower-combat prototype. Keep future agen
 - Owns assigned `UpgradeSO` assets.
 - Compiles base stats plus upgrades into cached final stats.
 - Selects a target from `UnitVision`.
-- Calls the assigned `AttackBehaviour`.
+- Calls the active primary `AttackBehaviour` and any runtime augment weapons.
 - Keeps the current target until it leaves vision or becomes invalid.
 - Uses `AttackSpeed` as cooldown time between attacks, not attacks per second.
 - Uses `SetupTime` as initial delay before attacking.
@@ -41,6 +41,7 @@ Current modifier types:
 
 - `STAT_TYPE.Add`: additive modifier.
 - `STAT_TYPE.Mult`: multiplicative modifier.
+- Serialized values are `STAT_TYPE.Mult = 0` and `STAT_TYPE.Add = 1`.
 
 Current final stat formula:
 
@@ -57,17 +58,18 @@ When adding stats, also update `TowerEntity.GetDefaultStat()` with a safe defaul
 - Create assets through `Create > TBTD > Upgrade`.
 - Stores display name and description.
 - Stores a list of stat effects.
-- Can hold a future weapon behavior reference.
-- Weapon override and augment are prepared but intentionally not applied yet.
+- Can hold a weapon behavior reference.
+- Can hold projectile modifier prefabs.
+- Weapon override and augment are applied by `TowerEntity.CompileFinalStats()`.
 
 Weapon upgrade fields:
 
 - `WEAPON_UPGRADE_TYPE.None`: no weapon change.
-- `WEAPON_UPGRADE_TYPE.Override`: intended future replacement of current attack behavior.
-- `WEAPON_UPGRADE_TYPE.Augment`: intended future composition/addition to current attack behavior.
-- `weaponBehaviourPrefab`: intended to reference an `AttackBehaviour` implementation such as `DirectAttackBehaviour` or `DebugAttackBehaviour`.
+- `WEAPON_UPGRADE_TYPE.Override`: latest valid override replaces the primary attack behavior.
+- `WEAPON_UPGRADE_TYPE.Augment`: each valid augment is instantiated as an extra weapon that fires with the primary attack tick.
+- `weaponBehaviourPrefab`: references an `AttackBehaviour` implementation such as `DirectAttackBehaviour`, `DebugAttackBehaviour`, or a projectile weapon.
 
-Do not implement weapon override/augment behavior unless explicitly requested. If implementing it later, use the existing `UpgradeSO` fields instead of adding a new upgrade asset model.
+Do not add a second upgrade asset model. Extend `UpgradeSO` and `TowerEntity.CompileFinalStats()` unless there is a deliberate refactor.
 
 ## Vision And Targeting
 
@@ -93,11 +95,15 @@ There is no faction, enemy component, tag check, or health requirement yet. Do n
 - Public attack entrypoint: `Attack(Transform target, float damageMultiplier)`.
 - Derived classes implement `ExecuteAttack(Transform target, float damage)`.
 - Use `TryApplyDamage()` to apply damage consistently.
+- `ConfigureRuntime(...)` receives tower/root context, runtime hit modifiers, and projectile modifier prefabs.
+- New non-projectile attacks such as direct damage, laser, beam, or hitscan weapons must consider how `ProjectileModifierBehaviour` hooks participate. Use `TryApplyDamage()` for normal resolved hits, or call `DispatchHitModifiers(...)` when a custom damage path still needs upgrade-authored hit behavior.
 
 Damage application order:
 
-- First tries `IDamageable.TakeDamage(float)` on the target or its parents.
+- First tries `IAttackContextDamageable.TakeDamage(float, AttackHitContext)` on the target or its parents.
+- Then tries `IDamageable.TakeDamage(float)` on the target or its parents.
 - Falls back to `SendMessage("TakeDamage", damage, DontRequireReceiver)`.
+- Dispatches active `ProjectileModifierBehaviour.ApplyProjectileHit(...)` hooks after direct/hitscan damage resolves.
 
 Existing implementations:
 
@@ -105,6 +111,20 @@ Existing implementations:
 - `DebugAttackBehaviour`: applies damage and draws a temporary laser beam using `LineRenderer`.
 
 When adding a new weapon, derive from `AttackBehaviour` and keep attack-specific presentation/logic there. Do not put weapon-specific behavior directly into `TowerEntity`.
+
+## Projectile Modifiers
+
+`ProjectileModifierBehaviour` is the single authored upgrade modifier base for hit hooks and projectile lifecycle behavior.
+
+- Direct and hitscan attacks invoke only the hit hook with `ProjectileModifierContext.Projectile == null`.
+- Beam, laser, chained, area, or multi-hit non-projectile attacks should dispatch hit hooks once per resolved gameplay hit when upgrade behavior should apply. Do not dispatch hit hooks for visual-only ticks.
+- Projectile attacks pass compiled modifier prefabs into `BaseProjectile.Initialize(...)`.
+- `BaseProjectile` instantiates modifier copies as projectile children so in-flight projectiles keep fired-time behavior.
+- Modifier hooks cover projectile initialization, tick, hit, and expiry.
+- `ProjectilePropertiesModifierBehaviour` covers common lifetime, destroy-on-hit, straight projectile speed, and collider-size changes.
+- Keep base damage balance on `AttackBehaviour.BaseDamage` plus `ENTITY_STATS.GlobalDamage`; use projectile modifiers for bullet behavior changes.
+
+Do not reintroduce `OnHitEffectBehaviour`; derive new hit effects and projectile behavior changes from `ProjectileModifierBehaviour`.
 
 ## Debug Laser Behaviour
 
@@ -133,6 +153,17 @@ Targets should have:
 - A layer included by `UnitVision.targetLayers`.
 - Optionally `IDamageable` or a `TakeDamage(float)` method if damage should have an effect.
 
+## Upgrade UI
+
+Upgrade selection is event-bus driven.
+
+- `UpgradesManager` generates pending offers when `UnitUpgradeThresholdReached` fires.
+- `UpgradeSelectionUI` listens for offered choices and creates `UpgradeChoiceItem` entries.
+- `UpgradeChoiceItem` uses TextMeshPro display fields and a `Button` for selection.
+- UI selection raises `UnitUpgradeChoiceRequested`.
+- `UpgradesManager` applies the pending selected upgrade and raises `UnitUpgradeSelected`.
+- The UI hides only after the selected event confirms the active unit's choice.
+
 ## Coding Guidelines For Future Agents
 
 - Prefer extending current components over adding duplicate systems.
@@ -148,7 +179,4 @@ Targets should have:
 
 - No enemy/faction/team system yet.
 - No health component implementation yet.
-- No projectile system yet.
-- No weapon override/augment application yet.
 - No targeting priority beyond first valid target.
-- No upgrade UI or upgrade selection flow yet.

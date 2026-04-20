@@ -30,7 +30,7 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - `Start()` initializes attack timers only when `deployed == true`.
   - `PrepareForDeploymentPreview()` sets `deployed = false`, clears `currentTarget`, clears `UnitVision`, and prevents attacks while dragging.
   - `Deploy()` sets `deployed = true`, clears targeting, applies `VisualRange`, then sets `activeAfterTime = Time.time + SetupTime` and `nextAttackTime = activeAfterTime`.
-  - Upgrade/stat formulas, attack behavior APIs, and weapon override/augment behavior remain unchanged.
+  - Upgrade/stat formulas, attack behavior APIs, weapon override/augment behavior, and projectile modifiers remain owned by the tower/combat system.
 
 - `UnitDeploymentChecker`
   - Uses inspector-assigned masks for `Ground` raycast surfaces and blocking layers such as `Units`.
@@ -47,6 +47,7 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - Primary mouse release attempts deployment: valid placement calls `Deploy()`, invalid placement cancels and destroys the preview.
   - Right mouse press cancels and destroys the preview.
   - Missing mouse or checker references fail gracefully without throwing.
+  - Managed-unit deployment applies saved upgrades before preview so range, override weapons, augment weapons, and projectile modifiers match the stored unit state after placement.
 
 - `MaterialOverrider`
   - Auto-caches child `MeshRenderer` and `SpriteRenderer` components by caching all renderers except `LineRenderer`.
@@ -71,5 +72,5 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
 - Uses Unity's Input System via `UnityEngine.InputSystem.Mouse.current`; `InputSystem_Actions.inputactions` is unchanged.
 - Placement is freeform on ground surfaces, not grid-snapped.
 - Footprint is inspector-configured serialized radius/height, not inferred from prefab colliders.
-- No economy, cooldown, unit inventory, upgrade UI, or weapon behavior changes are included.
-- UI implementation is out of scope except for the controller entrypoint future UI will call.
+- Upgrade selection UI is handled by the separate event-bus upgrade UI flow; drag/drop UI only starts deployment.
+- No economy, deployment cooldown, unit inventory, or weapon behavior changes are included in drag/drop.

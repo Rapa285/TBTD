@@ -13,7 +13,7 @@ public enum WEAPON_UPGRADE_TYPE
 }
 
 /// <summary>
-/// Authored upgrade asset that can combine stat effects, weapon replacement, and on-hit effects.
+/// Authored upgrade asset that can combine stat effects, weapon replacement/augment, and projectile modifiers.
 /// </summary>
 [CreateAssetMenu(fileName = "Upgrade", menuName = "TBTD/Upgrade")]
 public sealed class UpgradeSO : ScriptableObject
@@ -43,14 +43,14 @@ public sealed class UpgradeSO : ScriptableObject
     [SerializeField, Tooltip("Optional icon shown when this upgrade is offered in UI.")]
     private Sprite icon;
 
-    [SerializeField, Tooltip("Weapon change mode. Only Override is currently applied at runtime.")]
+    [SerializeField, Tooltip("Weapon change mode. Override replaces the primary weapon; Augment adds an extra weapon.")]
     private WEAPON_UPGRADE_TYPE weaponUpgradeType = WEAPON_UPGRADE_TYPE.None;
 
     [SerializeField, Tooltip("AttackBehaviour prefab used when this upgrade replaces the active weapon.")]
     private AttackBehaviour weaponBehaviourPrefab;
 
-    [SerializeField, Tooltip("On-hit effect prefabs added while this upgrade is applied.")]
-    private List<OnHitEffectBehaviour> onHitEffectPrefabs = new List<OnHitEffectBehaviour>();
+    [SerializeField, Tooltip("Effect/modifier prefabs added while this upgrade is applied.")]
+    private List<ProjectileModifierBehaviour> projectileModifierPrefabs = new List<ProjectileModifierBehaviour>();
 
     [SerializeField, Tooltip("Stat modifiers applied while this upgrade is selected.")]
     private List<StatEffect> statEffects = new List<StatEffect>();
@@ -60,9 +60,10 @@ public sealed class UpgradeSO : ScriptableObject
     public Sprite Icon => icon;
     public WEAPON_UPGRADE_TYPE WeaponUpgradeType => weaponUpgradeType;
     public AttackBehaviour WeaponBehaviourPrefab => weaponBehaviourPrefab;
-    public IReadOnlyList<OnHitEffectBehaviour> OnHitEffectPrefabs => onHitEffectPrefabs;
+    public IReadOnlyList<ProjectileModifierBehaviour> ProjectileModifierPrefabs => projectileModifierPrefabs;
     public IReadOnlyList<StatEffect> StatEffects => statEffects;
 
     public bool HasWeaponChange => weaponUpgradeType != WEAPON_UPGRADE_TYPE.None && weaponBehaviourPrefab != null;
     public bool HasWeaponReplacement => weaponUpgradeType == WEAPON_UPGRADE_TYPE.Override && weaponBehaviourPrefab != null;
+    public bool HasWeaponAugment => weaponUpgradeType == WEAPON_UPGRADE_TYPE.Augment && weaponBehaviourPrefab != null;
 }

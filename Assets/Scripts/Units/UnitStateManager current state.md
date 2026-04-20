@@ -3,7 +3,7 @@
 ## Role
 `UnitStateManager` is the player roster state manager. It stores long-lived per-unit identity, progression, selected upgrades, and the transient scene reference for the unit's currently deployed tower.
 
-It does not own combat execution. Runtime stats, weapon selection, targeting, attack timing, vision range, and on-hit effect composition remain owned by `TowerEntity`, `UnitVision`, `AttackBehaviour`, and projectile scripts.
+It does not own combat execution. Runtime stats, weapon override/augment composition, targeting, attack timing, vision range, and projectile modifiers remain owned by `TowerEntity`, `UnitVision`, `AttackBehaviour`, and projectile scripts.
 
 ## Owned Unit State
 Each roster entry is a nested serializable `OwnedUnitState` keyed by a stable `unitId`.
@@ -18,7 +18,7 @@ Important rules:
 - `unitId` is the public lookup key for UI, deployment, progression, and upgrade selection.
 - Duplicate `unitId` values log an error; empty IDs log a warning.
 - `currentRuntimeInstance` and `currentRuntimeRoot` are scene references only. They are not save data.
-- `appliedUpgrades` stores selected `UpgradeSO` assets. It does not cache offer pools, compiled stats, or runtime weapon/effect instances.
+- `appliedUpgrades` stores selected `UpgradeSO` assets. It does not cache offer pools, compiled stats, runtime weapons, or projectile modifier instances.
 
 ## Runtime Bridge
 `UnitStateManager` applies roster state to runtime towers through public bridge methods.
@@ -41,13 +41,13 @@ Current flow:
 - `UnitProgression` raises `UnitExperienceChanged`; `UnitStateManager` records the latest XP for the matching `unitId`.
 - When XP reaches the next threshold, `UnitProgression` raises `UnitUpgradeThresholdReached`.
 - `UpgradesManager` listens, asks `UnitStateManager.TryBeginUpgradeSelection(unitId)` to mark the unit pending, builds an offer from its shared pool, and records the final selected upgrade.
-- `UnitStateManager.RecordSelectedUpgrade(unitId, upgrade)` clears pending state, advances the level, appends the upgrade if it is new, applies it immediately to the deployed tower, and refreshes `UnitProgression`.
+- `UnitStateManager.RecordSelectedUpgrade(unitId, upgrade)` clears pending state, advances the level, appends the upgrade if it is new, applies it immediately to the deployed tower through `TowerEntity.AddUpgrade`, and refreshes `UnitProgression`.
 
 Current limitation:
 - Multi-threshold catch-up is not implemented. After an upgrade is selected, refreshed progression may evaluate the next threshold, but the system still resolves one pending upgrade selection at a time.
 
 ## Boundaries
-- Do not move stat math into `UnitStateManager`; extend `TowerEntity.CompileFinalStats()` instead.
+- Do not move stat math, weapon composition, or projectile modifier composition into `UnitStateManager`; extend `TowerEntity.CompileFinalStats()` instead.
 - Do not inspect `UpgradeSO` contents in `UnitStateManager` except for storing references and checking whether a selected asset is already applied.
 - Do not store upgrade offer pools or offer counts on `OwnedUnitState`; shared offer generation currently belongs to `UpgradesManager`.
 - Do not put targeting, cooldowns, attack behaviour selection, vision, projectile logic, raycasts, mouse input, or placement validation in `UnitStateManager`.

@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
-  onHitEffectPrefabs: []
+  projectileModifierPrefabs: []
   statEffects:
   - stat: 1
     type: 0

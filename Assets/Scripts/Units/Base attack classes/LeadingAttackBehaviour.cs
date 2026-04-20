@@ -77,7 +77,6 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
         float distance = toTarget.magnitude;
         if (distance <= Mathf.Epsilon)
         {
-            Debug.Log("Epsilon point hit");
             leadPosition = ApplyAimModifier(leadPosition);
             RecordLeadGizmoData(origin, enemyPosition, leadPosition);
             return leadPosition;
