@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - MapEnd
+  - SplinePath
   layers:
   - Default
   - TransparentFX
@@ -12,10 +13,10 @@ TagManager:
   - 
   - Water
   - UI
-  - Ground
-  - Units
   - Enemy
-  - 
+  - StealthEnemy
+  - Tower
+  - Base
   - 
   - 
   - 
