@@ -57,6 +57,21 @@ public struct UnitUpgradeChoicesOfferedEvent
 }
 
 /// <summary>
+/// Raised by UI when a player requests one pending upgrade choice.
+/// </summary>
+public struct UnitUpgradeChoiceRequestedEvent
+{
+    public string UnitId { get; }
+    public int ChoiceIndex { get; }
+
+    public UnitUpgradeChoiceRequestedEvent(string unitId, int choiceIndex)
+    {
+        UnitId = unitId;
+        ChoiceIndex = choiceIndex;
+    }
+}
+
+/// <summary>
 /// Raised after a pending upgrade choice has been recorded on the roster.
 /// </summary>
 public struct UnitUpgradeSelectedEvent
@@ -106,6 +121,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitExperienceChangedEvent> UnitExperienceChanged;
     public event Action<UnitUpgradeThresholdReachedEvent> UnitUpgradeThresholdReached;
     public event Action<UnitUpgradeChoicesOfferedEvent> UnitUpgradeChoicesOffered;
+    public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
 
@@ -131,6 +147,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitUpgradeChoicesOffered(UnitUpgradeChoicesOfferedEvent eventData)
     {
         UnitUpgradeChoicesOffered?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that UI requested one pending upgrade choice.
+    /// </summary>
+    public void RaiseUnitUpgradeChoiceRequested(UnitUpgradeChoiceRequestedEvent eventData)
+    {
+        UnitUpgradeChoiceRequested?.Invoke(eventData);
     }
 
     /// <summary>

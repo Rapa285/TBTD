@@ -32,6 +32,7 @@ public class UpgradesManager : MonoBehaviour
         if (eventBus != null)
         {
             eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
+            eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
         }
     }
 
@@ -40,6 +41,7 @@ public class UpgradesManager : MonoBehaviour
         if (eventBus != null)
         {
             eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
+            eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
         }
     }
 
@@ -121,6 +123,16 @@ public class UpgradesManager : MonoBehaviour
         {
             eventBus.RaiseUnitUpgradeChoicesOffered(new UnitUpgradeChoicesOfferedEvent(unitId, offer.ToArray()));
         }
+    }
+
+    private void HandleUnitUpgradeChoiceRequested(UnitUpgradeChoiceRequestedEvent eventData)
+    {
+        if (string.IsNullOrWhiteSpace(eventData.UnitId))
+        {
+            return;
+        }
+
+        SelectUpgrade(eventData.UnitId, eventData.ChoiceIndex);
     }
 
     private List<UpgradeSO> BuildOffer(UnitStateManager.OwnedUnitState unit)

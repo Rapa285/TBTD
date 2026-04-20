@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: RO_Upgrade
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Receiver Overclock
-  description: Shoots faster and slightly faster
+  description: Shoots faster and slightly further
+  icon: {fileID: 0}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   onHitEffectPrefabs: []

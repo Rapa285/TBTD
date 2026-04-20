@@ -40,6 +40,9 @@ public sealed class UpgradeSO : ScriptableObject
     [SerializeField, TextArea, Tooltip("Player-facing description of what this upgrade does.")]
     private string description;
 
+    [SerializeField, Tooltip("Optional icon shown when this upgrade is offered in UI.")]
+    private Sprite icon;
+
     [SerializeField, Tooltip("Weapon change mode. Only Override is currently applied at runtime.")]
     private WEAPON_UPGRADE_TYPE weaponUpgradeType = WEAPON_UPGRADE_TYPE.None;
 
@@ -54,6 +57,7 @@ public sealed class UpgradeSO : ScriptableObject
 
     public string UpgradeName => upgradeName;
     public string Description => description;
+    public Sprite Icon => icon;
     public WEAPON_UPGRADE_TYPE WeaponUpgradeType => weaponUpgradeType;
     public AttackBehaviour WeaponBehaviourPrefab => weaponBehaviourPrefab;
     public IReadOnlyList<OnHitEffectBehaviour> OnHitEffectPrefabs => onHitEffectPrefabs;
