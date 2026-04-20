@@ -46,8 +46,7 @@ public class SpawnOnDeathComponent : MonoBehaviour
                     childSpline.Container = parentSpline.Container;
                     
                     float offsetTime = Mathf.Max(0f, baseNormalizedTime - (i * pathSpacing));
-                    
-                    childEntity.StartCoroutine(ForcePositionNextFrame(childSpline, offsetTime));
+                    childSpline.StartCoroutine(ForcePositionNextFrame(childSpline, offsetTime));
                 }
             }
         }

@@ -150,6 +150,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   vision: {fileID: 1654467401}
   attackBehaviour: {fileID: 487112370}
+  deployed: 1
+  activelyPollEnemies: 0
+  enemyPollPeriod: 0.5
   baseStats:
   - stat: 0
     value: 1
@@ -209,6 +212,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   baseDamage: 10
+  aimModifierVector: {x: 0, y: 0, z: 0}
   lineRenderer: {fileID: 487112372}
   firePoint: {fileID: 487112371}
   beamDuration: 0.5

@@ -52,6 +52,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
   initializeOnStart: 0
   startingHealth: 100
+  startingShield: 0
+  deathMode: 0
   OnDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -110,6 +112,7 @@ MonoBehaviour:
     damage: 10
     movementSpeed: 3
     initialShield: 0
+  experienceReward: 1
   baseTarget: {fileID: 0}
   enemyMaterial: {fileID: 0}
   meshRenderer: {fileID: 6335815346427549580}

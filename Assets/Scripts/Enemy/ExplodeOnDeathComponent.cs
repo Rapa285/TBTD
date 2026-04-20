@@ -17,18 +17,14 @@ public class ExplodeOnDeathComponent : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius, targetLayer);
         foreach (var hit in hits)
         {
-            // Mencoba memberikan damage ke menara/objek di sekitar
-            IDamageable damageable = hit.GetComponentInParent<IDamageable>();
-            if (damageable != null)
+            Transform target = ColliderTargetUtility.GetTargetTransform(hit);
+            if (target == null || target == transform || target.IsChildOf(transform))
             {
-                Debug.Log($"{gameObject.name} exploded and damaged {hit.name} for {explosionDamage} damage.");
-                damageable.TakeDamage(explosionDamage);
+                continue;
             }
-            else
-            {
-                Debug.Log($"{gameObject.name} exploded and hit {hit.name}, but it has no IDamageable component.");
-                hit.SendMessageUpwards("TakeDamage", explosionDamage, SendMessageOptions.DontRequireReceiver);
-            }
+
+            Debug.Log($"{gameObject.name} exploded and damaged {target.name} for {explosionDamage} damage.");
+            CombatDamageUtility.TryApplyDamage(target, explosionDamage);
         }
     }
 }

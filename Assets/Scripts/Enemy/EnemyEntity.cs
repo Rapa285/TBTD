@@ -9,11 +9,12 @@ public struct EnemyStats
     [Min(0f)] public float initialShield;
 }
 
-[RequireComponent(typeof(HealthComponent), typeof(EnemyMover))]
+[RequireComponent(typeof(HealthComponent))]
 public class EnemyEntity : MonoBehaviour
 {
     [Header("Stats")]
     public EnemyStats stats = new EnemyStats { health = 100f, damage = 10f, movementSpeed = 3f, initialShield = 0f };
+    [SerializeField, Min(0f)] private float experienceReward = 1f;
 
     [Header("Targeting")]
     [SerializeField] private Transform baseTarget;
@@ -24,6 +25,10 @@ public class EnemyEntity : MonoBehaviour
 
     private HealthComponent health;
     private EnemyMover mover;
+
+    public HealthComponent Health => health;
+    public EnemyMover Mover => mover;
+    public float ExperienceReward => experienceReward;
 
     public Transform BaseTarget 
     { 
@@ -36,13 +41,28 @@ public class EnemyEntity : MonoBehaviour
         health = GetComponent<HealthComponent>();
         mover = GetComponent<EnemyMover>();
 
-        mover.OnReachEnd.AddListener(HandleReachBase);
+        if (health != null)
+        {
+            health.OnDeath.AddListener(HandleDeath);
+        }
+
+        if (mover != null)
+        {
+            mover.OnReachEnd.AddListener(HandleReachBase);
+        }
     }
 
     private void Start()
     {
-        health.Initialize(stats.health, stats.initialShield);
-        mover.Initialize(stats.movementSpeed);
+        if (health != null)
+        {
+            health.Initialize(stats.health, stats.initialShield);
+        }
+
+        if (mover != null)
+        {
+            mover.Initialize(stats.movementSpeed);
+        }
 
         if (meshRenderer != null && enemyMaterial != null)
         {
@@ -50,14 +70,76 @@ public class EnemyEntity : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (health != null)
+        {
+            health.OnDeath.RemoveListener(HandleDeath);
+        }
+
+        if (mover != null)
+        {
+            mover.OnReachEnd.RemoveListener(HandleReachBase);
+        }
+    }
+
+    private void OnValidate()
+    {
+        stats.health = Mathf.Max(1f, stats.health);
+        stats.damage = Mathf.Max(0f, stats.damage);
+        stats.movementSpeed = Mathf.Max(0.1f, stats.movementSpeed);
+        stats.initialShield = Mathf.Max(0f, stats.initialShield);
+        experienceReward = Mathf.Max(0f, experienceReward);
+    }
+
     private void HandleReachBase()
     {
         if (baseTarget != null)
         {
             Debug.Log($"{gameObject.name} reached the base and is dealing {stats.damage} damage.");
-            baseTarget.SendMessage("TakeDamage", stats.damage, SendMessageOptions.DontRequireReceiver);
+            CombatDamageUtility.TryApplyDamage(baseTarget, stats.damage);
         }
         
         Destroy(gameObject);
+    }
+
+    private void HandleDeath()
+    {
+        if (health != null && health.HasLastHitContext)
+        {
+            AwardExperience(health.LastHitContext.Attacker, health.LastHitContext.AttackerRoot);
+        }
+    }
+
+    private void AwardExperience(TowerEntity attacker, Transform attackerRoot)
+    {
+        if (experienceReward <= 0f)
+        {
+            return;
+        }
+
+        UnitProgression progression = null;
+        if (attacker != null)
+        {
+            progression = attacker.GetComponentInParent<UnitProgression>();
+            if (progression == null)
+            {
+                progression = attacker.GetComponentInChildren<UnitProgression>(true);
+            }
+        }
+
+        if (progression == null && attackerRoot != null)
+        {
+            progression = attackerRoot.GetComponentInParent<UnitProgression>();
+            if (progression == null)
+            {
+                progression = attackerRoot.GetComponentInChildren<UnitProgression>(true);
+            }
+        }
+
+        if (progression != null)
+        {
+            progression.AddExperience(experienceReward);
+        }
     }
 }

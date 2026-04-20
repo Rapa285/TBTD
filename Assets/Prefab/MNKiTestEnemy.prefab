@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2904990109516167620}
   - component: {fileID: 183963200779699497}
   - component: {fileID: 713640774843890005}
+  - component: {fileID: 4622891454021715601}
   - component: {fileID: 2754476529622790567}
   m_Layer: 8
   m_Name: MNKiTestEnemy
@@ -67,12 +68,37 @@ MonoBehaviour:
   m_GameObject: {fileID: 63756692778339923}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f648ea2cb1744623818fc55d0f1f6fb8, type: 3}
+  m_Script: {fileID: 11500000, guid: 2209e3dd742b3d74caaa6276caa23dc8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SimpleEnemy
-  maxHealth: 5
+  m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
+  initializeOnStart: 0
+  startingHealth: 5
+  startingShield: 0
+  deathMode: 0
+  OnDeath:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &4622891454021715601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 63756692778339923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49bfd43c3e6064e4eb1afcb76d4d2aab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyEntity
+  stats:
+    health: 5
+    damage: 0
+    movementSpeed: 3
+    initialShield: 0
   experienceReward: 2
-  destroyOnDeath: 1
+  baseTarget: {fileID: 0}
+  enemyMaterial: {fileID: 0}
+  meshRenderer: {fileID: 4177996627890723821}
 --- !u!54 &2754476529622790567
 Rigidbody:
   m_ObjectHideFlags: 0

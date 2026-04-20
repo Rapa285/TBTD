@@ -32,10 +32,11 @@ public class SniperAttacker : MonoBehaviour
 
         if (currentTarget != null)
         {
-            // stop jalan kl ada target di radius
-            mover.PauseMovement();
+            if (mover != null)
+            {
+                mover.PauseMovement();
+            }
             
-            // shoot kl cooldown udah lewat
             if (Time.time >= lastAttackTime + attackCooldown)
             {
                 AttackBase(currentTarget);
@@ -44,23 +45,16 @@ public class SniperAttacker : MonoBehaviour
         }
         else
         {
-            // jlan terus selama base g ada di radius
-            mover.ResumeMovement();
+            if (mover != null)
+            {
+                mover.ResumeMovement();
+            }
         }
     }
 
     private void AttackBase(Transform target)
     {
         Debug.Log($"{gameObject.name} is attacking {target.name} for {attackDamage} damage.");
-        
-        IDamageable damageable = target.GetComponentInParent<IDamageable>();
-        if (damageable != null)
-        {
-            damageable.TakeDamage(attackDamage);
-        }
-        else
-        {
-            target.SendMessageUpwards("TakeDamage", attackDamage, SendMessageOptions.DontRequireReceiver);
-        }
+        CombatDamageUtility.TryApplyDamage(target, attackDamage);
     }
 }
