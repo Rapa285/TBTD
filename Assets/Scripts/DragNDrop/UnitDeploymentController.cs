@@ -185,14 +185,19 @@ public class UnitDeploymentController : MonoBehaviour
         }
 
         currentDraggedRoot.transform.position = currentPlacementResult.position;
-        currentDraggedTower.Deploy();
 
         if (currentStateManager != null)
         {
-            // Bind only after a valid placement so canceled previews never become roster runtime instances.
-            currentStateManager.BindRuntimeInstance(currentUnitId, currentDraggedTower, currentDraggedRoot);
+            // The final deployment handoff injects progression state and records the live roster binding.
+            if (!currentStateManager.CompleteRuntimeDeployment(currentUnitId, currentDraggedRoot, currentDraggedTower))
+            {
+                Destroy(currentDraggedRoot);
+                ClearCurrentDeployment();
+                return;
+            }
         }
 
+        currentDraggedTower.Deploy();
         ClearCurrentDeployment();
     }
 

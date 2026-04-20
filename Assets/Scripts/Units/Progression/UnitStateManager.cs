@@ -216,24 +216,27 @@ public class UnitStateManager : MonoBehaviour
     /// </summary>
     public bool ApplyStateTo(string unitId, GameObject runtimeRoot, TowerEntity tower, bool evaluateThreshold)
     {
-        if (runtimeRoot == null || tower == null || !TryGetUnit(unitId, out OwnedUnitState unit))
+        if (!TryGetRuntimeState(unitId, runtimeRoot, tower, out OwnedUnitState unit))
         {
             return false;
         }
 
-        // This is the roster-to-runtime bridge; TowerEntity remains responsible for compiling upgrade effects.
-        for (int i = 0; i < unit.AppliedUpgrades.Count; i++)
+        InjectRuntimeState(unit, runtimeRoot, tower, evaluateThreshold);
+        return true;
+    }
+
+    /// <summary>
+    /// Injects all roster state required by a placed runtime unit, then records it as deployed.
+    /// </summary>
+    public bool CompleteRuntimeDeployment(string unitId, GameObject runtimeRoot, TowerEntity tower)
+    {
+        if (!TryGetRuntimeState(unitId, runtimeRoot, tower, out OwnedUnitState unit))
         {
-            tower.AddUpgrade(unit.AppliedUpgrades[i]);
+            return false;
         }
 
-        UnitProgression progression = runtimeRoot.GetComponentInChildren<UnitProgression>(true);
-        if (progression == null)
-        {
-            progression = runtimeRoot.AddComponent<UnitProgression>();
-        }
-
-        InitializeProgression(unit, progression, evaluateThreshold);
+        InjectRuntimeState(unit, runtimeRoot, tower, true);
+        unit.SetRuntimeInstance(tower, runtimeRoot);
         return true;
     }
 
@@ -250,13 +253,13 @@ public class UnitStateManager : MonoBehaviour
     /// </summary>
     public bool BindRuntimeInstance(string unitId, TowerEntity tower, GameObject runtimeRoot)
     {
-        if (tower == null || !TryGetUnit(unitId, out OwnedUnitState unit))
+        if (!TryGetRuntimeState(unitId, runtimeRoot, tower, out OwnedUnitState unit))
         {
             return false;
         }
 
+        InjectRuntimeState(unit, runtimeRoot, tower, true);
         unit.SetRuntimeInstance(tower, runtimeRoot);
-        RefreshRuntimeProgression(unit, true);
         return true;
     }
 
@@ -390,6 +393,47 @@ public class UnitStateManager : MonoBehaviour
             unit.UpgradePending,
             eventBus,
             evaluateThreshold);
+    }
+
+    private bool TryGetRuntimeState(
+        string unitId,
+        GameObject runtimeRoot,
+        TowerEntity tower,
+        out OwnedUnitState unit)
+    {
+        if (runtimeRoot == null || tower == null || !TryGetUnit(unitId, out unit))
+        {
+            unit = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    private void InjectRuntimeState(
+        OwnedUnitState unit,
+        GameObject runtimeRoot,
+        TowerEntity tower,
+        bool evaluateThreshold)
+    {
+        // This is the roster-to-runtime bridge; TowerEntity remains responsible for compiling upgrade effects.
+        for (int i = 0; i < unit.AppliedUpgrades.Count; i++)
+        {
+            tower.AddUpgrade(unit.AppliedUpgrades[i]);
+        }
+
+        InitializeProgression(unit, EnsureRuntimeProgression(tower), evaluateThreshold);
+    }
+
+    private UnitProgression EnsureRuntimeProgression(TowerEntity tower)
+    {
+        UnitProgression progression = tower.GetComponent<UnitProgression>();
+        if (progression == null)
+        {
+            progression = tower.gameObject.AddComponent<UnitProgression>();
+        }
+
+        return progression;
     }
 
     private void RefreshRuntimeProgression(OwnedUnitState unit, bool evaluateThreshold)

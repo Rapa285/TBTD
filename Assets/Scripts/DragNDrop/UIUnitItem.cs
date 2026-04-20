@@ -33,6 +33,7 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
 
     private bool isHovered;
     private bool isHeldDown;
+    private bool warnedMissingUnitStateManager;
 
     public bool IsHovered => isHovered;
     public bool IsHeldDown => isHeldDown;
@@ -49,6 +50,7 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
         }
 
         ResolveDeploymentController();
+        ResolveUnitStateManager();
         ResetPointerState();
     }
 
@@ -66,6 +68,8 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
     public void SetUnitToDeploy(GameObject unitPrefab)
     {
         unitToDeploy = unitPrefab;
+        unitStateManager = null;
+        unitId = null;
     }
 
     /// <summary>
@@ -156,6 +160,7 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
     private bool CanBeginDeployment()
     {
         ResolveDeploymentController();
+        ResolveUnitStateManager();
 
         return deploymentController != null
             && !deploymentController.IsDragging
@@ -165,9 +170,10 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
 
     private bool HasDeployableUnit()
     {
-        if (HasManagedUnit())
+        if (HasManagedUnitId())
         {
-            return unitStateManager.CanDeploy(unitId);
+            WarnIfMissingUnitStateManager();
+            return unitStateManager != null && unitStateManager.CanDeploy(unitId);
         }
 
         return unitToDeploy != null && HasDeployableTowerPrefab();
@@ -175,7 +181,12 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
 
     private bool HasManagedUnit()
     {
-        return unitStateManager != null && !string.IsNullOrWhiteSpace(unitId);
+        return unitStateManager != null && HasManagedUnitId();
+    }
+
+    private bool HasManagedUnitId()
+    {
+        return !string.IsNullOrWhiteSpace(unitId);
     }
 
     private bool HasDeployableTowerPrefab()
@@ -192,6 +203,29 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
         }
 
         deploymentController = FindAnyObjectByType<UnitDeploymentController>();
+    }
+
+    private void ResolveUnitStateManager()
+    {
+        if (unitStateManager != null || !HasManagedUnitId())
+        {
+            return;
+        }
+
+        unitStateManager = FindAnyObjectByType<UnitStateManager>();
+    }
+
+    private void WarnIfMissingUnitStateManager()
+    {
+        if (unitStateManager != null || warnedMissingUnitStateManager)
+        {
+            return;
+        }
+
+        warnedMissingUnitStateManager = true;
+        Debug.LogWarning(
+            $"{nameof(UIUnitItem)} is configured with unitId '{unitId}' but no {nameof(UnitStateManager)} was found. The unit cannot deploy through roster progression.",
+            this);
     }
 
     private void ResetPointerState()
