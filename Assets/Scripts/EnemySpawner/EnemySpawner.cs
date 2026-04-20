@@ -1,19 +1,26 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class EnemySpawner : MonoBehaviour
 {
+    public SplineContainer mapSpline;
+
     public float gracePeriod = 60;
 
     // Add enemy types here
     public List<EnemySpawnObject> enemyList = new List<EnemySpawnObject>();
-    public int waveValue = 1;
+
+    public int budgetMultiplier;
+    private int budget;
 
     private int currWave = 1;
     public int waveCount = 3;
     public int waveDuration = 30;
 
     public List<GameObject> enemyToSpawn = new List<GameObject>();
+
+    private bool isPaused = false;
 
     private float waveTimer;
     private float spawnInterval;
@@ -29,6 +36,11 @@ public class EnemySpawner : MonoBehaviour
     // FixedUpdate for consistency
     void FixedUpdate()
     {
+        if (isPaused)
+        {
+            return;
+        }
+
         if (gracePeriod > 0)
         {
             gracePeriod -= Time.fixedDeltaTime;
@@ -63,7 +75,7 @@ public class EnemySpawner : MonoBehaviour
 
     public void GenerateWave()
     {
-        waveValue = currWave * 10; // NOTE: Change Total Cost of each wave here
+        budget = currWave * budgetMultiplier; // NOTE: Change Total Cost of each wave here
         GenerateEnemies();
 
         if (enemyToSpawn.Count > 0)
@@ -81,20 +93,40 @@ public class EnemySpawner : MonoBehaviour
 
     public void GenerateEnemies()
     {
+        if (mapSpline == null) {
+            Debug.Log("Missing mapSpline on Spawner!");
+            return;
+        }
+
+        
+
         List<GameObject> generatedEnemies = new List<GameObject>();
 
         int attempts = 0;
-        while(waveValue > 0 && attempts < 100)
+        while(budget > 0 && attempts < 100)
         {
             int randEnemyId = Random.Range(0, enemyList.Count);
             int randEnemyCost = enemyList[randEnemyId].cost;
 
-            if (waveValue - randEnemyCost >= 0)
+            if (budget - randEnemyCost >= 0)
             {
+                GameObject randEnemyObject = enemyList[randEnemyId].enemyPrefab;
+                SplineAnimate animator = randEnemyObject.GetComponent<SplineAnimate>();
+
+                if (mapSpline != null && animator != null)
+                {
+                    // 3. Link them
+                    animator.Container = mapSpline;
+                }
+                else
+                {
+                    Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
+                }
+
                 generatedEnemies.Add(enemyList[randEnemyId].enemyPrefab);
-                waveValue -= randEnemyCost;
+                budget -= randEnemyCost;
             }
-            else if (waveValue <= 0)
+            else if (budget <= 0)
             {
                 break;
             }
@@ -108,6 +140,11 @@ public class EnemySpawner : MonoBehaviour
 
         enemyToSpawn.Clear();
         enemyToSpawn = generatedEnemies;
+    }
+
+    public void SetPauseSpawner(bool isPause)
+    {
+        isPaused = isPause;
     }
 }
 
