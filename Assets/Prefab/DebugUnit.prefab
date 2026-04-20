@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1683619560227403597}
   - component: {fileID: 5929984254154990258}
   - component: {fileID: 3249204317369271761}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: DebugUnit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8342355722193339825}
   - component: {fileID: 2627076634440530655}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Pistol
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -154,7 +154,7 @@ GameObject:
   - component: {fileID: 6706637941902643104}
   - component: {fileID: 8499077314356354358}
   - component: {fileID: 6597249124547463550}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -260,7 +260,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1039512237251317013}
   - component: {fileID: 1495543637394770891}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Footing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -352,7 +352,7 @@ GameObject:
   - component: {fileID: 8595622817226644282}
   - component: {fileID: 8484534163480795359}
   - component: {fileID: 6578588529729050545}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Vision
   m_TagString: Untagged
   m_Icon: {fileID: 0}

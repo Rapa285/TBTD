@@ -820,10 +820,10 @@ MonoBehaviour:
   raycastCamera: {fileID: 1804169527}
   groundLayers:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 2048
   blockingLayers:
     serializedVersion: 2
-    m_Bits: 2048
+    m_Bits: 1024
   placementRadius: 0.5
   placementHeight: 1
   verticalOffset: 0
@@ -1970,7 +1970,7 @@ GameObject:
   - component: {fileID: 1820845684}
   - component: {fileID: 1820845683}
   - component: {fileID: 1820845682}
-  m_Layer: 10
+  m_Layer: 11
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
