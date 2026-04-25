@@ -35,7 +35,6 @@ Transform:
   - {fileID: 6706637941902643104}
   - {fileID: 1039512237251317013}
   - {fileID: 8342355722193339825}
-  - {fileID: 1196176045379652838}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5929984254154990258
@@ -65,9 +64,9 @@ MonoBehaviour:
   - stat: 3
     value: 0
   - stat: 4
-    value: 2
+    value: 1
   - stat: 5
-    value: 10
+    value: 30
   upgrades: []
   onDeploy:
     m_PersistentCalls:
@@ -136,7 +135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestGunAttackBehaviour
   baseDamage: 1
-  attacksPerAmmo: 5
+  attacksPerAmmo: 1
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.5, z: 0}
   distanceFactor: 0.05
@@ -179,13 +178,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4085088390509733718}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.9063078, z: 0.42261833, w: 0}
+  m_LocalRotation: {x: -0, y: 0.8660254, z: 0.49999997, w: 0}
   m_LocalPosition: {x: 0, y: 0.45, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1196176045379652838}
   m_Father: {fileID: 1683619560227403597}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!212 &8499077314356354358
 SpriteRenderer:
   serializedVersion: 2
@@ -286,16 +286,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6005762253901955480}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1683619560227403597}
+  m_Father: {fileID: 6706637941902643104}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 1.26}
+  m_AnchoredPosition: {x: 0, y: 0.84}
   m_SizeDelta: {x: 2, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &316828089561551405

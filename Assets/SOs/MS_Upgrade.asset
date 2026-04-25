@@ -19,7 +19,7 @@ MonoBehaviour:
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 4
+  - stat: 5
     type: 0
     value: 1.5
   - stat: 1

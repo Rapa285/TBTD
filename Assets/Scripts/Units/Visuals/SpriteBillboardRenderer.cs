@@ -1,7 +1,7 @@
+using TMPro;
 using UnityEngine;
 
 [ExecuteAlways]
-[RequireComponent(typeof(SpriteRenderer))]
 public sealed class SpriteBillboardRenderer : MonoBehaviour
 {
     private enum BillboardMode
@@ -16,22 +16,32 @@ public sealed class SpriteBillboardRenderer : MonoBehaviour
     [SerializeField] private bool invertForward;
 
     private SpriteRenderer spriteRenderer;
+    private TMP_Text tmpText;
     private Camera activeCamera;
 
     public SpriteRenderer SpriteRenderer => spriteRenderer;
+    public TMP_Text TmpText => tmpText;
+    public bool HasSupportedRenderer => spriteRenderer != null || tmpText != null;
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        ResolveReferences();
     }
 
     private void OnValidate()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        ResolveReferences();
     }
 
     private void LateUpdate()
     {
+        ResolveReferences();
+
+        if (!HasSupportedRenderer)
+        {
+            return;
+        }
+
         activeCamera = GetActiveCamera();
 
         if (activeCamera == null)
@@ -40,6 +50,19 @@ public sealed class SpriteBillboardRenderer : MonoBehaviour
         }
 
         ApplyBillboardRotation();
+    }
+
+    private void ResolveReferences()
+    {
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        if (tmpText == null)
+        {
+            tmpText = GetComponent<TMP_Text>();
+        }
     }
 
     private Camera GetActiveCamera()
