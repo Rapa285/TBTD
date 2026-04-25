@@ -65,7 +65,7 @@ MonoBehaviour:
   - stat: 3
     value: 0
   - stat: 4
-    value: 1
+    value: 2
   - stat: 5
     value: 10
   upgrades: []

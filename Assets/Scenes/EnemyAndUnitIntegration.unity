@@ -975,6 +975,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e1215ca3a5519be4aacb6c67d0121c26, type: 2}
   - {fileID: 11400000, guid: 7cd2e8093f95d77468e0b8b506fecb58, type: 2}
   - {fileID: 11400000, guid: 16b756b9d3ed61a4c9a10e1896638963, type: 2}
+  - {fileID: 11400000, guid: ed5be96ed66a9084dbc9de92bc6bc713, type: 2}
   upgradeChoiceCount: 2
 --- !u!1001 &1643293713
 PrefabInstance:
