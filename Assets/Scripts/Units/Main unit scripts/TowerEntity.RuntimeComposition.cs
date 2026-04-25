@@ -16,6 +16,8 @@ public partial class TowerEntity
             return;
         }
 
+        AttackBehaviour previousPrimaryAttackBehaviour = GetActiveAttackBehaviour();
+
         ResolveAttackBehaviourReferences();
         UpdateRuntimeReplacement(replacementPrefab);
         UpdateRuntimeAugments(augmentWeaponPrefabs);
@@ -26,10 +28,15 @@ public partial class TowerEntity
             ? runtimeReplacementAttackBehaviour
             : defaultAttackBehaviour;
 
-        ConfigureAttackBehaviour(activeAttackBehaviour, projectileModifierPrefabs);
+        if (previousPrimaryAttackBehaviour != null && previousPrimaryAttackBehaviour != activeAttackBehaviour)
+        {
+            previousPrimaryAttackBehaviour.ResetAmmoConsumptionState();
+        }
+
+        ConfigureAttackBehaviour(activeAttackBehaviour, projectileModifierPrefabs, true);
         for (int i = 0; i < runtimeAugmentAttackBehaviours.Count; i++)
         {
-            ConfigureAttackBehaviour(runtimeAugmentAttackBehaviours[i], projectileModifierPrefabs);
+            ConfigureAttackBehaviour(runtimeAugmentAttackBehaviours[i], projectileModifierPrefabs, false);
         }
 
         RebuildActiveAttackBehaviourList();
@@ -37,11 +44,12 @@ public partial class TowerEntity
 
     private void ConfigureAttackBehaviour(
         AttackBehaviour behaviour,
-        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs,
+        bool usesTowerAmmo)
     {
         if (behaviour != null)
         {
-            behaviour.ConfigureRuntime(this, transform, activeProjectileModifiers, projectileModifierPrefabs);
+            behaviour.ConfigureRuntime(this, transform, activeProjectileModifiers, projectileModifierPrefabs, usesTowerAmmo);
         }
     }
 

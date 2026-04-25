@@ -19,30 +19,28 @@ public class UpgradesManager : MonoBehaviour
     private int upgradeChoiceCount = 3;
 
     private readonly Dictionary<string, List<UpgradeSO>> pendingOffers = new Dictionary<string, List<UpgradeSO>>();
+    private bool eventBusSubscribed;
 
     private void Awake()
     {
         ResolveReferences();
     }
 
+    private void Start()
+    {
+        ResolveReferences();
+        SubscribeToEventBus();
+    }
+
     private void OnEnable()
     {
         ResolveReferences();
-
-        if (eventBus != null)
-        {
-            eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
-            eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
-        }
+        SubscribeToEventBus();
     }
 
     private void OnDisable()
     {
-        if (eventBus != null)
-        {
-            eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
-            eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
-        }
+        UnsubscribeFromEventBus();
     }
 
     /// <summary>
@@ -119,6 +117,7 @@ public class UpgradesManager : MonoBehaviour
 
         pendingOffers[unitId] = offer;
 
+        ResolveReferences();
         if (eventBus != null)
         {
             eventBus.RaiseUnitUpgradeChoicesOffered(new UnitUpgradeChoicesOfferedEvent(unitId, offer.ToArray()));
@@ -187,6 +186,7 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
+        ResolveReferences();
         if (eventBus != null && unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
         {
             eventBus.RaiseUnitUpgradeSelected(new UnitUpgradeSelectedEvent(
@@ -205,12 +205,46 @@ public class UpgradesManager : MonoBehaviour
     {
         if (eventBus == null)
         {
-            eventBus = FindAnyObjectByType<UnitEventBus>();
+            ServiceLocator.TryResolve(out eventBus);
         }
 
         if (unitStateManager == null)
         {
             unitStateManager = FindAnyObjectByType<UnitStateManager>();
         }
+    }
+
+    private void SubscribeToEventBus()
+    {
+        if (eventBusSubscribed)
+        {
+            return;
+        }
+
+        if (eventBus == null)
+        {
+            ResolveReferences();
+        }
+
+        if (eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
+        eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
+        eventBusSubscribed = true;
+    }
+
+    private void UnsubscribeFromEventBus()
+    {
+        if (!eventBusSubscribed || eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
+        eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
+        eventBusSubscribed = false;
     }
 }

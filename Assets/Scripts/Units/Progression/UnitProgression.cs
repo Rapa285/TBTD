@@ -33,6 +33,16 @@ public class UnitProgression : MonoBehaviour
     public float NextExperienceThreshold => nextExperienceThreshold;
     public bool UpgradePending => upgradePending;
 
+    public void AssignRuntimeUnitId(string unitId)
+    {
+        this.unitId = unitId ?? string.Empty;
+
+        if (eventBus == null)
+        {
+            ServiceLocator.TryResolve(out eventBus);
+        }
+    }
+
     /// <summary>
     /// Rehydrates runtime progression from the persistent roster state.
     /// </summary>

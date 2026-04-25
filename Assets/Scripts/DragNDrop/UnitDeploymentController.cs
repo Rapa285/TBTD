@@ -130,6 +130,8 @@ public class UnitDeploymentController : MonoBehaviour
             return false;
         }
 
+        currentDraggedTower.PrepareForDeploymentPreview();
+
         if (stateManager != null && !stateManager.ApplyStateTo(unitId, currentDraggedRoot, currentDraggedTower, false))
         {
             Destroy(currentDraggedRoot);
@@ -137,10 +139,10 @@ public class UnitDeploymentController : MonoBehaviour
             return false;
         }
 
-        // Roster-managed previews receive saved upgrades before preview mode so placement stats match runtime stats.
+        // Roster-managed previews receive saved upgrades after preview mode is prepared so placement stats match runtime stats
+        // without running deployment-only activation work.
         currentStateManager = stateManager;
         currentUnitId = unitId;
-        currentDraggedTower.PrepareForDeploymentPreview();
 
         currentMaterialOverrider = currentDraggedRoot.GetComponentInChildren<MaterialOverrider>();
         if (currentMaterialOverrider != null)

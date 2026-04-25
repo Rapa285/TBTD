@@ -22,11 +22,11 @@ public sealed class TestGunAttackBehaviour : SplineLeadingAttackBehaviour
         return firePoint != null ? firePoint.position : transform.position;
     }
 
-    protected override void ExecuteAttack(Transform target, float damage)
+    protected override bool ExecuteAttack(Transform target, float damage)
     {
         if (target == null || bulletPrefab == null)
         {
-            return;
+            return false;
         }
 
         Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position;
@@ -38,12 +38,21 @@ public sealed class TestGunAttackBehaviour : SplineLeadingAttackBehaviour
         {
             Debug.LogWarning($"{nameof(TestGunAttackBehaviour)} requires a bullet prefab with {nameof(BaseStraightProjectile)}.", this);
             Destroy(bulletObject);
-            return;
+            return false;
         }
 
         projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
         // GetLeadPosition includes the shared Aim Modifier Vector as the final endpoint offset.
-        projectile.SetDirection(GetLeadPosition(target));
+        Vector3 aimPoint = GetLeadPosition(target);
+        projectile.SetDirection(aimPoint);
+
+        if (!projectile.ReadyToFire())
+        {
+            Destroy(bulletObject);
+            return false;
+        }
+
         projectile.Fire();
+        return true;
     }
 }

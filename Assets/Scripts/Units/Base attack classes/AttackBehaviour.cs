@@ -25,6 +25,12 @@ public abstract class AttackBehaviour : MonoBehaviour
     [SerializeField, Min(0f), Tooltip("Base damage before TowerEntity applies its global damage multiplier.")]
     private float baseDamage = 1f;
 
+    [SerializeField, Min(0f), Tooltip("How many attacks this weapon can make before consuming one ammo unit. TowerEntity applies AmmoEffectiveness as a multiplier to this value.")]
+    private float attacksPerAmmo = 5f;
+
+    [SerializeField, Tooltip("When enabled, this weapon ignores tower ammo depletion.")]
+    private bool infiniteAmmo;
+
     [SerializeField, Tooltip("World-space offset added to the final aim point after the target position or weapon-specific aiming calculation is chosen. Use (0, 1, 0) to aim one Unity unit above the target.")]
     private Vector3 aimModifierVector = Vector3.zero;
 
@@ -32,6 +38,8 @@ public abstract class AttackBehaviour : MonoBehaviour
     private IReadOnlyList<ProjectileModifierBehaviour> projectileModifiers;
     private TowerEntity ownerTower;
     private Transform ownerRoot;
+    private float accumulatedAmmoAttackCount;
+    private bool consumesTowerAmmo;
 
     public float BaseDamage
     {
@@ -39,11 +47,25 @@ public abstract class AttackBehaviour : MonoBehaviour
         set => baseDamage = Mathf.Max(0f, value);
     }
 
+    public float AttacksPerAmmo
+    {
+        get => attacksPerAmmo;
+        set => attacksPerAmmo = Mathf.Max(0f, value);
+    }
+
+    public bool InfiniteAmmo
+    {
+        get => infiniteAmmo;
+        set => infiniteAmmo = value;
+    }
+
     public Vector3 AimModifierVector
     {
         get => aimModifierVector;
         set => aimModifierVector = value;
     }
+
+    public bool UsesFiniteAmmo => consumesTowerAmmo && !infiniteAmmo;
 
     protected TowerEntity OwnerTower => ownerTower;
     protected Transform OwnerRoot => ownerRoot != null ? ownerRoot : transform;
@@ -56,12 +78,19 @@ public abstract class AttackBehaviour : MonoBehaviour
         TowerEntity tower,
         Transform root,
         IReadOnlyList<ProjectileModifierBehaviour> hitModifiers,
-        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs)
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs,
+        bool usesTowerAmmo)
     {
         ownerTower = tower;
         ownerRoot = root != null ? root : transform;
         activeHitModifiers = hitModifiers;
         projectileModifiers = projectileModifierPrefabs;
+        consumesTowerAmmo = usesTowerAmmo;
+
+        if (!UsesFiniteAmmo)
+        {
+            ResetAmmoConsumptionState();
+        }
     }
 
     /// <summary>
@@ -74,10 +103,13 @@ public abstract class AttackBehaviour : MonoBehaviour
             return;
         }
 
-        ExecuteAttack(target, baseDamage * Mathf.Max(0f, damageMultiplier));
+        if (ExecuteAttack(target, baseDamage * Mathf.Max(0f, damageMultiplier)))
+        {
+            HandleAttackDispatched();
+        }
     }
 
-    protected abstract void ExecuteAttack(Transform target, float damage);
+    protected abstract bool ExecuteAttack(Transform target, float damage);
 
     /// <summary>
     /// Returns the target's current world position with the final aim offset applied.
@@ -193,5 +225,30 @@ public abstract class AttackBehaviour : MonoBehaviour
             hitPosition,
             hasHitPosition,
             0f);
+    }
+
+    internal void ResetAmmoConsumptionState()
+    {
+        accumulatedAmmoAttackCount = 0f;
+    }
+
+    private void HandleAttackDispatched()
+    {
+        if (!UsesFiniteAmmo || ownerTower == null)
+        {
+            return;
+        }
+
+        accumulatedAmmoAttackCount += 1f;
+
+        float effectiveAttacksPerAmmo = Mathf.Max(0.0001f, Mathf.Max(0f, attacksPerAmmo) * ownerTower.AmmoEffectiveness);
+        int ammoUnitsConsumed = Mathf.FloorToInt(accumulatedAmmoAttackCount / effectiveAttacksPerAmmo);
+        if (ammoUnitsConsumed <= 0)
+        {
+            return;
+        }
+
+        accumulatedAmmoAttackCount -= ammoUnitsConsumed * effectiveAttacksPerAmmo;
+        ownerTower.HandlePrimaryAttackAmmoConsumed(this, ammoUnitsConsumed);
     }
 }

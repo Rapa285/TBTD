@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Stat and upgrade compilation for <see cref="TowerEntity"/>.
@@ -109,6 +110,10 @@ public partial class TowerEntity
                 return 5f;
             case ENTITY_STATS.SetupTime:
                 return 0f;
+            case ENTITY_STATS.AmmoEffectiveness:
+                return 1f;
+            case ENTITY_STATS.AmmoUnits:
+                return 10f;
             default:
                 return 0f;
         }

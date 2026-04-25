@@ -20,6 +20,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
     private readonly List<UpgradeChoiceItem> spawnedItems = new List<UpgradeChoiceItem>();
     private string activeUnitId;
+    private bool eventBusSubscribed;
 
     private void Awake()
     {
@@ -27,24 +28,21 @@ public class UpgradeSelectionUI : MonoBehaviour
         Hide();
     }
 
+    private void Start()
+    {
+        ResolveReferences();
+        SubscribeToEventBus();
+    }
+
     private void OnEnable()
     {
         ResolveReferences();
-
-        if (eventBus != null)
-        {
-            eventBus.UnitUpgradeChoicesOffered += HandleUpgradeChoicesOffered;
-            eventBus.UnitUpgradeSelected += HandleUpgradeSelected;
-        }
+        SubscribeToEventBus();
     }
 
     private void OnDisable()
     {
-        if (eventBus != null)
-        {
-            eventBus.UnitUpgradeChoicesOffered -= HandleUpgradeChoicesOffered;
-            eventBus.UnitUpgradeSelected -= HandleUpgradeSelected;
-        }
+        UnsubscribeFromEventBus();
     }
 
     private void OnValidate()
@@ -57,6 +55,11 @@ public class UpgradeSelectionUI : MonoBehaviour
     /// </summary>
     public void HandleChoiceSelected(int choiceIndex)
     {
+        if (eventBus == null)
+        {
+            ResolveReferences();
+        }
+
         if (eventBus == null)
         {
             Debug.LogWarning($"{nameof(UpgradeSelectionUI)} cannot request upgrade choice because no {nameof(UnitEventBus)} is assigned.", this);
@@ -162,7 +165,7 @@ public class UpgradeSelectionUI : MonoBehaviour
     {
         if (eventBus == null)
         {
-            eventBus = FindAnyObjectByType<UnitEventBus>();
+            ServiceLocator.TryResolve(out eventBus);
         }
 
         if (canvasGroup == null)
@@ -174,5 +177,39 @@ public class UpgradeSelectionUI : MonoBehaviour
         {
             choicesRoot = transform;
         }
+    }
+
+    private void SubscribeToEventBus()
+    {
+        if (eventBusSubscribed)
+        {
+            return;
+        }
+
+        if (eventBus == null)
+        {
+            ResolveReferences();
+        }
+
+        if (eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitUpgradeChoicesOffered += HandleUpgradeChoicesOffered;
+        eventBus.UnitUpgradeSelected += HandleUpgradeSelected;
+        eventBusSubscribed = true;
+    }
+
+    private void UnsubscribeFromEventBus()
+    {
+        if (!eventBusSubscribed || eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitUpgradeChoicesOffered -= HandleUpgradeChoicesOffered;
+        eventBus.UnitUpgradeSelected -= HandleUpgradeSelected;
+        eventBusSubscribed = false;
     }
 }
