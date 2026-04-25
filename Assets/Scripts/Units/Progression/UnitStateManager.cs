@@ -37,7 +37,7 @@ public class UnitStateManager : MonoBehaviour
         [SerializeField, Tooltip("Whether this unit is waiting for an upgrade selection.")]
         private bool upgradePending;
 
-        [SerializeField, Tooltip("Append-only list of upgrades selected for this owned unit.")]
+        [SerializeField, Tooltip("Append-only list of upgrades selected for this owned unit. Runtime stat and weapon composition still happens inside TowerEntity.")]
         private List<UpgradeSO> appliedUpgrades = new List<UpgradeSO>();
 
         [NonSerialized] private TowerEntity currentRuntimeInstance;
@@ -196,7 +196,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies persistent roster state to a runtime tower.
+    /// Applies persistent roster upgrades and progression state to a runtime tower instance.
     /// </summary>
     public bool ApplyStateTo(string unitId, TowerEntity tower)
     {
@@ -212,7 +212,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies upgrades and progression state from the roster into a runtime unit instance.
+    /// Applies roster upgrades and progression state into a runtime unit instance without recording it as deployed.
     /// </summary>
     public bool ApplyStateTo(string unitId, GameObject runtimeRoot, TowerEntity tower, bool evaluateThreshold)
     {
@@ -227,7 +227,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Injects all roster state required by a placed runtime unit, then records it as deployed.
+    /// Injects all roster state required by a placed runtime unit, then records it as the live deployed instance.
     /// </summary>
     public bool CompleteRuntimeDeployment(string unitId, GameObject runtimeRoot, TowerEntity tower)
     {
@@ -344,7 +344,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Records the selected upgrade, advances level, and applies it to the deployed tower when present.
+    /// Records the selected upgrade, advances level, and applies it immediately to the deployed tower when present.
     /// </summary>
     public bool RecordSelectedUpgrade(string unitId, UpgradeSO upgrade)
     {

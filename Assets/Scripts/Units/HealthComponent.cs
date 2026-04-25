@@ -8,15 +8,24 @@ public enum HealthDeathMode
     None = 2
 }
 
+/// <summary>
+/// Basic health and shield receiver that supports both plain and context-aware damage.
+/// </summary>
 public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamageable
 {
     [Header("Auto Initialization")]
-    [SerializeField] private bool initializeOnStart = false;
-    [SerializeField, Min(1f)] private float startingHealth = 100f;
-    [SerializeField, Min(0f)] private float startingShield = 0f;
+    [SerializeField, Tooltip("Initialize health automatically from the serialized starting values on Start.")]
+    private bool initializeOnStart = false;
+
+    [SerializeField, Min(1f), Tooltip("Starting and maximum health used when auto-initializing or when Initialize is called with this value.")]
+    private float startingHealth = 100f;
+
+    [SerializeField, Min(0f), Tooltip("Starting shield used when auto-initializing. Shield absorbs incoming damage before health.")]
+    private float startingShield = 0f;
 
     [Header("Death")]
-    [SerializeField] private HealthDeathMode deathMode = HealthDeathMode.DestroyGameObject;
+    [SerializeField, Tooltip("What happens to this GameObject after health reaches zero.")]
+    private HealthDeathMode deathMode = HealthDeathMode.DestroyGameObject;
 
     private float maxHealth;
     private float currentHealth;
@@ -58,6 +67,9 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         EnsureDeathEvent();
     }
 
+    /// <summary>
+    /// Resets current health, shield, and cached hit context.
+    /// </summary>
     public void Initialize(float health, float shield = 0f)
     {
         maxHealth = Mathf.Max(1f, health);

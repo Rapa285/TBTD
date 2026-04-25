@@ -1,4 +1,6 @@
-
+/// <summary>
+/// Stats compiled by <see cref="TowerEntity"/> from base values and applied upgrades.
+/// </summary>
 public enum ENTITY_STATS
 {
     GlobalDamage, // Global damage mult
@@ -9,6 +11,9 @@ public enum ENTITY_STATS
     AmmoUnits // Deployment-time ammo pool for finite primary weapons
 }
 
+/// <summary>
+/// Stat modifier operation used by <see cref="UpgradeSO.StatEffect"/>.
+/// </summary>
 public enum STAT_TYPE
 {
     Mult = 0,

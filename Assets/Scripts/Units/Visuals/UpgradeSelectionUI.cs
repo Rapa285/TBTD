@@ -51,7 +51,7 @@ public class UpgradeSelectionUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by child choice items after the player clicks one option.
+    /// Called by child choice items after the player clicks one option in the active pending offer.
     /// </summary>
     public void HandleChoiceSelected(int choiceIndex)
     {
@@ -121,6 +121,7 @@ public class UpgradeSelectionUI : MonoBehaviour
             return;
         }
 
+        // Only close the panel after the authoritative selected event returns for the active unit.
         activeUnitId = null;
         ClearChoices();
         Hide();

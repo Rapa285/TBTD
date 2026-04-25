@@ -44,7 +44,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns whether the unit has unresolved upgrade choices.
+    /// Returns whether the roster unit currently has an unresolved generated offer.
     /// </summary>
     public bool HasPendingOffer(string unitId)
     {
@@ -52,7 +52,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets the pending choices for a unit without allowing callers to mutate the stored offer.
+    /// Gets the pending offer choices for a unit without exposing the mutable backing list.
     /// </summary>
     public bool TryGetPendingChoices(string unitId, out IReadOnlyList<UpgradeSO> choices)
     {
@@ -67,7 +67,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects one pending upgrade choice by UI index.
+    /// Selects one pending upgrade choice by UI index from the currently stored offer.
     /// </summary>
     public bool SelectUpgrade(string unitId, int choiceIndex)
     {
@@ -82,7 +82,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects one pending upgrade choice by asset reference.
+    /// Selects one pending upgrade choice by asset reference from the currently stored offer.
     /// </summary>
     public bool SelectUpgrade(string unitId, UpgradeSO upgrade)
     {
