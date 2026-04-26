@@ -1,11 +1,9 @@
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 /// <summary>
-/// UI drag/click entry point for starting direct prefab or roster-managed unit deployment.
+/// UI identity and status model for one unit item.
 /// </summary>
-public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler, IPointerExitHandler, IPointerEnterHandler, IBeginDragHandler
+public class UIUnitItem : MonoBehaviour
 {
     [SerializeField, Tooltip("Fallback tower prefab used when this UI item is not bound to a roster unit.")]
     private GameObject unitToDeploy;
@@ -16,50 +14,19 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
     [SerializeField, Tooltip("Stable ID of the owned unit to deploy from the roster manager.")]
     private string unitId;
 
-    [SerializeField, Tooltip("Deployment controller that owns preview placement and final deployment.")]
-    private UnitDeploymentController deploymentController;
-
-    [SerializeField, Tooltip("Optional Selectable used to block deployment while the UI element is not interactable.")]
-    private Selectable selectable;
-
-    [SerializeField, Tooltip("Start deployment when Unity begins a drag gesture from this UI item.")]
-    private bool beginDeploymentOnBeginDrag = true;
-
-    [SerializeField, Tooltip("Start deployment when the pointer leaves this item while held down.")]
-    private bool beginDeploymentOnPointerExit = true;
-
-    [SerializeField, Tooltip("Start deployment immediately when the left pointer button is pressed.")]
-    private bool beginDeploymentOnPointerDown;
-
-    private bool isHovered;
-    private bool isHeldDown;
     private bool warnedMissingUnitStateManager;
 
-    public bool IsHovered => isHovered;
-    public bool IsHeldDown => isHeldDown;
     public GameObject UnitToDeploy => unitToDeploy;
     public UnitStateManager UnitStateManager => unitStateManager;
     public string UnitId => unitId;
-    public UnitDeploymentController DeploymentController => deploymentController;
+    public bool IsManagedUnit => !string.IsNullOrWhiteSpace(unitId);
+    public bool IsManagedUnitConfigured => IsManagedUnit && ResolveManagedUnitStateManager() != null;
+    public bool IsDeployed => TryGetOwnedUnit(out UnitStateManager.OwnedUnitState unit) && unit.IsDeployed;
+    public bool CanDeploy => EvaluateCanDeploy();
 
     private void Awake()
     {
-        if (selectable == null)
-        {
-            selectable = GetComponent<Selectable>();
-        }
-
-        ResolveDeploymentController();
         ResolveUnitStateManager();
-        ResetPointerState();
-    }
-
-    private void OnValidate()
-    {
-        if (selectable == null)
-        {
-            selectable = GetComponent<Selectable>();
-        }
     }
 
     /// <summary>
@@ -70,6 +37,7 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
         unitToDeploy = unitPrefab;
         unitStateManager = null;
         unitId = null;
+        warnedMissingUnitStateManager = false;
     }
 
     /// <summary>
@@ -79,114 +47,51 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
     {
         unitStateManager = stateManager;
         this.unitId = unitId;
+        warnedMissingUnitStateManager = false;
     }
 
     /// <summary>
-    /// Assigns the deployment controller used by this UI item.
+    /// Returns whether this item currently represents a deployable unit.
     /// </summary>
-    public void SetDeploymentController(UnitDeploymentController controller)
+    public bool HasDeployableUnit()
     {
-        deploymentController = controller;
+        ResolveUnitStateManager();
+        return EvaluateCanDeploy();
     }
 
     /// <summary>
-    /// Attempts to begin deployment using the managed-unit path when configured, otherwise the direct prefab path.
+    /// Tries to get the roster entry represented by this item.
     /// </summary>
-    public bool TryBeginDeployment()
+    public bool TryGetOwnedUnit(out UnitStateManager.OwnedUnitState unit)
     {
-        if (!CanBeginDeployment())
+        UnitStateManager resolvedUnitStateManager = ResolveManagedUnitStateManager();
+        if (resolvedUnitStateManager == null)
         {
+            unit = null;
             return false;
         }
 
-        if (HasManagedUnit())
-        {
-            return deploymentController.BeginDeployment(unitStateManager, unitId);
-        }
-
-        return deploymentController.BeginDeployment(unitToDeploy);
+        return resolvedUnitStateManager.TryGetUnit(unitId, out unit);
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    /// <summary>
+    /// Recalls the managed unit represented by this item.
+    /// </summary>
+    public bool TryRecall()
     {
-        isHovered = true;
+        UnitStateManager resolvedUnitStateManager = ResolveManagedUnitStateManager();
+        return resolvedUnitStateManager != null && resolvedUnitStateManager.RecallUnit(unitId);
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    private bool EvaluateCanDeploy()
     {
-        isHeldDown = false;
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (eventData.button != PointerEventData.InputButton.Left || !CanBeginDeployment())
+        if (IsManagedUnit)
         {
-            return;
-        }
-
-        isHeldDown = true;
-
-        if (beginDeploymentOnPointerDown && TryBeginDeployment())
-        {
-            ResetPointerState();
-        }
-    }
-
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        if (!isHeldDown || eventData.button != PointerEventData.InputButton.Left || !beginDeploymentOnBeginDrag)
-        {
-            return;
-        }
-
-        if (TryBeginDeployment())
-        {
-            ResetPointerState();
-        }
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        isHovered = false;
-
-        if (isHeldDown && beginDeploymentOnPointerExit)
-        {
-            TryBeginDeployment();
-        }
-
-        ResetPointerState();
-    }
-
-    private bool CanBeginDeployment()
-    {
-        ResolveDeploymentController();
-        ResolveUnitStateManager();
-
-        return deploymentController != null
-            && !deploymentController.IsDragging
-            && (selectable == null || selectable.IsInteractable())
-            && HasDeployableUnit();
-    }
-
-    private bool HasDeployableUnit()
-    {
-        if (HasManagedUnitId())
-        {
-            WarnIfMissingUnitStateManager();
-            return unitStateManager != null && unitStateManager.CanDeploy(unitId);
+            UnitStateManager resolvedUnitStateManager = ResolveManagedUnitStateManager();
+            return resolvedUnitStateManager != null && resolvedUnitStateManager.CanDeploy(unitId);
         }
 
         return unitToDeploy != null && HasDeployableTowerPrefab();
-    }
-
-    private bool HasManagedUnit()
-    {
-        return unitStateManager != null && HasManagedUnitId();
-    }
-
-    private bool HasManagedUnitId()
-    {
-        return !string.IsNullOrWhiteSpace(unitId);
     }
 
     private bool HasDeployableTowerPrefab()
@@ -195,24 +100,25 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
             || unitToDeploy.GetComponentInChildren<TowerEntity>(true) != null;
     }
 
-    private void ResolveDeploymentController()
-    {
-        if (deploymentController != null)
-        {
-            return;
-        }
-
-        deploymentController = FindAnyObjectByType<UnitDeploymentController>();
-    }
-
     private void ResolveUnitStateManager()
     {
-        if (unitStateManager != null || !HasManagedUnitId())
+        ResolveManagedUnitStateManager();
+    }
+
+    private UnitStateManager ResolveManagedUnitStateManager()
+    {
+        if (unitStateManager != null || !IsManagedUnit)
         {
-            return;
+            return unitStateManager;
         }
 
         unitStateManager = FindAnyObjectByType<UnitStateManager>();
+        if (unitStateManager == null)
+        {
+            WarnIfMissingUnitStateManager();
+        }
+
+        return unitStateManager;
     }
 
     private void WarnIfMissingUnitStateManager()
@@ -226,11 +132,5 @@ public class UIUnitItem : MonoBehaviour, IPointerUpHandler, IPointerDownHandler,
         Debug.LogWarning(
             $"{nameof(UIUnitItem)} is configured with unitId '{unitId}' but no {nameof(UnitStateManager)} was found. The unit cannot deploy through roster progression.",
             this);
-    }
-
-    private void ResetPointerState()
-    {
-        isHovered = false;
-        isHeldDown = false;
     }
 }

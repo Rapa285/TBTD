@@ -238,6 +238,12 @@ public class UnitStateManager : MonoBehaviour
 
         InitializeRuntimeProgression(unit, tower, true);
         unit.SetRuntimeInstance(tower, runtimeRoot);
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitDeployed(new UnitDeployedEvent(unitId, tower, runtimeRoot));
+        }
+
         return true;
     }
 
