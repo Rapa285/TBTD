@@ -99,6 +99,11 @@ public class EnemyEntity : MonoBehaviour
             Debug.Log($"{gameObject.name} reached the base and is dealing {stats.damage} damage.");
             CombatDamageUtility.TryApplyDamage(baseTarget, stats.damage);
         }
+
+        GeneralEventBus<BaseDamagedEvent>.Publish(new BaseDamagedEvent
+        {
+            DamageAmount = stats.damage
+        });
         
         Destroy(gameObject);
     }
