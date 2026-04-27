@@ -2136,7 +2136,7 @@ MonoBehaviour:
     Probability: 0
   m_Method: 1
   m_Space: 0
-  m_Spacing: {x: 0.1, y: 0.1}
+  m_Spacing: {x: 0.5, y: 0.5}
   m_Up: 1
   m_Forward: 2
   m_PositionOffset:
@@ -2815,7 +2815,7 @@ Transform:
   m_GameObject: {fileID: 1555786158}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15.69, y: 0.488, z: 26.37}
+  m_LocalPosition: {x: 21, y: 0.488, z: 30.5}
   m_LocalScale: {x: 2.5, y: 1, z: 2.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2976,7 +2976,7 @@ Transform:
   m_GameObject: {fileID: 1564048790}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
-  m_LocalPosition: {x: 24, y: 15, z: -5}
+  m_LocalPosition: {x: 32, y: 17.19, z: -3.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
