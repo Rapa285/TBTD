@@ -13,6 +13,9 @@ public sealed class UnitVision : MonoBehaviour
     [SerializeField, Tooltip("Layers this vision volume is allowed to track as valid targets.")]
     private LayerMask targetLayers = ~0;
 
+    [SerializeField, Tooltip("Optional object scaled to the vision diameter for range previews.")]
+    private GameObject visualization;
+
     private readonly List<Transform> validTargets = new List<Transform>();
     private SphereCollider visionCollider;
 
@@ -25,6 +28,7 @@ public sealed class UnitVision : MonoBehaviour
         {
             range = Mathf.Max(0f, value);
             SyncCollider();
+            SyncVisualization();
         }
     }
 
@@ -32,6 +36,7 @@ public sealed class UnitVision : MonoBehaviour
     {
         visionCollider = GetComponent<SphereCollider>();
         SyncCollider();
+        SyncVisualization();
     }
 
     private void OnValidate()
@@ -39,6 +44,7 @@ public sealed class UnitVision : MonoBehaviour
         range = Mathf.Max(0f, range);
         visionCollider = GetComponent<SphereCollider>();
         SyncCollider();
+        SyncVisualization();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -150,6 +156,16 @@ public sealed class UnitVision : MonoBehaviour
 
         visionCollider.isTrigger = true;
         visionCollider.radius = range;
+    }
+
+    private void SyncVisualization()
+    {
+        if (visualization == null)
+        {
+            return;
+        }
+
+        visualization.transform.localScale = Vector3.one * (range * 2f);
     }
 
     private Vector3 GetWorldCenter()

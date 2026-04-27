@@ -114,6 +114,8 @@ public partial class TowerEntity
                 return 1f;
             case ENTITY_STATS.AmmoUnits:
                 return 10f;
+            case ENTITY_STATS.DeploymentCooldown:
+                return 10f;
             default:
                 return 0f;
         }

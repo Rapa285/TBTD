@@ -235,7 +235,7 @@ Targets that should take damage should have:
 - Run `dotnet build Assembly-CSharp.csproj` after script changes when possible.
 - If `--no-restore` fails because `Temp/obj/.../project.assets.json` is missing, run build without `--no-restore`.
 - Avoid changing generated `.csproj` files unless necessary for immediate local compilation; Unity may regenerate them.
-- Preserve existing `.meta` files and create `.meta` files for new Unity assets/scripts when working outside the editor.
+- Preserve existing `.meta` files, but do not create or edit `.meta` files manually in this project. Let Unity generate new `.meta` files itself when the editor regains focus.
 - Do not use destructive git commands.
 
 ## Known Intentional Gaps

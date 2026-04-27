@@ -5,6 +5,7 @@ using UnityEngine;
 /// <summary>
 /// Persistent roster state for all player-owned units.
 /// </summary>
+[DefaultExecutionOrder(-900)]
 public class UnitStateManager : MonoBehaviour
 {
     /// <summary>
@@ -42,6 +43,9 @@ public class UnitStateManager : MonoBehaviour
 
         [NonSerialized] private TowerEntity currentRuntimeInstance;
         [NonSerialized] private GameObject currentRuntimeRoot;
+        [NonSerialized] private float cooldownDuration;
+        [NonSerialized] private float cooldownEndTime;
+        [NonSerialized] private bool cooldownActive;
 
         public string UnitId => unitId;
         public string DisplayName => displayName;
@@ -55,6 +59,12 @@ public class UnitStateManager : MonoBehaviour
         public TowerEntity CurrentRuntimeInstance => currentRuntimeInstance;
         public GameObject CurrentRuntimeRoot => currentRuntimeRoot;
         public bool IsDeployed => currentRuntimeInstance != null;
+        public bool IsCoolingDown => cooldownActive && CooldownRemaining > 0f;
+        public float CooldownDuration => cooldownActive ? cooldownDuration : 0f;
+        public float CooldownRemaining => cooldownActive ? Mathf.Max(0f, cooldownEndTime - Time.time) : 0f;
+        public float CooldownNormalizedRemaining => cooldownDuration > 0f
+            ? Mathf.Clamp01(CooldownRemaining / cooldownDuration)
+            : 0f;
         public bool HasNextExperienceThreshold => TryGetNextExperienceThreshold(out _);
         public float NextExperienceThreshold => TryGetNextExperienceThreshold(out float threshold) ? threshold : 0f;
 
@@ -112,12 +122,44 @@ public class UnitStateManager : MonoBehaviour
         {
             currentRuntimeInstance = tower;
             currentRuntimeRoot = root != null ? root : tower != null ? tower.gameObject : null;
+            ClearCooldown();
         }
 
         internal void ClearRuntimeInstance()
         {
             currentRuntimeInstance = null;
             currentRuntimeRoot = null;
+        }
+
+        internal void StartCooldown(float duration)
+        {
+            cooldownDuration = Mathf.Max(0f, duration);
+            if (cooldownDuration <= 0f)
+            {
+                ClearCooldown();
+                return;
+            }
+
+            cooldownEndTime = Time.time + cooldownDuration;
+            cooldownActive = true;
+        }
+
+        internal bool TryEndExpiredCooldown()
+        {
+            if (!cooldownActive || CooldownRemaining > 0f)
+            {
+                return false;
+            }
+
+            ClearCooldown();
+            return true;
+        }
+
+        internal void ClearCooldown()
+        {
+            cooldownDuration = 0f;
+            cooldownEndTime = 0f;
+            cooldownActive = false;
         }
     }
 
@@ -132,6 +174,7 @@ public class UnitStateManager : MonoBehaviour
 
     private void Awake()
     {
+        RegisterWithServiceLocator();
         ResolveEventBus();
         ValidateUnitIds();
     }
@@ -153,9 +196,19 @@ public class UnitStateManager : MonoBehaviour
         UnsubscribeFromEventBus();
     }
 
+    private void OnDestroy()
+    {
+        ServiceLocator.Unregister<UnitStateManager>(this);
+    }
+
     private void OnValidate()
     {
         ValidateUnitIds();
+    }
+
+    private void Update()
+    {
+        ExpireCooldowns();
     }
 
     /// <summary>
@@ -190,9 +243,15 @@ public class UnitStateManager : MonoBehaviour
     /// </summary>
     public bool CanDeploy(string unitId)
     {
-        return TryGetUnit(unitId, out OwnedUnitState unit)
-            && unit.UnitPrefab != null
-            && unit.CurrentRuntimeInstance == null;
+        if (!TryGetUnit(unitId, out OwnedUnitState unit))
+        {
+            return false;
+        }
+
+        ExpireCooldownIfNeeded(unit, true);
+        return unit.UnitPrefab != null
+            && unit.CurrentRuntimeInstance == null
+            && !unit.IsCoolingDown;
     }
 
     /// <summary>
@@ -236,8 +295,19 @@ public class UnitStateManager : MonoBehaviour
             return false;
         }
 
+        if (!CanDeploy(unitId))
+        {
+            return false;
+        }
+
         InitializeRuntimeProgression(unit, tower, true);
         unit.SetRuntimeInstance(tower, runtimeRoot);
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitDeployed(new UnitDeployedEvent(unitId, tower, runtimeRoot));
+        }
+
         return true;
     }
 
@@ -295,11 +365,17 @@ public class UnitStateManager : MonoBehaviour
             RecordExperience(unitId, progression.CurrentExperience);
         }
 
+        TowerEntity recalledTower = unit.CurrentRuntimeInstance;
+        float cooldownDuration = recalledTower != null
+            ? Mathf.Max(0f, recalledTower.GetStat(ENTITY_STATS.DeploymentCooldown))
+            : 0f;
+
         GameObject root = unit.CurrentRuntimeRoot != null
             ? unit.CurrentRuntimeRoot
             : unit.CurrentRuntimeInstance.gameObject;
 
         unit.ClearRuntimeInstance();
+        unit.StartCooldown(cooldownDuration);
 
         if (root != null)
         {
@@ -382,6 +458,38 @@ public class UnitStateManager : MonoBehaviour
     private void HandleUnitExperienceChanged(UnitExperienceChangedEvent eventData)
     {
         RecordExperience(eventData.UnitId, eventData.CurrentExperience);
+    }
+
+    private void ExpireCooldowns()
+    {
+        for (int i = 0; i < ownedUnits.Count; i++)
+        {
+            ExpireCooldownIfNeeded(ownedUnits[i], true);
+        }
+    }
+
+    private bool ExpireCooldownIfNeeded(OwnedUnitState unit, bool raiseEvent)
+    {
+        if (unit == null || !unit.TryEndExpiredCooldown())
+        {
+            return false;
+        }
+
+        if (raiseEvent)
+        {
+            RaiseUnitCooldownEnded(unit.UnitId);
+        }
+
+        return true;
+    }
+
+    private void RaiseUnitCooldownEnded(string unitId)
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitCooldownEnded(new UnitCooldownEndedEvent(unitId));
+        }
     }
 
     private void InitializeProgression(OwnedUnitState unit, UnitProgression progression, bool evaluateThreshold)
@@ -502,6 +610,20 @@ public class UnitStateManager : MonoBehaviour
 
         eventBus.UnitExperienceChanged -= HandleUnitExperienceChanged;
         eventBusSubscribed = false;
+    }
+
+    private void RegisterWithServiceLocator()
+    {
+        if (ServiceLocator.TryResolve<UnitStateManager>(out UnitStateManager existingStateManager)
+            && existingStateManager != null
+            && existingStateManager != this)
+        {
+            Debug.LogWarning(
+                $"{nameof(UnitStateManager)} on '{name}' replaced the previously registered {nameof(UnitStateManager)} on '{existingStateManager.name}'.",
+                this);
+        }
+
+        ServiceLocator.Register<UnitStateManager>(this);
     }
 
     private void ValidateUnitIds()

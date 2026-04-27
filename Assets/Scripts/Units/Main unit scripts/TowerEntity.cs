@@ -49,7 +49,8 @@ public partial class TowerEntity : MonoBehaviour
         new EntityStat { stat = ENTITY_STATS.VisualRange, value = 5f },
         new EntityStat { stat = ENTITY_STATS.SetupTime, value = 0f },
         new EntityStat { stat = ENTITY_STATS.AmmoEffectiveness, value = 1f },
-        new EntityStat { stat = ENTITY_STATS.AmmoUnits, value = 10f }
+        new EntityStat { stat = ENTITY_STATS.AmmoUnits, value = 10f },
+        new EntityStat { stat = ENTITY_STATS.DeploymentCooldown, value = 10f }
     };
 
     [SerializeField, Tooltip("Upgrade assets currently applied to this runtime tower.")]

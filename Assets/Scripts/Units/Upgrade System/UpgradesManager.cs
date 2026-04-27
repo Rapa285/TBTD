@@ -4,6 +4,7 @@ using UnityEngine;
 /// <summary>
 /// Generates shared-pool upgrade offers and records selected upgrades for roster units.
 /// </summary>
+[DefaultExecutionOrder(-800)]
 public class UpgradesManager : MonoBehaviour
 {
     [SerializeField, Tooltip("Event bus used to listen for level-up requests and publish offers/selections.")]
@@ -23,6 +24,7 @@ public class UpgradesManager : MonoBehaviour
 
     private void Awake()
     {
+        RegisterWithServiceLocator();
         ResolveReferences();
     }
 
@@ -41,6 +43,11 @@ public class UpgradesManager : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromEventBus();
+    }
+
+    private void OnDestroy()
+    {
+        ServiceLocator.Unregister<UpgradesManager>(this);
     }
 
     /// <summary>
@@ -98,6 +105,8 @@ public class UpgradesManager : MonoBehaviour
 
     private void HandleUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
     {
+        ResolveReferences();
+
         string unitId = eventData.UnitId;
         if (string.IsNullOrWhiteSpace(unitId)
             || unitStateManager == null
@@ -181,6 +190,8 @@ public class UpgradesManager : MonoBehaviour
 
     private bool RecordSelection(string unitId, UpgradeSO upgrade)
     {
+        ResolveReferences();
+
         if (unitStateManager == null || !unitStateManager.RecordSelectedUpgrade(unitId, upgrade))
         {
             return false;
@@ -210,7 +221,7 @@ public class UpgradesManager : MonoBehaviour
 
         if (unitStateManager == null)
         {
-            unitStateManager = FindAnyObjectByType<UnitStateManager>();
+            ServiceLocator.TryResolve(out unitStateManager);
         }
     }
 
@@ -246,5 +257,19 @@ public class UpgradesManager : MonoBehaviour
         eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
         eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
         eventBusSubscribed = false;
+    }
+
+    private void RegisterWithServiceLocator()
+    {
+        if (ServiceLocator.TryResolve<UpgradesManager>(out UpgradesManager existingUpgradesManager)
+            && existingUpgradesManager != null
+            && existingUpgradesManager != this)
+        {
+            Debug.LogWarning(
+                $"{nameof(UpgradesManager)} on '{name}' replaced the previously registered {nameof(UpgradesManager)} on '{existingUpgradesManager.name}'.",
+                this);
+        }
+
+        ServiceLocator.Register<UpgradesManager>(this);
     }
 }
