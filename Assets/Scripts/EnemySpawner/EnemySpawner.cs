@@ -33,6 +33,16 @@ public class EnemySpawner : MonoBehaviour
         GenerateWave();
     }
 
+    private void Awake()
+    {
+        SplineContainer spline = GetComponent<SplineContainer>();
+        if (spline != null)
+        {
+            mapSpline = spline;
+        }
+    }
+
+
     // FixedUpdate for consistency
     void FixedUpdate()
     {
