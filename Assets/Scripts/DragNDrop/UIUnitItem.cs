@@ -17,7 +17,7 @@ public class UIUnitItem : MonoBehaviour
     private bool warnedMissingUnitStateManager;
 
     public GameObject UnitToDeploy => unitToDeploy;
-    public UnitStateManager UnitStateManager => unitStateManager;
+    public UnitStateManager UnitStateManager => ResolveManagedUnitStateManager();
     public string UnitId => unitId;
     public bool IsManagedUnit => !string.IsNullOrWhiteSpace(unitId);
     public bool IsManagedUnitConfigured => IsManagedUnit && ResolveManagedUnitStateManager() != null;
@@ -112,7 +112,7 @@ public class UIUnitItem : MonoBehaviour
             return unitStateManager;
         }
 
-        unitStateManager = FindAnyObjectByType<UnitStateManager>();
+        ServiceLocator.TryResolve(out unitStateManager);
         if (unitStateManager == null)
         {
             WarnIfMissingUnitStateManager();

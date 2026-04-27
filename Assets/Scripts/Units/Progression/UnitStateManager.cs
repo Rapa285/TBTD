@@ -5,6 +5,7 @@ using UnityEngine;
 /// <summary>
 /// Persistent roster state for all player-owned units.
 /// </summary>
+[DefaultExecutionOrder(-900)]
 public class UnitStateManager : MonoBehaviour
 {
     /// <summary>
@@ -173,6 +174,7 @@ public class UnitStateManager : MonoBehaviour
 
     private void Awake()
     {
+        RegisterWithServiceLocator();
         ResolveEventBus();
         ValidateUnitIds();
     }
@@ -192,6 +194,11 @@ public class UnitStateManager : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromEventBus();
+    }
+
+    private void OnDestroy()
+    {
+        ServiceLocator.Unregister<UnitStateManager>(this);
     }
 
     private void OnValidate()
@@ -603,6 +610,20 @@ public class UnitStateManager : MonoBehaviour
 
         eventBus.UnitExperienceChanged -= HandleUnitExperienceChanged;
         eventBusSubscribed = false;
+    }
+
+    private void RegisterWithServiceLocator()
+    {
+        if (ServiceLocator.TryResolve<UnitStateManager>(out UnitStateManager existingStateManager)
+            && existingStateManager != null
+            && existingStateManager != this)
+        {
+            Debug.LogWarning(
+                $"{nameof(UnitStateManager)} on '{name}' replaced the previously registered {nameof(UnitStateManager)} on '{existingStateManager.name}'.",
+                this);
+        }
+
+        ServiceLocator.Register<UnitStateManager>(this);
     }
 
     private void ValidateUnitIds()

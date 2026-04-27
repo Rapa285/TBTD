@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Owns tower deployment previews, placement validation, cancellation, and final runtime binding.
 /// </summary>
+[DefaultExecutionOrder(-850)]
 public class UnitDeploymentController : MonoBehaviour
 {
     [SerializeField, Tooltip("Placement service used to convert mouse position into valid world placement results.")]
@@ -25,10 +26,17 @@ public class UnitDeploymentController : MonoBehaviour
 
     private void Awake()
     {
+        RegisterWithServiceLocator();
+
         if (deploymentChecker == null)
         {
             deploymentChecker = GetComponent<UnitDeploymentChecker>();
         }
+    }
+
+    private void OnDestroy()
+    {
+        ServiceLocator.Unregister<UnitDeploymentController>(this);
     }
 
     private void Update()
@@ -243,5 +251,19 @@ public class UnitDeploymentController : MonoBehaviour
         currentStateManager = null;
         currentUnitId = null;
         hasCurrentPlacement = false;
+    }
+
+    private void RegisterWithServiceLocator()
+    {
+        if (ServiceLocator.TryResolve<UnitDeploymentController>(out UnitDeploymentController existingDeploymentController)
+            && existingDeploymentController != null
+            && existingDeploymentController != this)
+        {
+            Debug.LogWarning(
+                $"{nameof(UnitDeploymentController)} on '{name}' replaced the previously registered {nameof(UnitDeploymentController)} on '{existingDeploymentController.name}'.",
+                this);
+        }
+
+        ServiceLocator.Register<UnitDeploymentController>(this);
     }
 }

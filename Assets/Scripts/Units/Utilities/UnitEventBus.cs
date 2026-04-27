@@ -190,6 +190,7 @@ public struct TowerModifiedEvent
 /// <summary>
 /// Lightweight scene event hub for unit progression, upgrade, and recall notifications.
 /// </summary>
+[DefaultExecutionOrder(-1000)]
 public class UnitEventBus : MonoBehaviour
 {
     public event Action<UnitDeployedEvent> UnitDeployed;

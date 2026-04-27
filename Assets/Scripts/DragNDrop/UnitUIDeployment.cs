@@ -31,7 +31,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
 
     public bool IsHovered => isHovered;
     public bool IsHeldDown => isHeldDown;
-    public UnitDeploymentController DeploymentController => deploymentController;
+    public UnitDeploymentController DeploymentController => ResolveDeploymentController();
 
     private void Awake()
     {
@@ -134,8 +134,18 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
 
         if (deploymentController == null)
         {
-            deploymentController = FindAnyObjectByType<UnitDeploymentController>();
+            ResolveDeploymentController();
         }
+    }
+
+    private UnitDeploymentController ResolveDeploymentController()
+    {
+        if (deploymentController == null)
+        {
+            ServiceLocator.TryResolve(out deploymentController);
+        }
+
+        return deploymentController;
     }
 
     private void ResetPointerState()
