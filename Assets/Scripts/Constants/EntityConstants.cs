@@ -8,7 +8,8 @@ public enum ENTITY_STATS
     VisualRange,
     SetupTime, // Time taken from units deployment until actively attacking
     AmmoEffectiveness, // Multiplies attacksPerAmmo on the primary weapon
-    AmmoUnits // Deployment-time ammo pool for finite primary weapons
+    AmmoUnits, // Deployment-time ammo pool for finite primary weapons
+    DeploymentCooldown // Time before a recalled unit can deploy again
 }
 
 /// <summary>

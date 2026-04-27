@@ -62,11 +62,13 @@ MonoBehaviour:
   - stat: 2
     value: 5
   - stat: 3
-    value: 0
+    value: 5
   - stat: 4
     value: 1
   - stat: 5
     value: 30
+  - stat: 6
+    value: 10
   upgrades: []
   onDeploy:
     m_PersistentCalls:

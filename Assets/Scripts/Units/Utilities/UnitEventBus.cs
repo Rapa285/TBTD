@@ -131,6 +131,19 @@ public struct UnitRecalledEvent
 }
 
 /// <summary>
+/// Raised after a recalled unit's deployment cooldown has elapsed.
+/// </summary>
+public struct UnitCooldownEndedEvent
+{
+    public string UnitId { get; }
+
+    public UnitCooldownEndedEvent(string unitId)
+    {
+        UnitId = unitId;
+    }
+}
+
+/// <summary>
 /// Raised after a tower spends one or more ammo units on its primary weapon.
 /// </summary>
 public struct UnitAmmoConsumedEvent
@@ -186,6 +199,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
+    public event Action<UnitCooldownEndedEvent> UnitCooldownEnded;
     public event Action<UnitAmmoConsumedEvent> UnitAmmoConsumed;
     public event Action<TowerModifiedEvent> TowerModified;
 
@@ -253,6 +267,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitRecalled(UnitRecalledEvent eventData)
     {
         UnitRecalled?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a recalled unit can deploy again after cooldown.
+    /// </summary>
+    public void RaiseUnitCooldownEnded(UnitCooldownEndedEvent eventData)
+    {
+        UnitCooldownEnded?.Invoke(eventData);
     }
 
     /// <summary>

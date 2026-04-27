@@ -5,6 +5,15 @@ using UnityEngine;
 /// </summary>
 public partial class TowerEntity
 {
+    public bool IsInSetupTime => deployed && deploymentTimersInitialized && SetupTimeRemaining > 0f;
+    public float SetupTimeDuration => Mathf.Max(0f, GetStat(ENTITY_STATS.SetupTime));
+    public float SetupTimeRemaining => deployed && deploymentTimersInitialized
+        ? Mathf.Max(0f, activeAfterTime - Time.time)
+        : 0f;
+    public float SetupTimeNormalizedRemaining => SetupTimeDuration > 0f
+        ? Mathf.Clamp01(SetupTimeRemaining / SetupTimeDuration)
+        : 0f;
+
     private float GetAttackCooldown()
     {
         return Mathf.Max(0.01f, GetStat(ENTITY_STATS.AttackSpeed));
