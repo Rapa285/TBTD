@@ -42,8 +42,23 @@ public partial class TowerEntity
             && (vision == null || vision.Contains(target));
     }
 
-    private void InitializeDeploymentTimers()
+    private void ClearDeploymentRuntimeState()
     {
+        deploymentTimersInitialized = false;
+        currentTarget = null;
+        activeAfterTime = float.PositiveInfinity;
+        nextAttackTime = float.PositiveInfinity;
+        nextEnemyPollTime = float.PositiveInfinity;
+
+        if (vision != null)
+        {
+            vision.ClearTargets();
+        }
+    }
+
+    private void InitializeDeploymentRuntime()
+    {
+        currentTarget = null;
         activeAfterTime = Time.time + GetStat(ENTITY_STATS.SetupTime);
         nextAttackTime = activeAfterTime;
         deploymentTimersInitialized = true;
@@ -51,7 +66,30 @@ public partial class TowerEntity
         if (vision != null)
         {
             vision.Range = GetStat(ENTITY_STATS.VisualRange);
+            vision.ClearTargets();
             vision.ScanForTargetsOnce();
+        }
+
+        nextEnemyPollTime = Time.time + GetEnemyPollPeriod();
+    }
+
+    private void RefreshDeploymentRuntime()
+    {
+        if (!deploymentTimersInitialized)
+        {
+            InitializeDeploymentRuntime();
+            return;
+        }
+
+        if (vision != null)
+        {
+            vision.Range = GetStat(ENTITY_STATS.VisualRange);
+            vision.ScanForTargetsOnce();
+        }
+
+        if (currentTarget != null && !IsAttackTargetStillValid(currentTarget))
+        {
+            currentTarget = null;
         }
 
         nextEnemyPollTime = Time.time + GetEnemyPollPeriod();

@@ -1,11 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Trigger-based target tracker used by towers for current-target retention and reacquisition.
+/// </summary>
 [RequireComponent(typeof(SphereCollider))]
 public sealed class UnitVision : MonoBehaviour
 {
-    [SerializeField, Min(0f)] private float range = 5f;
-    [SerializeField] private LayerMask targetLayers = ~0;
+    [SerializeField, Min(0f), Tooltip("Vision radius used to size the trigger sphere and overlap scans.")]
+    private float range = 5f;
+
+    [SerializeField, Tooltip("Layers this vision volume is allowed to track as valid targets.")]
+    private LayerMask targetLayers = ~0;
 
     private readonly List<Transform> validTargets = new List<Transform>();
     private SphereCollider visionCollider;
@@ -45,23 +51,35 @@ public sealed class UnitVision : MonoBehaviour
         RemoveTarget(ColliderTargetUtility.GetTargetTransform(other));
     }
 
+    /// <summary>
+    /// Returns the oldest still-valid tracked target after pruning null or inactive entries.
+    /// </summary>
     public Transform GetFirstValidTarget()
     {
         PruneInvalidTargets();
         return validTargets.Count > 0 ? validTargets[0] : null;
     }
 
+    /// <summary>
+    /// Returns whether the supplied transform is still tracked as a valid target.
+    /// </summary>
     public bool Contains(Transform target)
     {
         PruneInvalidTargets();
         return target != null && validTargets.Contains(target);
     }
 
+    /// <summary>
+    /// Clears the current tracked-target cache.
+    /// </summary>
     public void ClearTargets()
     {
         validTargets.Clear();
     }
 
+    /// <summary>
+    /// Rebuilds tracked targets from an overlap scan. Useful for deployment refreshes and debug polling.
+    /// </summary>
     public void ScanForTargetsOnce()
     {
         ClearTargets();

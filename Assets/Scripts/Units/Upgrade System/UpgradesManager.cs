@@ -19,34 +19,32 @@ public class UpgradesManager : MonoBehaviour
     private int upgradeChoiceCount = 3;
 
     private readonly Dictionary<string, List<UpgradeSO>> pendingOffers = new Dictionary<string, List<UpgradeSO>>();
+    private bool eventBusSubscribed;
 
     private void Awake()
     {
         ResolveReferences();
     }
 
+    private void Start()
+    {
+        ResolveReferences();
+        SubscribeToEventBus();
+    }
+
     private void OnEnable()
     {
         ResolveReferences();
-
-        if (eventBus != null)
-        {
-            eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
-            eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
-        }
+        SubscribeToEventBus();
     }
 
     private void OnDisable()
     {
-        if (eventBus != null)
-        {
-            eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
-            eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
-        }
+        UnsubscribeFromEventBus();
     }
 
     /// <summary>
-    /// Returns whether the unit has unresolved upgrade choices.
+    /// Returns whether the roster unit currently has an unresolved generated offer.
     /// </summary>
     public bool HasPendingOffer(string unitId)
     {
@@ -54,7 +52,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets the pending choices for a unit without allowing callers to mutate the stored offer.
+    /// Gets the pending offer choices for a unit without exposing the mutable backing list.
     /// </summary>
     public bool TryGetPendingChoices(string unitId, out IReadOnlyList<UpgradeSO> choices)
     {
@@ -69,7 +67,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects one pending upgrade choice by UI index.
+    /// Selects one pending upgrade choice by UI index from the currently stored offer.
     /// </summary>
     public bool SelectUpgrade(string unitId, int choiceIndex)
     {
@@ -84,7 +82,7 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects one pending upgrade choice by asset reference.
+    /// Selects one pending upgrade choice by asset reference from the currently stored offer.
     /// </summary>
     public bool SelectUpgrade(string unitId, UpgradeSO upgrade)
     {
@@ -119,6 +117,7 @@ public class UpgradesManager : MonoBehaviour
 
         pendingOffers[unitId] = offer;
 
+        ResolveReferences();
         if (eventBus != null)
         {
             eventBus.RaiseUnitUpgradeChoicesOffered(new UnitUpgradeChoicesOfferedEvent(unitId, offer.ToArray()));
@@ -187,6 +186,7 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
+        ResolveReferences();
         if (eventBus != null && unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
         {
             eventBus.RaiseUnitUpgradeSelected(new UnitUpgradeSelectedEvent(
@@ -205,12 +205,46 @@ public class UpgradesManager : MonoBehaviour
     {
         if (eventBus == null)
         {
-            eventBus = FindAnyObjectByType<UnitEventBus>();
+            ServiceLocator.TryResolve(out eventBus);
         }
 
         if (unitStateManager == null)
         {
             unitStateManager = FindAnyObjectByType<UnitStateManager>();
         }
+    }
+
+    private void SubscribeToEventBus()
+    {
+        if (eventBusSubscribed)
+        {
+            return;
+        }
+
+        if (eventBus == null)
+        {
+            ResolveReferences();
+        }
+
+        if (eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
+        eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
+        eventBusSubscribed = true;
+    }
+
+    private void UnsubscribeFromEventBus()
+    {
+        if (!eventBusSubscribed || eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
+        eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
+        eventBusSubscribed = false;
     }
 }

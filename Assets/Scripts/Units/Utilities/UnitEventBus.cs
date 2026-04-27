@@ -114,6 +114,50 @@ public struct UnitRecalledEvent
 }
 
 /// <summary>
+/// Raised after a tower spends one or more ammo units on its primary weapon.
+/// </summary>
+public struct UnitAmmoConsumedEvent
+{
+    public string UnitId { get; }
+    public TowerEntity Tower { get; }
+    public AttackBehaviour AttackBehaviour { get; }
+    public int AmountConsumed { get; }
+    public int CurrentAmmoUnits { get; }
+    public int MaxAmmoUnits { get; }
+
+    public UnitAmmoConsumedEvent(
+        string unitId,
+        TowerEntity tower,
+        AttackBehaviour attackBehaviour,
+        int amountConsumed,
+        int currentAmmoUnits,
+        int maxAmmoUnits)
+    {
+        UnitId = unitId;
+        Tower = tower;
+        AttackBehaviour = attackBehaviour;
+        AmountConsumed = Mathf.Max(0, amountConsumed);
+        CurrentAmmoUnits = Mathf.Max(0, currentAmmoUnits);
+        MaxAmmoUnits = Mathf.Max(0, maxAmmoUnits);
+    }
+}
+
+/// <summary>
+/// Raised after a deployed tower refreshes its runtime state outside the initial deployment activation.
+/// </summary>
+public struct TowerModifiedEvent
+{
+    public string UnitId { get; }
+    public TowerEntity Tower { get; }
+
+    public TowerModifiedEvent(string unitId, TowerEntity tower)
+    {
+        UnitId = unitId;
+        Tower = tower;
+    }
+}
+
+/// <summary>
 /// Lightweight scene event hub for unit progression, upgrade, and recall notifications.
 /// </summary>
 public class UnitEventBus : MonoBehaviour
@@ -124,6 +168,18 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
+    public event Action<UnitAmmoConsumedEvent> UnitAmmoConsumed;
+    public event Action<TowerModifiedEvent> TowerModified;
+
+    private void Awake()
+    {
+        RegisterWithServiceLocator();
+    }
+
+    private void OnDestroy()
+    {
+        ServiceLocator.Unregister<UnitEventBus>(this);
+    }
 
     /// <summary>
     /// Publishes a unit experience change.
@@ -171,5 +227,35 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitRecalled(UnitRecalledEvent eventData)
     {
         UnitRecalled?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a tower consumed ammo through its primary weapon.
+    /// </summary>
+    public void RaiseUnitAmmoConsumed(UnitAmmoConsumedEvent eventData)
+    {
+        UnitAmmoConsumed?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a deployed tower refreshed its runtime state after deployment.
+    /// </summary>
+    public void RaiseTowerModified(TowerModifiedEvent eventData)
+    {
+        TowerModified?.Invoke(eventData);
+    }
+
+    private void RegisterWithServiceLocator()
+    {
+        if (ServiceLocator.TryResolve<UnitEventBus>(out UnitEventBus existingEventBus)
+            && existingEventBus != null
+            && existingEventBus != this)
+        {
+            Debug.LogWarning(
+                $"{nameof(UnitEventBus)} on '{name}' replaced the previously registered {nameof(UnitEventBus)} on '{existingEventBus.name}'.",
+                this);
+        }
+
+        ServiceLocator.Register<UnitEventBus>(this);
     }
 }

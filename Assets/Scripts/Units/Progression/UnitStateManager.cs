@@ -37,7 +37,7 @@ public class UnitStateManager : MonoBehaviour
         [SerializeField, Tooltip("Whether this unit is waiting for an upgrade selection.")]
         private bool upgradePending;
 
-        [SerializeField, Tooltip("Append-only list of upgrades selected for this owned unit.")]
+        [SerializeField, Tooltip("Append-only list of upgrades selected for this owned unit. Runtime stat and weapon composition still happens inside TowerEntity.")]
         private List<UpgradeSO> appliedUpgrades = new List<UpgradeSO>();
 
         [NonSerialized] private TowerEntity currentRuntimeInstance;
@@ -126,6 +126,7 @@ public class UnitStateManager : MonoBehaviour
 
     [SerializeField, Tooltip("Inspector-authored roster of player-owned units.")]
     private List<OwnedUnitState> ownedUnits = new List<OwnedUnitState>();
+    private bool eventBusSubscribed;
 
     public IReadOnlyList<OwnedUnitState> OwnedUnits => ownedUnits;
 
@@ -135,22 +136,21 @@ public class UnitStateManager : MonoBehaviour
         ValidateUnitIds();
     }
 
+    private void Start()
+    {
+        ResolveEventBus();
+        SubscribeToEventBus();
+    }
+
     private void OnEnable()
     {
         ResolveEventBus();
-
-        if (eventBus != null)
-        {
-            eventBus.UnitExperienceChanged += HandleUnitExperienceChanged;
-        }
+        SubscribeToEventBus();
     }
 
     private void OnDisable()
     {
-        if (eventBus != null)
-        {
-            eventBus.UnitExperienceChanged -= HandleUnitExperienceChanged;
-        }
+        UnsubscribeFromEventBus();
     }
 
     private void OnValidate()
@@ -196,7 +196,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies persistent roster state to a runtime tower.
+    /// Applies persistent roster upgrades and progression state to a runtime tower instance.
     /// </summary>
     public bool ApplyStateTo(string unitId, TowerEntity tower)
     {
@@ -212,7 +212,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies upgrades and progression state from the roster into a runtime unit instance.
+    /// Applies roster upgrades and progression state into a runtime unit instance without recording it as deployed.
     /// </summary>
     public bool ApplyStateTo(string unitId, GameObject runtimeRoot, TowerEntity tower, bool evaluateThreshold)
     {
@@ -221,12 +221,13 @@ public class UnitStateManager : MonoBehaviour
             return false;
         }
 
-        InjectRuntimeState(unit, runtimeRoot, tower, evaluateThreshold);
+        ApplyRuntimeUpgrades(unit, tower);
+        InitializeRuntimeProgression(unit, tower, evaluateThreshold);
         return true;
     }
 
     /// <summary>
-    /// Injects all roster state required by a placed runtime unit, then records it as deployed.
+    /// Injects all roster state required by a placed runtime unit, then records it as the live deployed instance.
     /// </summary>
     public bool CompleteRuntimeDeployment(string unitId, GameObject runtimeRoot, TowerEntity tower)
     {
@@ -235,7 +236,7 @@ public class UnitStateManager : MonoBehaviour
             return false;
         }
 
-        InjectRuntimeState(unit, runtimeRoot, tower, true);
+        InitializeRuntimeProgression(unit, tower, true);
         unit.SetRuntimeInstance(tower, runtimeRoot);
         return true;
     }
@@ -258,7 +259,8 @@ public class UnitStateManager : MonoBehaviour
             return false;
         }
 
-        InjectRuntimeState(unit, runtimeRoot, tower, true);
+        ApplyRuntimeUpgrades(unit, tower);
+        InitializeRuntimeProgression(unit, tower, true);
         unit.SetRuntimeInstance(tower, runtimeRoot);
         return true;
     }
@@ -304,6 +306,7 @@ public class UnitStateManager : MonoBehaviour
             Destroy(root);
         }
 
+        ResolveEventBus();
         if (eventBus != null)
         {
             eventBus.RaiseUnitRecalled(new UnitRecalledEvent(unitId));
@@ -341,7 +344,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Records the selected upgrade, advances level, and applies it to the deployed tower when present.
+    /// Records the selected upgrade, advances level, and applies it immediately to the deployed tower when present.
     /// </summary>
     public bool RecordSelectedUpgrade(string unitId, UpgradeSO upgrade)
     {
@@ -383,6 +386,8 @@ public class UnitStateManager : MonoBehaviour
 
     private void InitializeProgression(OwnedUnitState unit, UnitProgression progression, bool evaluateThreshold)
     {
+        ResolveEventBus();
+
         bool hasThreshold = unit.TryGetNextExperienceThreshold(out float threshold);
         progression.Initialize(
             unit.UnitId,
@@ -410,18 +415,20 @@ public class UnitStateManager : MonoBehaviour
         return true;
     }
 
-    private void InjectRuntimeState(
-        OwnedUnitState unit,
-        GameObject runtimeRoot,
-        TowerEntity tower,
-        bool evaluateThreshold)
+    private void ApplyRuntimeUpgrades(OwnedUnitState unit, TowerEntity tower)
     {
         // This is the roster-to-runtime bridge; TowerEntity remains responsible for compiling upgrade effects.
         for (int i = 0; i < unit.AppliedUpgrades.Count; i++)
         {
             tower.AddUpgrade(unit.AppliedUpgrades[i]);
         }
+    }
 
+    private void InitializeRuntimeProgression(
+        OwnedUnitState unit,
+        TowerEntity tower,
+        bool evaluateThreshold)
+    {
         InitializeProgression(unit, EnsureRuntimeProgression(tower), evaluateThreshold);
     }
 
@@ -461,8 +468,40 @@ public class UnitStateManager : MonoBehaviour
     {
         if (eventBus == null)
         {
-            eventBus = FindAnyObjectByType<UnitEventBus>();
+            ServiceLocator.TryResolve(out eventBus);
         }
+    }
+
+    private void SubscribeToEventBus()
+    {
+        if (eventBusSubscribed)
+        {
+            return;
+        }
+
+        if (eventBus == null)
+        {
+            ResolveEventBus();
+        }
+
+        if (eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitExperienceChanged += HandleUnitExperienceChanged;
+        eventBusSubscribed = true;
+    }
+
+    private void UnsubscribeFromEventBus()
+    {
+        if (!eventBusSubscribed || eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.UnitExperienceChanged -= HandleUnitExperienceChanged;
+        eventBusSubscribed = false;
     }
 
     private void ValidateUnitIds()

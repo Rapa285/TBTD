@@ -1,7 +1,7 @@
 public sealed class DirectAttackBehaviour : AttackBehaviour
 {
-    protected override void ExecuteAttack(UnityEngine.Transform target, float damage)
+    protected override bool ExecuteAttack(UnityEngine.Transform target, float damage)
     {
-        TryApplyDamage(target, damage);
+        return TryApplyDamage(target, damage);
     }
 }

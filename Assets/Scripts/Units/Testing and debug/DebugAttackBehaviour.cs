@@ -35,8 +35,13 @@ public class DebugAttackBehaviour : AttackBehaviour
         ConfigureLineRenderer();
     }
 
-    protected override void ExecuteAttack(Transform target, float damage)
+    protected override bool ExecuteAttack(Transform target, float damage)
     {
+        if (target == null)
+        {
+            return false;
+        }
+
         TryApplyDamage(target, damage);
 
         if (activeBeam != null)
@@ -45,6 +50,7 @@ public class DebugAttackBehaviour : AttackBehaviour
         }
 
         activeBeam = StartCoroutine(RenderBeam(target));
+        return true;
     }
 
     private System.Collections.IEnumerator RenderBeam(Transform target)

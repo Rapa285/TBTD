@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// Runtime authority for tower stats, targeting, attack timing, weapon replacement, and upgrade modifiers.
 /// </summary>
 public partial class TowerEntity : MonoBehaviour
 {
+    [Serializable]
+    public sealed class TowerDeploymentEvent : UnityEvent<string>
+    {
+    }
+
     /// <summary>
     /// Inspector-authored base value for one tower stat.
     /// </summary>
@@ -41,7 +47,9 @@ public partial class TowerEntity : MonoBehaviour
         new EntityStat { stat = ENTITY_STATS.GlobalDamage, value = 1f },
         new EntityStat { stat = ENTITY_STATS.AttackSpeed, value = 1f },
         new EntityStat { stat = ENTITY_STATS.VisualRange, value = 5f },
-        new EntityStat { stat = ENTITY_STATS.SetupTime, value = 0f }
+        new EntityStat { stat = ENTITY_STATS.SetupTime, value = 0f },
+        new EntityStat { stat = ENTITY_STATS.AmmoEffectiveness, value = 1f },
+        new EntityStat { stat = ENTITY_STATS.AmmoUnits, value = 10f }
     };
 
     [SerializeField, Tooltip("Upgrade assets currently applied to this runtime tower.")]
@@ -64,29 +72,22 @@ public partial class TowerEntity : MonoBehaviour
     private float activeAfterTime;
     private float nextEnemyPollTime;
     private bool deploymentTimersInitialized;
+    private bool deploymentBroadcasted;
 
     public bool Deployed => deployed;
     public AttackBehaviour ActiveAttackBehaviour => GetActiveAttackBehaviour();
     public IReadOnlyList<AttackBehaviour> ActiveAttackBehaviours => activeAttackBehaviours;
     public IReadOnlyList<ProjectileModifierBehaviour> ActiveProjectileModifiers => activeProjectileModifiers;
+    public string UnitId => unitId;
+
+    [SerializeField, Tooltip("Broadcast after this tower becomes active and has resolved its runtime unit ID.")]
+    private TowerDeploymentEvent onDeploy = new TowerDeploymentEvent();
+
+    public TowerDeploymentEvent OnDeploy => onDeploy;
 
     private void Awake()
     {
-        if (vision == null)
-        {
-            vision = GetComponentInChildren<UnitVision>();
-        }
-
-        if (attackBehaviour == null)
-        {
-            attackBehaviour = GetComponent<AttackBehaviour>();
-        }
-
-        defaultAttackBehaviour = attackBehaviour;
-        activeAttackBehaviour = defaultAttackBehaviour;
-        RebuildActiveAttackBehaviourList();
-
-        CompileFinalStats();
+        CacheComponentReferences();
     }
 
     /// <summary>
@@ -95,16 +96,11 @@ public partial class TowerEntity : MonoBehaviour
     public void PrepareForDeploymentPreview()
     {
         deployed = false;
-        deploymentTimersInitialized = false;
-        currentTarget = null;
-        activeAfterTime = float.PositiveInfinity;
-        nextAttackTime = float.PositiveInfinity;
-        nextEnemyPollTime = float.PositiveInfinity;
-
-        if (vision != null)
-        {
-            vision.ClearTargets();
-        }
+        deploymentBroadcasted = false;
+        ClearDeploymentRuntimeState();
+        ResetAmmoStateForPreview();
+        ReleaseResolvedUnitIdForPreview();
+        ResolveTowerCoreState();
     }
 
     /// <summary>
@@ -113,28 +109,35 @@ public partial class TowerEntity : MonoBehaviour
     public void Deploy()
     {
         deployed = true;
-        currentTarget = null;
+        RunDeploymentActivation();
+    }
 
-        if (vision != null)
+    private void BroadcastDeployment()
+    {
+        if (!deployed || deploymentBroadcasted || string.IsNullOrWhiteSpace(unitId))
         {
-            vision.ClearTargets();
-            vision.Range = GetStat(ENTITY_STATS.VisualRange);
+            return;
         }
 
-        InitializeDeploymentTimers();
+        deploymentBroadcasted = true;
+        onDeploy?.Invoke(unitId);
     }
 
     private void Start()
     {
-        if (deployed && !deploymentTimersInitialized)
+        if (deployed)
         {
-            InitializeDeploymentTimers();
+            RunDeploymentActivation();
+            return;
         }
+
+        ResolveTowerCoreState();
     }
 
     private void OnValidate()
     {
-        CompileFinalStats();
+        CacheComponentReferences();
+        ResolveTowerCoreState();
     }
 
     private void Update()
@@ -157,6 +160,11 @@ public partial class TowerEntity : MonoBehaviour
             return;
         }
 
+        if (!CanStartPrimaryAttack(currentAttackBehaviour))
+        {
+            return;
+        }
+
         AttackWithActiveBehaviours(currentTarget, GetStat(ENTITY_STATS.GlobalDamage));
         nextAttackTime = Time.time + GetAttackCooldown();
     }
@@ -168,7 +176,7 @@ public partial class TowerEntity : MonoBehaviour
     {
         if (finalStats.Count == 0)
         {
-            CompileFinalStats();
+            ResolveTowerCoreState();
         }
 
         return finalStats.TryGetValue(stat, out float value) ? value : GetDefaultStat(stat);
@@ -190,12 +198,12 @@ public partial class TowerEntity : MonoBehaviour
             entityStat.value = value;
             baseStats[i] = entityStat;
 
-            CompileFinalStats();
+            RefreshTowerStateForCurrentMode();
             return;
         }
 
         baseStats.Add(new EntityStat { stat = stat, value = value });
-        CompileFinalStats();
+        RefreshTowerStateForCurrentMode();
     }
 
     /// <summary>
@@ -209,7 +217,7 @@ public partial class TowerEntity : MonoBehaviour
         }
 
         upgrades.Add(upgrade);
-        CompileFinalStats();
+        RefreshTowerStateForCurrentMode();
     }
 
     /// <summary>
@@ -222,6 +230,117 @@ public partial class TowerEntity : MonoBehaviour
             return;
         }
 
+        RefreshTowerStateForCurrentMode();
+    }
+
+    private void CacheComponentReferences()
+    {
+        if (vision == null)
+        {
+            vision = GetComponentInChildren<UnitVision>();
+        }
+
+        if (attackBehaviour == null)
+        {
+            attackBehaviour = GetComponent<AttackBehaviour>();
+        }
+
+        if (defaultAttackBehaviour == null)
+        {
+            defaultAttackBehaviour = attackBehaviour;
+        }
+
+        if (activeAttackBehaviour == null)
+        {
+            activeAttackBehaviour = defaultAttackBehaviour;
+        }
+
+        if (activeAttackBehaviours.Count == 0)
+        {
+            RebuildActiveAttackBehaviourList();
+        }
+
+        if (onDeploy == null)
+        {
+            onDeploy = new TowerDeploymentEvent();
+        }
+    }
+
+    private void RefreshTowerStateForCurrentMode()
+    {
+        if (!Application.isPlaying)
+        {
+            ResolveTowerCoreState();
+            return;
+        }
+
+        if (deployed && deploymentBroadcasted)
+        {
+            RunDeployedRuntimeRefresh();
+            return;
+        }
+
+        ResolveTowerCoreState();
+    }
+
+    private void RunDeploymentActivation()
+    {
+        // Deployment activation is intentionally linear: identity, tower core, dependent runtime state, timers, broadcast.
+        if (!ValidateOrResolveUnitId())
+        {
+            return;
+        }
+
+        ResolveTowerCoreState();
+        ResolvePrimaryRuntimeFeatures(true);
+        InitializeDeploymentRuntime();
+        BroadcastDeployment();
+    }
+
+    private void RunDeployedRuntimeRefresh()
+    {
+        // Live refresh keeps the same order as deployment, but finishes with a runtime-modified event instead of OnDeploy.
+        if (!ValidateOrResolveUnitId())
+        {
+            return;
+        }
+
+        ResolveTowerCoreState();
+        ResolvePrimaryRuntimeFeatures(false);
+        RefreshDeploymentRuntime();
+        BroadcastTowerModified();
+    }
+
+    private void ResolveTowerCoreState()
+    {
+        CacheComponentReferences();
         CompileFinalStats();
+    }
+
+    private void ResolvePrimaryRuntimeFeatures(bool isInitialActivation)
+    {
+        if (isInitialActivation)
+        {
+            InitializeAmmoState();
+            return;
+        }
+
+        RefreshAmmoCapacityFromStats();
+    }
+
+    private void BroadcastTowerModified()
+    {
+        if (!deployed || string.IsNullOrWhiteSpace(unitId))
+        {
+            return;
+        }
+
+        UnitEventBus resolvedEventBus = ResolveEventBus();
+        if (resolvedEventBus == null)
+        {
+            return;
+        }
+
+        resolvedEventBus.RaiseTowerModified(new TowerModifiedEvent(unitId, this));
     }
 }
