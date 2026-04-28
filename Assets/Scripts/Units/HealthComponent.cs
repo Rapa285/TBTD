@@ -181,4 +181,20 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
         }
     }
+
+    public void ApplyDOT(float damagePerTick, int totalTicks, float tickInterval)
+    {
+        if (isDead) return;
+        StartCoroutine(ApplyDOTCoroutine(damagePerTick, totalTicks, tickInterval));
+    }
+
+    private System.Collections.IEnumerator ApplyDOTCoroutine(float damagePerTick, int totalTicks, float tickInterval)
+    {
+        for (int i = 0; i < totalTicks; i++)
+        {
+            if (isDead) yield break;
+            yield return new WaitForSeconds(tickInterval);
+            TakeDamage(damagePerTick);
+        }
+    }
 }
