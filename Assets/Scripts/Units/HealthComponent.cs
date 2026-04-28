@@ -162,4 +162,23 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             OnDeath = new UnityEvent();
         }
     }
+
+    public void ApplyTemporaryShieldBuff(float amount, float duration)
+    {
+        if (isDead) return;
+        currentShield+= amount;
+        Debug.Log($"{gameObject.name} received a temporary shield buff of {amount}. Current Shield: {currentShield}");
+        StartCoroutine(RemoveShieldBuffAfterDuration(amount, duration));
+    }
+
+    private System.Collections.IEnumerator RemoveShieldBuffAfterDuration(float amount, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        if (!isDead&&currentShield > 0f)
+        {
+            float amountToRemove = Mathf.Min(amount, currentShield);
+            currentShield = amountToRemove;
+            Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
+        }
+    }
 }
