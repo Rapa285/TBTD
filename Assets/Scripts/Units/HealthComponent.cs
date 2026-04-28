@@ -23,6 +23,10 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     [SerializeField, Min(0f), Tooltip("Starting shield used when auto-initializing. Shield absorbs incoming damage before health.")]
     private float startingShield = 0f;
 
+    [Header("Revive")]
+    [SerializeField, Tooltip("Number of extra lives this entity has. When health reaches zero, it will be revived with full health until extra lives are exhausted. Shield is not restored on revive.")]
+    private int extraLives = 0;
+
     [Header("Death")]
     [SerializeField, Tooltip("What happens to this GameObject after health reaches zero.")]
     private HealthDeathMode deathMode = HealthDeathMode.DestroyGameObject;
@@ -125,6 +129,14 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 
         if (currentHealth <= 0f)
         {
+            if (extraLives > 0)
+            {
+                extraLives--;
+                currentHealth = maxHealth;
+                currentShield = 0f;
+                Debug.Log($"{gameObject.name} has been revived! Remaining extra lives: {extraLives}");
+                return;
+            }
             Die();
         }
     }
