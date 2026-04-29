@@ -7,6 +7,7 @@ The upgrade system is split between persistent roster selection and runtime towe
 - `UpgradesManager` owns the shared upgrade pool, offer count, pending upgrade offers, and selection.
 - `UnitStateManager` stores selected upgrade assets per owned unit.
 - `TowerEntity` compiles selected upgrades into runtime stats, active weapon behaviours, and projectile modifier prefabs.
+- `UnitStateManager` uses `TowerEntity.CalculateFinalStat(...)` to cache deployment cost for UI and deployment preflight without building runtime weapon/modifier composition.
 
 The normal upgrade flow is append-only. Selected upgrades are recorded on `OwnedUnitState.AppliedUpgrades`; later upgrades do not delete earlier selections.
 
@@ -78,10 +79,12 @@ Runtime application:
 - Projectile modifier prefabs are instantiated as runtime children for direct/hitscan hit hooks and exposed to every active weapon for projectile initialization.
 - Appending a new upgrade only adds new modifier instances when the current modifier list is a prefix of the compiled list.
 
+Deployment price changes should use `ENTITY_STATS.DeploymentCost` stat effects. Cached roster deployment cost is refreshed on startup and after selected upgrades.
+
 Important constraints:
 - `TowerEntity.AddUpgrade` ignores null or duplicate upgrade assets.
 - `RemoveUpgrade` exists for runtime/editor utility, but the normal roster flow only adds upgrades.
-- `UnitStateManager` stores upgrade references only; it does not inspect stat effects or construct runtime weapon/modifier instances.
+- `UnitStateManager` stores upgrade references and cached deployment cost only; it does not inspect stat effects or construct runtime weapon/modifier instances.
 
 ## Projectile Modifier Pipeline
 `ProjectileModifierBehaviour` is the base class for C# authored hit modifiers and projectile modifiers.
@@ -105,6 +108,7 @@ Damage scaling should normally be authored as `ENTITY_STATS.GlobalDamage` stat e
 - `UnitStateManager.OwnedUnitState` does not expose per-unit offer pool or offer count.
 - `UpgradesManager` exposes one shared upgrade pool and one shared offer count.
 - Stat-only upgrades still update final tower stats and vision range.
+- `DeploymentCost` upgrades update cached roster cost and deployment UI.
 - Multiple override upgrades keep all selections recorded, with the latest override firing.
 - Augment upgrades fire alongside the active primary weapon.
 - Augments still fire after a later override upgrade.
