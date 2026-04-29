@@ -8,6 +8,22 @@ using UnityEngine;
 public partial class TowerEntity
 {
     /// <summary>
+    /// Calculates one final stat from this tower's authored stats and the supplied upgrades without mutating runtime state.
+    /// </summary>
+    public float CalculateFinalStat(ENTITY_STATS stat, IReadOnlyList<UpgradeSO> additionalUpgrades)
+    {
+        float baseValue = GetBaseStat(stat);
+        float addValue = 0f;
+        float multValue = 1f;
+        HashSet<UpgradeSO> processedUpgrades = new HashSet<UpgradeSO>();
+
+        AccumulateStatEffects(upgrades, stat, ref addValue, ref multValue, processedUpgrades);
+        AccumulateStatEffects(additionalUpgrades, stat, ref addValue, ref multValue, processedUpgrades);
+
+        return (baseValue + addValue) * multValue;
+    }
+
+    /// <summary>
     /// Compiles base stats plus applied upgrades into final runtime stats and combat composition.
     /// </summary>
     public void CompileFinalStats()
@@ -120,6 +136,66 @@ public partial class TowerEntity
                 return 100f;
             default:
                 return 0f;
+        }
+    }
+
+    private float GetBaseStat(ENTITY_STATS stat)
+    {
+        if (baseStats == null)
+        {
+            return GetDefaultStat(stat);
+        }
+
+        for (int i = 0; i < baseStats.Count; i++)
+        {
+            if (baseStats[i].stat == stat)
+            {
+                return baseStats[i].value;
+            }
+        }
+
+        return GetDefaultStat(stat);
+    }
+
+    private static void AccumulateStatEffects(
+        IReadOnlyList<UpgradeSO> upgradeList,
+        ENTITY_STATS stat,
+        ref float addValue,
+        ref float multValue,
+        HashSet<UpgradeSO> processedUpgrades)
+    {
+        if (upgradeList == null)
+        {
+            return;
+        }
+
+        for (int upgradeIndex = 0; upgradeIndex < upgradeList.Count; upgradeIndex++)
+        {
+            UpgradeSO upgrade = upgradeList[upgradeIndex];
+            if (upgrade == null || !processedUpgrades.Add(upgrade))
+            {
+                continue;
+            }
+
+            IReadOnlyList<UpgradeSO.StatEffect> statEffects = upgrade.StatEffects;
+            for (int effectIndex = 0; effectIndex < statEffects.Count; effectIndex++)
+            {
+                UpgradeSO.StatEffect effect = statEffects[effectIndex];
+                if (effect.stat != stat)
+                {
+                    continue;
+                }
+
+                switch (effect.type)
+                {
+                    case STAT_TYPE.Add:
+                        addValue += effect.value;
+                        break;
+                    case STAT_TYPE.Mult:
+                        multValue *= effect.value;
+                        break;
+                }
+            }
         }
     }
 }

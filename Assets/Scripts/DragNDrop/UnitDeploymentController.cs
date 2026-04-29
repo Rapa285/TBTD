@@ -21,6 +21,7 @@ public class UnitDeploymentController : MonoBehaviour
     private string currentUnitId;
     private int currentDeploymentCost;
     private bool hasCurrentPlacement;
+    private bool warnedMissingCurrencyManager;
 
     public bool IsDragging => currentDraggedRoot != null;
     public TowerEntity CurrentDraggedTower => currentDraggedTower;
@@ -103,6 +104,20 @@ public class UnitDeploymentController : MonoBehaviour
             || unit.UnitPrefab == null)
         {
             return false;
+        }
+
+        if (stateManager.TryGetDeploymentCost(unitId, out int cachedDeploymentCost))
+        {
+            if (!CanAffordRosterDeployment(cachedDeploymentCost))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            Debug.LogWarning(
+                $"{nameof(UnitDeploymentController)} could not find a precompiled deployment cost for unitId '{unitId}'. Falling back to instantiated preview cost lookup.",
+                this);
         }
 
         return BeginDeployment(unit.UnitPrefab.gameObject, stateManager, unitId);
@@ -281,14 +296,22 @@ public class UnitDeploymentController : MonoBehaviour
 
     private bool CanAffordRosterDeployment(int deploymentCost)
     {
-        return TryResolveCurrencyManager(out CurrencyManager currencyManager)
-            && currencyManager.CanAfford(deploymentCost);
+        if (!TryResolveCurrencyManager(out CurrencyManager currencyManager))
+        {
+            return true;
+        }
+
+        return currencyManager.CanAfford(deploymentCost);
     }
 
     private bool TrySpendRosterDeploymentCost()
     {
-        return TryResolveCurrencyManager(out CurrencyManager currencyManager)
-            && currencyManager.TrySpend(currentDeploymentCost);
+        if (!TryResolveCurrencyManager(out CurrencyManager currencyManager))
+        {
+            return true;
+        }
+
+        return currencyManager.TrySpend(currentDeploymentCost);
     }
 
     private void RefundRosterDeploymentCost()
@@ -311,9 +334,14 @@ public class UnitDeploymentController : MonoBehaviour
             return true;
         }
 
-        Debug.LogWarning(
-            $"{nameof(UnitDeploymentController)} could not find a {nameof(CurrencyManager)}. Roster-managed deployment requires currency tracking.",
-            this);
+        if (!warnedMissingCurrencyManager)
+        {
+            warnedMissingCurrencyManager = true;
+            Debug.LogWarning(
+                $"{nameof(UnitDeploymentController)} could not find a {nameof(CurrencyManager)}. Roster-managed deployment will skip currency enforcement.",
+                this);
+        }
+
         return false;
     }
 
