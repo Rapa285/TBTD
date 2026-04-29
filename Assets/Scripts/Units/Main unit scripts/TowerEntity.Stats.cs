@@ -116,6 +116,8 @@ public partial class TowerEntity
                 return 10f;
             case ENTITY_STATS.DeploymentCooldown:
                 return 10f;
+            case ENTITY_STATS.DeploymentCost:
+                return 100f;
             default:
                 return 0f;
         }

@@ -188,6 +188,23 @@ public struct TowerModifiedEvent
 }
 
 /// <summary>
+/// Raised after the player's currency balance changes.
+/// </summary>
+public struct CurrencyChangedEvent
+{
+    public int PreviousCurrency { get; }
+    public int CurrentCurrency { get; }
+    public int Delta { get; }
+
+    public CurrencyChangedEvent(int previousCurrency, int currentCurrency, int delta)
+    {
+        PreviousCurrency = Mathf.Max(0, previousCurrency);
+        CurrentCurrency = Mathf.Max(0, currentCurrency);
+        Delta = delta;
+    }
+}
+
+/// <summary>
 /// Lightweight scene event hub for unit progression, upgrade, and recall notifications.
 /// </summary>
 [DefaultExecutionOrder(-1000)]
@@ -203,6 +220,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitCooldownEndedEvent> UnitCooldownEnded;
     public event Action<UnitAmmoConsumedEvent> UnitAmmoConsumed;
     public event Action<TowerModifiedEvent> TowerModified;
+    public event Action<CurrencyChangedEvent> CurrencyChanged;
 
     private void Awake()
     {
@@ -292,6 +310,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseTowerModified(TowerModifiedEvent eventData)
     {
         TowerModified?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that the player's currency balance changed.
+    /// </summary>
+    public void RaiseCurrencyChanged(CurrencyChangedEvent eventData)
+    {
+        CurrencyChanged?.Invoke(eventData);
     }
 
     private void RegisterWithServiceLocator()

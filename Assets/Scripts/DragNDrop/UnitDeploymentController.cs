@@ -19,6 +19,7 @@ public class UnitDeploymentController : MonoBehaviour
     private UnitDeploymentChecker.PlacementResult currentPlacementResult;
     private UnitStateManager currentStateManager;
     private string currentUnitId;
+    private int currentDeploymentCost;
     private bool hasCurrentPlacement;
 
     public bool IsDragging => currentDraggedRoot != null;
@@ -147,6 +148,14 @@ public class UnitDeploymentController : MonoBehaviour
             return false;
         }
 
+        currentDeploymentCost = stateManager != null ? GetDeploymentCost(currentDraggedTower) : 0;
+        if (stateManager != null && !CanAffordRosterDeployment(currentDeploymentCost))
+        {
+            Destroy(currentDraggedRoot);
+            ClearCurrentDeployment();
+            return false;
+        }
+
         // Roster-managed previews receive saved upgrades after preview mode is prepared so placement stats match runtime stats
         // without running deployment-only activation work.
         currentStateManager = stateManager;
@@ -198,9 +207,18 @@ public class UnitDeploymentController : MonoBehaviour
 
         if (currentStateManager != null)
         {
+            currentDeploymentCost = GetDeploymentCost(currentDraggedTower);
+            if (!currentStateManager.CanDeploy(currentUnitId) || !TrySpendRosterDeploymentCost())
+            {
+                Destroy(currentDraggedRoot);
+                ClearCurrentDeployment();
+                return;
+            }
+
             // The final deployment handoff injects progression state and records the live roster binding.
             if (!currentStateManager.CompleteRuntimeDeployment(currentUnitId, currentDraggedRoot, currentDraggedTower))
             {
+                RefundRosterDeploymentCost();
                 Destroy(currentDraggedRoot);
                 ClearCurrentDeployment();
                 return;
@@ -250,7 +268,53 @@ public class UnitDeploymentController : MonoBehaviour
         currentPlacementResult = default;
         currentStateManager = null;
         currentUnitId = null;
+        currentDeploymentCost = 0;
         hasCurrentPlacement = false;
+    }
+
+    private int GetDeploymentCost(TowerEntity tower)
+    {
+        return tower != null
+            ? Mathf.Max(0, Mathf.CeilToInt(tower.GetStat(ENTITY_STATS.DeploymentCost)))
+            : 0;
+    }
+
+    private bool CanAffordRosterDeployment(int deploymentCost)
+    {
+        return TryResolveCurrencyManager(out CurrencyManager currencyManager)
+            && currencyManager.CanAfford(deploymentCost);
+    }
+
+    private bool TrySpendRosterDeploymentCost()
+    {
+        return TryResolveCurrencyManager(out CurrencyManager currencyManager)
+            && currencyManager.TrySpend(currentDeploymentCost);
+    }
+
+    private void RefundRosterDeploymentCost()
+    {
+        if (currentDeploymentCost <= 0)
+        {
+            return;
+        }
+
+        if (TryResolveCurrencyManager(out CurrencyManager currencyManager))
+        {
+            currencyManager.AddCurrency(currentDeploymentCost);
+        }
+    }
+
+    private bool TryResolveCurrencyManager(out CurrencyManager currencyManager)
+    {
+        if (ServiceLocator.TryResolve(out currencyManager))
+        {
+            return true;
+        }
+
+        Debug.LogWarning(
+            $"{nameof(UnitDeploymentController)} could not find a {nameof(CurrencyManager)}. Roster-managed deployment requires currency tracking.",
+            this);
+        return false;
     }
 
     private void RegisterWithServiceLocator()
