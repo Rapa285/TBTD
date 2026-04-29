@@ -168,7 +168,6 @@ public class UnitStateManager : MonoBehaviour
 
         internal void SetCompiledDeploymentCost(int value)
         {
-            Debug.Log("Unit cost compilation occured!");
             deploymentCost = Mathf.Max(0, value);
             hasCompiledDeploymentCost = true;
         }
@@ -509,12 +508,35 @@ public class UnitStateManager : MonoBehaviour
     {
         if (unit == null || unit.UnitPrefab == null)
         {
-            unit?.ClearCompiledDeploymentCost();
+            if (unit != null)
+            {
+                unit.ClearCompiledDeploymentCost();
+                RaiseUnitDeploymentCostCompiled(unit);
+            }
+
             return;
         }
 
         float cost = unit.UnitPrefab.CalculateFinalStat(ENTITY_STATS.DeploymentCost, unit.AppliedUpgrades);
         unit.SetCompiledDeploymentCost(Mathf.CeilToInt(Mathf.Max(0f, cost)));
+        RaiseUnitDeploymentCostCompiled(unit);
+    }
+
+    private void RaiseUnitDeploymentCostCompiled(OwnedUnitState unit)
+    {
+        if (unit == null || string.IsNullOrWhiteSpace(unit.UnitId))
+        {
+            return;
+        }
+
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitDeploymentCostCompiled(new UnitDeploymentCostCompiledEvent(
+                unit.UnitId,
+                unit.HasCompiledDeploymentCost,
+                unit.DeploymentCost));
+        }
     }
 
     private void ExpireCooldowns()

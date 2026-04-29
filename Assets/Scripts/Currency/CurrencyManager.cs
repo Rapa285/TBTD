@@ -61,6 +61,28 @@ public class CurrencyManager : MonoBehaviour
         SetCurrency(currentCurrency + amount);
     }
 
+    /// <summary>
+    /// Debug/testing endpoint for granting currency from inspector buttons, UnityEvents, or console helpers.
+    /// </summary>
+    public void DebugAddCurrency(int amount)
+    {
+        AddCurrency(amount);
+    }
+
+    /// <summary>
+    /// Debug/testing endpoint for removing currency while clamping the balance at zero.
+    /// </summary>
+    public void DebugRemoveCurrency(int amount)
+    {
+        amount = Mathf.Max(0, amount);
+        if (amount == 0)
+        {
+            return;
+        }
+
+        SetCurrency(currentCurrency - amount);
+    }
+
     private void SetCurrency(int value)
     {
         int previousCurrency = currentCurrency;

@@ -205,6 +205,23 @@ public struct CurrencyChangedEvent
 }
 
 /// <summary>
+/// Raised after a roster unit's cached deployment cost is compiled or cleared.
+/// </summary>
+public struct UnitDeploymentCostCompiledEvent
+{
+    public string UnitId { get; }
+    public bool HasCost { get; }
+    public int Cost { get; }
+
+    public UnitDeploymentCostCompiledEvent(string unitId, bool hasCost, int cost)
+    {
+        UnitId = unitId;
+        HasCost = hasCost;
+        Cost = Mathf.Max(0, cost);
+    }
+}
+
+/// <summary>
 /// Lightweight scene event hub for unit progression, upgrade, and recall notifications.
 /// </summary>
 [DefaultExecutionOrder(-1000)]
@@ -221,6 +238,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitAmmoConsumedEvent> UnitAmmoConsumed;
     public event Action<TowerModifiedEvent> TowerModified;
     public event Action<CurrencyChangedEvent> CurrencyChanged;
+    public event Action<UnitDeploymentCostCompiledEvent> UnitDeploymentCostCompiled;
 
     private void Awake()
     {
@@ -318,6 +336,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseCurrencyChanged(CurrencyChangedEvent eventData)
     {
         CurrencyChanged?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a roster unit's cached deployment cost changed.
+    /// </summary>
+    public void RaiseUnitDeploymentCostCompiled(UnitDeploymentCostCompiledEvent eventData)
+    {
+        UnitDeploymentCostCompiled?.Invoke(eventData);
     }
 
     private void RegisterWithServiceLocator()
