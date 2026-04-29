@@ -40,7 +40,6 @@ public class EnemyMover : MonoBehaviour
         UpdateSpeed();
     }
 
-    // --- PERBAIKAN DI SINI ---
     private void UpdateSpeed()
     {
         if (splineAnimate != null)

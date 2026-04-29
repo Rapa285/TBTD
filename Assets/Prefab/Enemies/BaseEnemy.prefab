@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 506166491940111436}
   - component: {fileID: 4041331552045464392}
   - component: {fileID: 7602337457454699332}
+  - component: {fileID: 1506452212532473650}
   m_Layer: 6
   m_Name: BaseEnemy
   m_TagString: Untagged
@@ -53,6 +54,7 @@ MonoBehaviour:
   initializeOnStart: 0
   startingHealth: 100
   startingShield: 0
+  extraLives: 0
   deathMode: 0
   OnDeath:
     m_PersistentCalls:
@@ -166,6 +168,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1506452212532473650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8371444609426255717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 475fa112bac21d549a6b7ed76fe97d33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StatusEffectManager
 --- !u!1 &9045070914709005361
 GameObject:
   m_ObjectHideFlags: 0
