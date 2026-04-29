@@ -188,6 +188,91 @@ public struct TowerModifiedEvent
 }
 
 /// <summary>
+/// Raised after the player's currency balance changes.
+/// </summary>
+public struct CurrencyChangedEvent
+{
+    public int PreviousCurrency { get; }
+    public int CurrentCurrency { get; }
+    public int Delta { get; }
+
+    public CurrencyChangedEvent(int previousCurrency, int currentCurrency, int delta)
+    {
+        PreviousCurrency = Mathf.Max(0, previousCurrency);
+        CurrentCurrency = Mathf.Max(0, currentCurrency);
+        Delta = delta;
+    }
+}
+
+/// <summary>
+/// Raised after a roster unit's cached deployment cost is compiled or cleared.
+/// </summary>
+public struct UnitDeploymentCostCompiledEvent
+{
+    public string UnitId { get; }
+    public bool HasCost { get; }
+    public int Cost { get; }
+
+    public UnitDeploymentCostCompiledEvent(string unitId, bool hasCost, int cost)
+    {
+        UnitId = unitId;
+        HasCost = hasCost;
+        Cost = Mathf.Max(0, cost);
+    }
+}
+
+/// <summary>
+/// Raised after a deployment preview has been created and prepared.
+/// </summary>
+public struct UnitDeploymentPreviewStartedEvent
+{
+    public string UnitId { get; }
+    public GameObject UnitPrefab { get; }
+    public TowerEntity Tower { get; }
+    public GameObject RuntimeRoot { get; }
+    public bool WasCompleted { get; }
+
+    public UnitDeploymentPreviewStartedEvent(
+        string unitId,
+        GameObject unitPrefab,
+        TowerEntity tower,
+        GameObject runtimeRoot)
+    {
+        UnitId = unitId;
+        UnitPrefab = unitPrefab;
+        Tower = tower;
+        RuntimeRoot = runtimeRoot;
+        WasCompleted = false;
+    }
+}
+
+/// <summary>
+/// Raised after a deployment preview has ended through cancellation or completion.
+/// </summary>
+public struct UnitDeploymentPreviewEndedEvent
+{
+    public string UnitId { get; }
+    public GameObject UnitPrefab { get; }
+    public TowerEntity Tower { get; }
+    public GameObject RuntimeRoot { get; }
+    public bool WasCompleted { get; }
+
+    public UnitDeploymentPreviewEndedEvent(
+        string unitId,
+        GameObject unitPrefab,
+        TowerEntity tower,
+        GameObject runtimeRoot,
+        bool wasCompleted)
+    {
+        UnitId = unitId;
+        UnitPrefab = unitPrefab;
+        Tower = tower;
+        RuntimeRoot = runtimeRoot;
+        WasCompleted = wasCompleted;
+    }
+}
+
+/// <summary>
 /// Lightweight scene event hub for unit progression, upgrade, and recall notifications.
 /// </summary>
 [DefaultExecutionOrder(-1000)]
@@ -203,6 +288,10 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitCooldownEndedEvent> UnitCooldownEnded;
     public event Action<UnitAmmoConsumedEvent> UnitAmmoConsumed;
     public event Action<TowerModifiedEvent> TowerModified;
+    public event Action<CurrencyChangedEvent> CurrencyChanged;
+    public event Action<UnitDeploymentCostCompiledEvent> UnitDeploymentCostCompiled;
+    public event Action<UnitDeploymentPreviewStartedEvent> UnitDeploymentPreviewStarted;
+    public event Action<UnitDeploymentPreviewEndedEvent> UnitDeploymentPreviewEnded;
 
     private void Awake()
     {
@@ -292,6 +381,38 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseTowerModified(TowerModifiedEvent eventData)
     {
         TowerModified?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that the player's currency balance changed.
+    /// </summary>
+    public void RaiseCurrencyChanged(CurrencyChangedEvent eventData)
+    {
+        CurrencyChanged?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a roster unit's cached deployment cost changed.
+    /// </summary>
+    public void RaiseUnitDeploymentCostCompiled(UnitDeploymentCostCompiledEvent eventData)
+    {
+        UnitDeploymentCostCompiled?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a deployment preview has started.
+    /// </summary>
+    public void RaiseUnitDeploymentPreviewStarted(UnitDeploymentPreviewStartedEvent eventData)
+    {
+        UnitDeploymentPreviewStarted?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a deployment preview has ended.
+    /// </summary>
+    public void RaiseUnitDeploymentPreviewEnded(UnitDeploymentPreviewEndedEvent eventData)
+    {
+        UnitDeploymentPreviewEnded?.Invoke(eventData);
     }
 
     private void RegisterWithServiceLocator()

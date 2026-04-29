@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 4041331552045464392}
   - component: {fileID: 7602337457454699332}
   - component: {fileID: 1506452212532473650}
+  - component: {fileID: 1627325428167897236}
   m_Layer: 6
   m_Name: BaseEnemy
   m_TagString: Untagged
@@ -180,6 +181,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475fa112bac21d549a6b7ed76fe97d33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatusEffectManager
+--- !u!114 &1627325428167897236
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8371444609426255717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d5045058a0a46a4ab005eff4b2f2a8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GiveCurrencyOnDeath
+  currencyReward: 25
+  warnIfCurrencyManagerMissing: 1
 --- !u!1 &9045070914709005361
 GameObject:
   m_ObjectHideFlags: 0

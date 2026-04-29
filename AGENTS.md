@@ -23,6 +23,7 @@ This Unity project is a roster-managed tower combat prototype. Keep future agent
 - Resolves a stable runtime `unitId` from `UnitProgression` when roster-managed, otherwise generates a unique runtime ID.
 - Raises `OnDeploy` only after activation has completed and a resolved unit ID exists.
 - Raises `TowerModified` after deployed runtime refreshes caused by stat or upgrade changes.
+- Provides `CalculateFinalStat(...)` for side-effect-free single-stat previews, such as roster deployment cost caching, without instantiating runtime weapon or modifier composition.
 
 Do not create a second runtime stat/combat composition pipeline. Extend `TowerEntity.CompileFinalStats()` and related `TowerEntity` partials unless there is a deliberate refactor.
 
@@ -34,15 +35,20 @@ Do not create a second runtime stat/combat composition pipeline. Extend `TowerEn
 - Owns display metadata, prefab reference, XP thresholds, level, stored XP, pending-upgrade state, and selected `UpgradeSO` list.
 - Stores transient runtime bindings with `currentRuntimeInstance` and `currentRuntimeRoot`.
 - Applies persistent upgrades and progression state into runtime towers through `ApplyStateTo(...)`.
+- Precompiles cached deployment costs for roster units through `TowerEntity.CalculateFinalStat(...)`.
 - Finalizes managed deployments through `CompleteRuntimeDeployment(...)`.
 - Applies selected upgrades immediately to the deployed runtime tower when present.
+- Refreshes cached deployment cost when selected upgrades change.
 - Recalls deployed units while preserving persistent XP and upgrades.
 
 `UnitDeploymentController` owns deployment preview and placement flow.
 
+- Checks cached roster deployment cost before preview creation when available.
 - Instantiates a preview root.
 - Calls `TowerEntity.PrepareForDeploymentPreview()` before placement.
 - Applies roster state during preview without running deployment-only activation work.
+- Raises deployment preview started/ended events for UI state.
+- Spends roster deployment currency only on successful final placement.
 - Calls `UnitStateManager.CompleteRuntimeDeployment(...)` before `TowerEntity.Deploy()` for managed units.
 
 Do not move combat stat math, runtime weapon composition, or projectile modifier composition into `UnitStateManager`. That remains runtime `TowerEntity` work.
@@ -57,6 +63,8 @@ Current stats are defined in `EntityConstants.cs`.
 - `ENTITY_STATS.SetupTime`: delay from deployment until attacking is allowed.
 - `ENTITY_STATS.AmmoEffectiveness`: multiplier applied to a primary weapon's `AttacksPerAmmo`.
 - `ENTITY_STATS.AmmoUnits`: deployed tower ammo pool for finite primary weapons.
+- `ENTITY_STATS.DeploymentCooldown`: time before a recalled unit can deploy again.
+- `ENTITY_STATS.DeploymentCost`: currency cost paid when roster-managed units deploy.
 
 Current modifier types:
 
@@ -71,6 +79,32 @@ finalStat = (baseStat + totalAdd) * totalMult
 ```
 
 When adding stats, also update `TowerEntity.GetDefaultStat()` with a safe default.
+
+## Currency And Deployment UI
+
+`CurrencyManager` is the scene-level player currency authority.
+
+- Registers through `ServiceLocator`.
+- Stores nonnegative integer currency initialized from `startingCurrency`.
+- Exposes `CurrentCurrency`, `CanAfford(int)`, `TrySpend(int)`, and `AddCurrency(int)`.
+- Debug/testing endpoints `DebugAddCurrency(int)` and `DebugRemoveCurrency(int)` reuse the same event-raising balance path.
+- Raises `CurrencyChanged` through `UnitEventBus` whenever the balance changes.
+
+Roster deployment economy currently applies only to managed units.
+
+- `UnitStateManager.Precompile()` caches each managed unit's rounded-up `DeploymentCost`.
+- `UnitDeploymentCostCompiled` is raised when cached cost is compiled or cleared.
+- Missing cached cost falls back to instantiated preview cost lookup with a warning.
+- Missing `CurrencyManager` skips currency enforcement with a warning.
+- Direct prefab deployment remains free.
+
+Deployment UI state is separate from deployment input eligibility.
+
+- `UnitUIDeployment.CanBeginDeployment()` still blocks input while any preview is active.
+- `UnitUIDeployment.CurrentState` can be `CannotDeploy`, `CanDeploy`, or `InDeployPreview`.
+- The deployable indicator is visible for `CanDeploy` and `InDeployPreview`.
+- `UnitUICost` displays cached cost for undeployed roster units and hides it while deployed or when no cached cost exists.
+- `UICurrencyDisplayer` displays the current currency balance and refreshes from `CurrencyChanged`.
 
 ## Combat Loop
 
@@ -244,3 +278,4 @@ Targets that should take damage should have:
 - No targeting priority beyond first valid target.
 - Upgrade offers are still built from one shared pool with simple duplicate/already-owned filtering.
 - Runtime-generated unit IDs exist for unmanaged towers, but broader persistence/save-load infrastructure is not implemented here.
+- Currency rewards, recall refunds, and save/load persistence for currency are not implemented yet.
