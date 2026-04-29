@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -46,19 +46,27 @@ public class SpawnOnDeathComponent : MonoBehaviour
                     childSpline.Container = parentSpline.Container;
                     
                     float offsetTime = Mathf.Max(0f, baseNormalizedTime - (i * pathSpacing));
-                    childSpline.StartCoroutine(ForcePositionNextFrame(childSpline, offsetTime));
+
+                    ForcePositionNextFrame(childSpline, offsetTime, childEntity.destroyCancellationToken);
                 }
             }
         }
     }
 
-    private IEnumerator ForcePositionNextFrame(SplineAnimate spline, float timeToSet)
+    private async void ForcePositionNextFrame(SplineAnimate spline, float timeToSet, CancellationToken childToken)
     {
-        yield return null;
-
+        try
+        {
+            await Awaitable.NextFrameAsync(childToken);
+        }
+        catch (System.OperationCanceledException)
+        {
+            // If the parent object was destroyed before the next frame
+            return;
+        }
         if (spline != null)
         {
-            spline.NormalizedTime = timeToSet;
+            spline.NormalizedTime=timeToSet;
             spline.Play();
         }
     }
