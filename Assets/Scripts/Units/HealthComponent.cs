@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -180,33 +181,50 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         if (isDead) return;
         currentShield+= amount;
         Debug.Log($"{gameObject.name} received a temporary shield buff of {amount}. Current Shield: {currentShield}");
-        StartCoroutine(RemoveShieldBuffAfterDuration(amount, duration));
+        _ = RemoveShieldBuffAfterDuration(amount, duration);
     }
 
-    private System.Collections.IEnumerator RemoveShieldBuffAfterDuration(float amount, float duration)
+    private async Awaitable RemoveShieldBuffAfterDuration(float amount, float duration)
     {
-        yield return new WaitForSeconds(duration);
-        if (!isDead&&currentShield > 0f)
+        try
         {
-            float amountToRemove = Mathf.Min(amount, currentShield);
-            currentShield = amountToRemove;
-            Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
+            await Awaitable.WaitForSecondsAsync(duration, destroyCancellationToken);
+
+            if (!isDead && currentShield > 0f)
+            {
+                float amountToRemove = Mathf.Min(amount, currentShield);
+                currentShield -= amountToRemove;
+                Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 
     public void ApplyDOT(float damagePerTick, int totalTicks, float tickInterval)
     {
         if (isDead) return;
-        StartCoroutine(ApplyDOTCoroutine(damagePerTick, totalTicks, tickInterval));
+        _ = ApplyDOTAsync(damagePerTick, totalTicks, tickInterval);
     }
 
-    private System.Collections.IEnumerator ApplyDOTCoroutine(float damagePerTick, int totalTicks, float tickInterval)
+    private async Awaitable ApplyDOTAsync(float damagePerTick, int totalTicks, float tickInterval)
     {
-        for (int i = 0; i < totalTicks; i++)
+        try
         {
-            if (isDead) yield break;
-            yield return new WaitForSeconds(tickInterval);
-            TakeDamage(damagePerTick);
+            for (int i = 0; i < totalTicks; i++)
+            {
+                if (isDead)
+                {
+                    return;
+                }
+
+                await Awaitable.WaitForSecondsAsync(tickInterval, destroyCancellationToken);
+                TakeDamage(damagePerTick);
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 }

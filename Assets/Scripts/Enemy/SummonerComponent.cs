@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -35,18 +35,25 @@ public class SummonerComponent : MonoBehaviour
 
         if (Time.time - lastSummonTime >= summonCooldown)
         {
-            StartCoroutine(SummonRoutine());
+            SummonAsync();
         }
     }
 
-    private IEnumerator SummonRoutine()
+    private async void SummonAsync()
     {
         isSummoning=true;
         mover.PauseMovement();
         Debug.Log("Summoning minions...");
-        
-        yield return new WaitForSeconds(castTime);
 
+        try{
+            await Awaitable.WaitForSecondsAsync(castTime, destroyCancellationToken);
+        }
+        catch (System.OperationCanceledException)
+        {
+            // If the parent object was destroyed during the cast time
+            return;
+        }
+        
         ExecuteSummon();
 
         mover.ResumeMovement();
@@ -73,16 +80,24 @@ public class SummonerComponent : MonoBehaviour
                 {
                     childSpline.Container=splineAnimate.Container;
                     float offsetTime=Mathf.Max(0f,currentNormTime-(i*pathSpacing));
-                    childEntity.StartCoroutine(ForcePositionNextFrame(childSpline,offsetTime));
+
+                    ForcePositionNextFrame(childSpline,offsetTime, childEntity.destroyCancellationToken);
                 }
                 
             }
         }
     }
 
-    private IEnumerator ForcePositionNextFrame(SplineAnimate childSpline,float offsetTime)
+    private async void ForcePositionNextFrame(SplineAnimate childSpline,float offsetTime, CancellationToken childtoken)
     {
-        yield return null;
+        try{
+            await Awaitable.NextFrameAsync(childtoken);
+        }
+        catch (System.OperationCanceledException)
+        {
+            // If the parent object was destroyed before the next frame
+            return;
+        }
         if (childSpline != null)
         {
             childSpline.NormalizedTime=offsetTime;
