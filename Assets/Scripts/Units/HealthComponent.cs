@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -38,6 +39,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     private bool isDead;
     private bool hasLastHitContext;
     private AttackHitContext lastHitContext;
+    private CancellationTokenSource lifeTokenSource;
+    private CancellationToken activeLifeToken;
 
     [HideInInspector] public UnityEvent OnDeath = new UnityEvent();
 
@@ -77,6 +80,11 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     /// </summary>
     public void Initialize(float health, float shield = 0f)
     {
+        lifeTokenSource?.Cancel();
+        lifeTokenSource?.Dispose();
+        lifeTokenSource=CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        activeLifeToken=lifeTokenSource.Token;
+
         maxHealth = Mathf.Max(1f, health);
         currentHealth = maxHealth;
         currentShield = Mathf.Max(0f, shield);
@@ -150,6 +158,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         }
 
         isDead = true;
+        lifeTokenSource?.Cancel();
         Debug.Log($"{gameObject.name} has died.");
         EnsureDeathEvent();
         OnDeath?.Invoke();
@@ -188,39 +197,13 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     {
         try
         {
-            await Awaitable.WaitForSecondsAsync(duration, destroyCancellationToken);
+            await Awaitable.WaitForSecondsAsync(duration, activeLifeToken);
 
             if (!isDead && currentShield > 0f)
             {
                 float amountToRemove = Mathf.Min(amount, currentShield);
                 currentShield -= amountToRemove;
                 Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    public void ApplyDOT(float damagePerTick, int totalTicks, float tickInterval)
-    {
-        if (isDead) return;
-        _ = ApplyDOTAsync(damagePerTick, totalTicks, tickInterval);
-    }
-
-    private async Awaitable ApplyDOTAsync(float damagePerTick, int totalTicks, float tickInterval)
-    {
-        try
-        {
-            for (int i = 0; i < totalTicks; i++)
-            {
-                if (isDead)
-                {
-                    return;
-                }
-
-                await Awaitable.WaitForSecondsAsync(tickInterval, destroyCancellationToken);
-                TakeDamage(damagePerTick);
             }
         }
         catch (OperationCanceledException)
