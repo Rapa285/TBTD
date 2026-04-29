@@ -19,6 +19,7 @@ public class UnitDeploymentController : MonoBehaviour
     private UnitDeploymentChecker.PlacementResult currentPlacementResult;
     private UnitStateManager currentStateManager;
     private string currentUnitId;
+    private GameObject currentUnitPrefab;
     private int currentDeploymentCost;
     private bool hasCurrentPlacement;
     private bool warnedMissingCurrencyManager;
@@ -175,6 +176,7 @@ public class UnitDeploymentController : MonoBehaviour
         // without running deployment-only activation work.
         currentStateManager = stateManager;
         currentUnitId = unitId;
+        currentUnitPrefab = unitPrefab;
 
         currentMaterialOverrider = currentDraggedRoot.GetComponentInChildren<MaterialOverrider>();
         if (currentMaterialOverrider != null)
@@ -184,6 +186,7 @@ public class UnitDeploymentController : MonoBehaviour
 
         hasCurrentPlacement = false;
         UpdateCurrentPlacement(Mouse.current.position.ReadValue());
+        RaiseDeploymentPreviewStarted();
         return true;
     }
 
@@ -202,6 +205,7 @@ public class UnitDeploymentController : MonoBehaviour
             currentMaterialOverrider.RestoreOriginalMaterials();
         }
 
+        RaiseDeploymentPreviewEnded(false);
         Destroy(currentDraggedRoot);
         ClearCurrentDeployment();
     }
@@ -225,6 +229,7 @@ public class UnitDeploymentController : MonoBehaviour
             currentDeploymentCost = GetDeploymentCost(currentDraggedTower);
             if (!currentStateManager.CanDeploy(currentUnitId) || !TrySpendRosterDeploymentCost())
             {
+                RaiseDeploymentPreviewEnded(false);
                 Destroy(currentDraggedRoot);
                 ClearCurrentDeployment();
                 return;
@@ -234,6 +239,7 @@ public class UnitDeploymentController : MonoBehaviour
             if (!currentStateManager.CompleteRuntimeDeployment(currentUnitId, currentDraggedRoot, currentDraggedTower))
             {
                 RefundRosterDeploymentCost();
+                RaiseDeploymentPreviewEnded(false);
                 Destroy(currentDraggedRoot);
                 ClearCurrentDeployment();
                 return;
@@ -241,6 +247,7 @@ public class UnitDeploymentController : MonoBehaviour
         }
 
         currentDraggedTower.Deploy();
+        RaiseDeploymentPreviewEnded(true);
         ClearCurrentDeployment();
     }
 
@@ -283,8 +290,34 @@ public class UnitDeploymentController : MonoBehaviour
         currentPlacementResult = default;
         currentStateManager = null;
         currentUnitId = null;
+        currentUnitPrefab = null;
         currentDeploymentCost = 0;
         hasCurrentPlacement = false;
+    }
+
+    private void RaiseDeploymentPreviewStarted()
+    {
+        if (ServiceLocator.TryResolve(out UnitEventBus eventBus))
+        {
+            eventBus.RaiseUnitDeploymentPreviewStarted(new UnitDeploymentPreviewStartedEvent(
+                currentUnitId,
+                currentUnitPrefab,
+                currentDraggedTower,
+                currentDraggedRoot));
+        }
+    }
+
+    private void RaiseDeploymentPreviewEnded(bool wasCompleted)
+    {
+        if (ServiceLocator.TryResolve(out UnitEventBus eventBus))
+        {
+            eventBus.RaiseUnitDeploymentPreviewEnded(new UnitDeploymentPreviewEndedEvent(
+                currentUnitId,
+                currentUnitPrefab,
+                currentDraggedTower,
+                currentDraggedRoot,
+                wasCompleted));
+        }
     }
 
     private int GetDeploymentCost(TowerEntity tower)

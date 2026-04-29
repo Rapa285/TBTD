@@ -89,6 +89,22 @@ public class UnitUICost : MonoBehaviour
         }
     }
 
+    private void HandleUnitDeployed(UnitDeployedEvent eventData)
+    {
+        if (IsMatchingUnit(eventData.UnitId))
+        {
+            RefreshDisplay();
+        }
+    }
+
+    private void HandleUnitRecalled(UnitRecalledEvent eventData)
+    {
+        if (IsMatchingUnit(eventData.UnitId))
+        {
+            RefreshDisplay();
+        }
+    }
+
     private void ResolveReferences()
     {
         if (uiUnitItem == null)
@@ -136,6 +152,8 @@ public class UnitUICost : MonoBehaviour
 
         eventBus.CurrencyChanged += HandleCurrencyChanged;
         eventBus.UnitDeploymentCostCompiled += HandleUnitDeploymentCostCompiled;
+        eventBus.UnitDeployed += HandleUnitDeployed;
+        eventBus.UnitRecalled += HandleUnitRecalled;
         eventBusSubscribed = true;
     }
 
@@ -148,6 +166,8 @@ public class UnitUICost : MonoBehaviour
 
         eventBus.CurrencyChanged -= HandleCurrencyChanged;
         eventBus.UnitDeploymentCostCompiled -= HandleUnitDeploymentCostCompiled;
+        eventBus.UnitDeployed -= HandleUnitDeployed;
+        eventBus.UnitRecalled -= HandleUnitRecalled;
         eventBusSubscribed = false;
     }
 
@@ -176,6 +196,11 @@ public class UnitUICost : MonoBehaviour
         cost = 0;
 
         if (uiUnitItem == null || !uiUnitItem.IsManagedUnitConfigured)
+        {
+            return false;
+        }
+
+        if (!uiUnitItem.TryGetOwnedUnit(out UnitStateManager.OwnedUnitState unit) || unit.IsDeployed)
         {
             return false;
         }

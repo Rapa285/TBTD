@@ -2446,7 +2446,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIUnitItem
   unitToDeploy: {fileID: 1538131365874546553, guid: 963941391e3e5ea4a901ea5451234bbe, type: 3}
   unitStateManager: {fileID: 0}
-  unitId: 1
+  unitId: 2
 --- !u!114 &1536351215
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4049,6 +4049,42 @@ PrefabInstance:
       propertyPath: raycastCamera
       value: 
       objectReference: {fileID: 1804169527}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[1].unitId
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[1].unitPrefab
+      value: 
+      objectReference: {fileID: 5509090700039814363, guid: 963941391e3e5ea4a901ea5451234bbe, type: 3}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[1].displayName
+      value: Unit B
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[1].xpThresholds.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: 'ownedUnits.Array.data[1].xpThresholds.Array.data[0]'
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: 'ownedUnits.Array.data[1].xpThresholds.Array.data[1]'
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: 'ownedUnits.Array.data[1].xpThresholds.Array.data[2]'
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: 'ownedUnits.Array.data[1].xpThresholds.Array.data[3]'
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 4658590519654865812, guid: e55be2b46ec88814385775d52508b781, type: 3}
       propertyPath: m_LocalPosition.x
       value: 954.8512

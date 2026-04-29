@@ -2,6 +2,13 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+public enum DeploymentUIState
+{
+    CannotDeploy = 0,
+    CanDeploy = 1,
+    InDeployPreview = 2
+}
+
 /// <summary>
 /// UI input and deployment behavior for one unit item.
 /// </summary>
@@ -34,10 +41,13 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     private UnitEventBus eventBus;
     private CurrencyManager currencyManager;
     private bool subscribedToEventBus;
+    private bool isInDeployPreview;
+    private DeploymentUIState currentState = DeploymentUIState.CannotDeploy;
 
     public bool IsHovered => isHovered;
     public bool IsHeldDown => isHeldDown;
     public UnitDeploymentController DeploymentController => ResolveDeploymentController();
+    public DeploymentUIState CurrentState => currentState;
 
     private void Awake()
     {
@@ -81,7 +91,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
             SubscribeToEventBus();
         }
 
-        // RefreshDeployableIndicator();
+        RefreshDeployableIndicator();
     }
 
     private void OnDisable()
@@ -281,6 +291,8 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         eventBus.UnitDeployed += HandleUnitDeployed;
         eventBus.UnitRecalled += HandleUnitRecalled;
         eventBus.UnitCooldownEnded += HandleUnitCooldownEnded;
+        eventBus.UnitDeploymentPreviewStarted += HandleUnitDeploymentPreviewStarted;
+        eventBus.UnitDeploymentPreviewEnded += HandleUnitDeploymentPreviewEnded;
         subscribedToEventBus = true;
     }
 
@@ -296,7 +308,31 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         eventBus.UnitDeployed -= HandleUnitDeployed;
         eventBus.UnitRecalled -= HandleUnitRecalled;
         eventBus.UnitCooldownEnded -= HandleUnitCooldownEnded;
+        eventBus.UnitDeploymentPreviewStarted -= HandleUnitDeploymentPreviewStarted;
+        eventBus.UnitDeploymentPreviewEnded -= HandleUnitDeploymentPreviewEnded;
         subscribedToEventBus = false;
+    }
+
+    private void HandleUnitDeploymentPreviewStarted(UnitDeploymentPreviewStartedEvent eventData)
+    {
+        if (!IsMatchingPreview(eventData.UnitId, eventData.UnitPrefab))
+        {
+            return;
+        }
+
+        isInDeployPreview = true;
+        RefreshDeployableIndicator();
+    }
+
+    private void HandleUnitDeploymentPreviewEnded(UnitDeploymentPreviewEndedEvent eventData)
+    {
+        if (!IsMatchingPreview(eventData.UnitId, eventData.UnitPrefab))
+        {
+            return;
+        }
+
+        isInDeployPreview = false;
+        RefreshDeployableIndicator();
     }
 
     private bool HasAffordableDeploymentCost()
@@ -327,9 +363,49 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
             && uiUnitItem.UnitId == unitId;
     }
 
+    private bool IsMatchingPreview(string unitId, GameObject unitPrefab)
+    {
+        if (uiUnitItem == null)
+        {
+            return false;
+        }
+
+        if (uiUnitItem.IsManagedUnit)
+        {
+            return !string.IsNullOrWhiteSpace(unitId) && uiUnitItem.UnitId == unitId;
+        }
+
+        return unitPrefab != null && uiUnitItem.UnitToDeploy == unitPrefab;
+    }
+
     private void RefreshDeployableIndicator()
     {
-        SetDeployableIndicatorVisible(CanBeginDeployment());
+        currentState = EvaluateDisplayState();
+        SetDeployableIndicatorVisible(currentState == DeploymentUIState.CanDeploy
+            || currentState == DeploymentUIState.InDeployPreview);
+    }
+
+    private DeploymentUIState EvaluateDisplayState()
+    {
+        if (isInDeployPreview)
+        {
+            return DeploymentUIState.InDeployPreview;
+        }
+
+        return CanDisplayDeployable()
+            ? DeploymentUIState.CanDeploy
+            : DeploymentUIState.CannotDeploy;
+    }
+
+    private bool CanDisplayDeployable()
+    {
+        ResolveReferences();
+
+        return uiUnitItem != null
+            && deploymentController != null
+            && (selectable == null || selectable.IsInteractable())
+            && uiUnitItem.HasDeployableUnit()
+            && HasAffordableDeploymentCost();
     }
 
     private void SetDeployableIndicatorVisible(bool isVisible)
