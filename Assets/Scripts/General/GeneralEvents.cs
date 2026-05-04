@@ -1,12 +1,10 @@
 using UnityEngine;
 
-// Event untuk mengganti kamera (seperti yang kita bahas sebelumnya)
 public struct TowerSelectedEvent
 {
     public TowerEntity towerEntity;
 }
 
-// Contoh event lain: saat player kena damage
 public struct BaseDamagedEvent
 {
     public float DamageAmount;
@@ -29,3 +27,12 @@ public struct KeyboardInput
     public KeyCode inputKey;
 }
 
+public readonly struct SettingsChangedEvent
+{
+    public readonly ConfigData Config;
+
+    public SettingsChangedEvent(ConfigData config)
+    {
+        Config = config;
+    }
+}
