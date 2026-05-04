@@ -66,6 +66,7 @@ public abstract class AttackBehaviour : MonoBehaviour
     }
 
     public bool UsesFiniteAmmo => consumesTowerAmmo && !infiniteAmmo;
+    public virtual bool RequiresCooldownWhenTargetsFirstAvailable => false;
 
     protected TowerEntity OwnerTower => ownerTower;
     protected Transform OwnerRoot => ownerRoot != null ? ownerRoot : transform;

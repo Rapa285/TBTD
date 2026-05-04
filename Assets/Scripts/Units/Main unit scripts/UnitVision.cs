@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Splines;
 
 /// <summary>
 /// Trigger-based target tracker used by towers for current-target retention and reacquisition.
@@ -17,9 +19,23 @@ public sealed class UnitVision : MonoBehaviour
     private GameObject visualization;
 
     private readonly List<Transform> validTargets = new List<Transform>();
+    private readonly Dictionary<Transform, HealthComponent> targetHealthComponents = new Dictionary<Transform, HealthComponent>();
+    private readonly Dictionary<HealthComponent, int> trackedHealthCounts = new Dictionary<HealthComponent, int>();
     private SphereCollider visionCollider;
 
     public IReadOnlyList<Transform> ValidTargets => validTargets;
+    public bool HasValidTargets
+    {
+        get
+        {
+            PruneInvalidTargets();
+            return validTargets.Count > 0;
+        }
+    }
+
+    public event UnityAction<Transform> TargetAdded;
+    public event UnityAction<Transform> TargetRemoved;
+    public event UnityAction TargetsChanged;
 
     public float Range
     {
@@ -57,6 +73,11 @@ public sealed class UnitVision : MonoBehaviour
         RemoveTarget(ColliderTargetUtility.GetTargetTransform(other));
     }
 
+    private void OnDisable()
+    {
+        ClearTargets();
+    }
+
     /// <summary>
     /// Returns the oldest still-valid tracked target after pruning null or inactive entries.
     /// </summary>
@@ -64,6 +85,34 @@ public sealed class UnitVision : MonoBehaviour
     {
         PruneInvalidTargets();
         return validTargets.Count > 0 ? validTargets[0] : null;
+    }
+
+    /// <summary>
+    /// Returns the tracked spline target furthest along its path, falling back to tracked order.
+    /// </summary>
+    public Transform GetFrontMostValidTarget()
+    {
+        PruneInvalidTargets();
+        if (validTargets.Count == 0)
+        {
+            return null;
+        }
+
+        Transform fallbackTarget = validTargets[0];
+        Transform bestSplineTarget = null;
+        float bestProgress = float.NegativeInfinity;
+
+        for (int i = 0; i < validTargets.Count; i++)
+        {
+            Transform target = validTargets[i];
+            if (TryGetSplineProgress(target, out float progress) && progress > bestProgress)
+            {
+                bestProgress = progress;
+                bestSplineTarget = target;
+            }
+        }
+
+        return bestSplineTarget != null ? bestSplineTarget : fallbackTarget;
     }
 
     /// <summary>
@@ -80,6 +129,63 @@ public sealed class UnitVision : MonoBehaviour
     /// </summary>
     public void ClearTargets()
     {
+        if (validTargets.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = validTargets.Count - 1; i >= 0; i--)
+        {
+            RemoveTargetAt(i);
+        }
+
+        TargetsChanged?.Invoke();
+    }
+
+    private bool TryGetSplineProgress(Transform target, out float progress)
+    {
+        progress = 0f;
+        if (!TryGetSplineAnimate(target, out SplineAnimate splineAnimate))
+        {
+            return false;
+        }
+
+        progress = splineAnimate.NormalizedTime;
+        return true;
+    }
+
+    private bool TryGetSplineAnimate(Transform target, out SplineAnimate splineAnimate)
+    {
+        splineAnimate = null;
+        if (target == null)
+        {
+            return false;
+        }
+
+        splineAnimate = target.GetComponent<SplineAnimate>();
+        if (splineAnimate != null)
+        {
+            return true;
+        }
+
+        splineAnimate = target.GetComponentInParent<SplineAnimate>();
+        if (splineAnimate != null)
+        {
+            return true;
+        }
+
+        splineAnimate = target.GetComponentInChildren<SplineAnimate>();
+        return splineAnimate != null;
+    }
+
+    private void ClearTargetsWithoutEvents()
+    {
+        for (int i = validTargets.Count - 1; i >= 0; i--)
+        {
+            Transform target = validTargets[i];
+            UntrackTargetHealth(target);
+        }
+
         validTargets.Clear();
     }
 
@@ -88,10 +194,12 @@ public sealed class UnitVision : MonoBehaviour
     /// </summary>
     public void ScanForTargetsOnce()
     {
-        ClearTargets();
+        bool hadTargets = validTargets.Count > 0;
+        ClearTargetsWithoutEvents();
         SyncCollider();
         Physics.SyncTransforms();
 
+        bool addedAnyTarget = false;
         Vector3 center = GetWorldCenter();
         float radius = GetWorldRadius();
         Collider[] overlappingColliders = Physics.OverlapSphere(
@@ -102,18 +210,37 @@ public sealed class UnitVision : MonoBehaviour
 
         for (int i = 0; i < overlappingColliders.Length; i++)
         {
-            TryAddTarget(ColliderTargetUtility.GetTargetTransform(overlappingColliders[i]));
+            addedAnyTarget |= TryAddTarget(ColliderTargetUtility.GetTargetTransform(overlappingColliders[i]), false);
+        }
+
+        if (addedAnyTarget || hadTargets)
+        {
+            TargetsChanged?.Invoke();
         }
     }
 
-    private void TryAddTarget(Transform target)
+    private bool TryAddTarget(Transform target)
+    {
+        return TryAddTarget(target, true);
+    }
+
+    private bool TryAddTarget(Transform target, bool raiseChanged)
     {
         if (target == null || IsOwnTransform(target) || !IsInTargetLayer(target.gameObject) || validTargets.Contains(target))
         {
-            return;
+            return false;
         }
 
         validTargets.Add(target);
+        TrackTargetHealth(target);
+        TargetAdded?.Invoke(target);
+
+        if (raiseChanged)
+        {
+            TargetsChanged?.Invoke();
+        }
+
+        return true;
     }
 
     private void RemoveTarget(Transform target)
@@ -123,7 +250,22 @@ public sealed class UnitVision : MonoBehaviour
             return;
         }
 
-        validTargets.Remove(target);
+        int targetIndex = validTargets.IndexOf(target);
+        if (targetIndex < 0)
+        {
+            return;
+        }
+
+        RemoveTargetAt(targetIndex);
+        TargetsChanged?.Invoke();
+    }
+
+    private void RemoveTargetAt(int targetIndex)
+    {
+        Transform target = validTargets[targetIndex];
+        validTargets.RemoveAt(targetIndex);
+        UntrackTargetHealth(target);
+        TargetRemoved?.Invoke(target);
     }
 
     private bool IsInTargetLayer(GameObject target)
@@ -138,13 +280,80 @@ public sealed class UnitVision : MonoBehaviour
 
     private void PruneInvalidTargets()
     {
+        bool removedAnyTarget = false;
         for (int i = validTargets.Count - 1; i >= 0; i--)
         {
-            if (validTargets[i] == null || !validTargets[i].gameObject.activeInHierarchy)
+            if (IsInvalidTarget(validTargets[i]))
             {
-                validTargets.RemoveAt(i);
+                RemoveTargetAt(i);
+                removedAnyTarget = true;
             }
         }
+
+        if (removedAnyTarget)
+        {
+            TargetsChanged?.Invoke();
+        }
+    }
+
+    private bool IsInvalidTarget(Transform target)
+    {
+        if (target == null || !target.gameObject.activeInHierarchy)
+        {
+            return true;
+        }
+
+        return targetHealthComponents.TryGetValue(target, out HealthComponent health)
+            && health != null
+            && health.IsDead;
+    }
+
+    private void TrackTargetHealth(Transform target)
+    {
+        HealthComponent health = target.GetComponentInParent<HealthComponent>();
+        if (health == null)
+        {
+            return;
+        }
+
+        targetHealthComponents[target] = health;
+        if (trackedHealthCounts.TryGetValue(health, out int count))
+        {
+            trackedHealthCounts[health] = count + 1;
+            return;
+        }
+
+        trackedHealthCounts.Add(health, 1);
+        health.OnDeath.AddListener(HandleTrackedTargetDeath);
+    }
+
+    private void UntrackTargetHealth(Transform target)
+    {
+        if (ReferenceEquals(target, null) || !targetHealthComponents.TryGetValue(target, out HealthComponent health))
+        {
+            return;
+        }
+
+        targetHealthComponents.Remove(target);
+        if (health == null || !trackedHealthCounts.TryGetValue(health, out int count))
+        {
+            return;
+        }
+
+        count--;
+        if (count > 0)
+        {
+            trackedHealthCounts[health] = count;
+            return;
+        }
+
+        trackedHealthCounts.Remove(health);
+        health.OnDeath.RemoveListener(HandleTrackedTargetDeath);
+    }
+
+    private void HandleTrackedTargetDeath()
+    {
+        PruneInvalidTargets();
     }
 
     private void SyncCollider()

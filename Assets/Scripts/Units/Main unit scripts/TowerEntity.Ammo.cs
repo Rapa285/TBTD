@@ -24,6 +24,7 @@ public partial class TowerEntity
 
     private void OnDestroy()
     {
+        UnsubscribeFromVisionEvents();
         ReleaseRegisteredUnitId(true);
     }
 

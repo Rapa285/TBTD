@@ -41,6 +41,9 @@ public partial class TowerEntity : MonoBehaviour
     [SerializeField, Min(0.01f), Tooltip("Seconds between debug target scans when active polling is enabled.")]
     private float enemyPollPeriod = 0.5f;
 
+    [SerializeField, Min(0.01f), Tooltip("Seconds between priority target refreshes while targets are tracked.")]
+    private float targetRefreshPeriod = 0.25f;
+
     [SerializeField, Tooltip("Base stat values before upgrade modifiers are applied.")]
     private List<EntityStat> baseStats = new List<EntityStat>
     {
@@ -73,10 +76,15 @@ public partial class TowerEntity : MonoBehaviour
     private float nextAttackTime;
     private float activeAfterTime;
     private float nextEnemyPollTime;
+    private float nextTargetRefreshTime;
     private bool deploymentTimersInitialized;
     private bool deploymentBroadcasted;
+    private bool targetSelectionDirty;
+    private bool hadValidTargets;
+    private UnitVision subscribedVision;
 
     public bool Deployed => deployed;
+    public UnitVision Vision => vision;
     public AttackBehaviour ActiveAttackBehaviour => GetActiveAttackBehaviour();
     public IReadOnlyList<AttackBehaviour> ActiveAttackBehaviours => activeAttackBehaviours;
     public IReadOnlyList<ProjectileModifierBehaviour> ActiveProjectileModifiers => activeProjectileModifiers;
@@ -151,11 +159,7 @@ public partial class TowerEntity : MonoBehaviour
         }
 
         PollEnemiesForDebugIfNeeded();
-
-        if (currentTarget == null || !vision.Contains(currentTarget))
-        {
-            currentTarget = vision.GetFirstValidTarget();
-        }
+        UpdateTargetSelectionIfNeeded();
 
         if (currentTarget == null || Time.time < nextAttackTime)
         {
@@ -266,6 +270,8 @@ public partial class TowerEntity : MonoBehaviour
         {
             onDeploy = new TowerDeploymentEvent();
         }
+
+        SubscribeToVisionEventsIfNeeded();
     }
 
     private void RefreshTowerStateForCurrentMode()

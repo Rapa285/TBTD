@@ -105,7 +105,7 @@ public abstract class BaseProjectile : MonoBehaviour
         }
 
         Transform target = ColliderTargetUtility.GetTargetTransform(other);
-        if (IsIgnoredTarget(target) || !IsInHitLayers(target.gameObject))
+        if (!CanHitTarget(target))
         {
             return;
         }
@@ -195,10 +195,7 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected virtual void OnHit(Collider other, Transform target)
     {
-        AttackHitContext context = CreateHitContext(other, target, damage);
-        TryApplyDamage(target, damage, context);
-        // Projectile modifiers run after damage, using the context captured when the shot was fired.
-        DispatchProjectileHitModifiers(other, target, damage);
+        ApplyProjectileHit(other, target, damage);
 
         if (destroyOnHit)
         {
@@ -231,6 +228,25 @@ public abstract class BaseProjectile : MonoBehaviour
         }
 
         return CombatDamageUtility.TryApplyDamage(target, damageAmount, context);
+    }
+
+    protected bool CanHitTarget(Transform target)
+    {
+        return target != null && !IsIgnoredTarget(target) && IsInHitLayers(target.gameObject);
+    }
+
+    protected bool ApplyProjectileHit(Collider hitCollider, Transform target, float damageAmount)
+    {
+        if (!CanHitTarget(target))
+        {
+            return false;
+        }
+
+        AttackHitContext context = CreateHitContext(hitCollider, target, damageAmount);
+        bool damageApplied = TryApplyDamage(target, damageAmount, context);
+        // Projectile modifiers run after damage, using the context captured when the shot was fired.
+        DispatchProjectileHitModifiers(hitCollider, target, damageAmount);
+        return damageApplied;
     }
 
     private void DispatchProjectileInitializedModifiers()
@@ -378,7 +394,7 @@ public abstract class BaseProjectile : MonoBehaviour
         }
     }
 
-    private bool IsInHitLayers(GameObject target)
+    protected bool IsInHitLayers(GameObject target)
     {
         return target != null && (hitLayers.value & (1 << target.layer)) != 0;
     }
