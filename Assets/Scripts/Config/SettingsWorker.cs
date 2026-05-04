@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ASCENTA.Events;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -316,7 +315,7 @@ public sealed class SettingsWorker : MonoBehaviour
         ConfigWorker.Instance.ApplyConfig(target);
 
         savedSnapshot = CloneConfig(target);
-        EventBus.Publish(new SettingsChangedEvent(target));
+        GeneralEventBus<SettingsChangedEvent>.Publish(new SettingsChangedEvent(target));
     }
 
     void EnsureWorkingConfig()

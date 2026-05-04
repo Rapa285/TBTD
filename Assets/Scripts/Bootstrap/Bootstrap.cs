@@ -13,7 +13,7 @@ public class Bootstrap : MonoBehaviour
 
     [Header("References")]
     [SerializeField] ConfigWorker configWorker;
-    [SerializeField] SceneLoader sceneLoad;
+    [SerializeField] SceneLoader sceneLoader;
     // [SerializeField] ServiceRegistry serviceRegistry;
 
     static bool hasBootstrapped;
@@ -33,10 +33,10 @@ public class Bootstrap : MonoBehaviour
         //     configWorker = FindFirstObjectByType<ConfigWorker>(FindObjectsInactive.Include);
         // }
 
-        if (sceneLoad == null)
+        if (sceneLoader == null)
         {
-            // sceneLoad = FindFirstObjectByType<SceneLoad>(FindObjectsInactive.Include);
-            sceneLoad = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoad) ? resolvedSceneLoad : sceneLoad;
+            // sceneLoader = FindFirstObjectByType<SceneLoader>(FindObjectsInactive.Include);
+            sceneLoader = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoader) ? resolvedSceneLoader : sceneLoader;
         }
 
         // if (serviceRegistry == null)
@@ -78,25 +78,28 @@ public class Bootstrap : MonoBehaviour
             LoadSceneMode mode = loadAdditive ? LoadSceneMode.Additive : LoadSceneMode.Single;
             if (nextScene.BuildIndex >= 0)
             {
-                if (sceneLoad == null)
+                if (sceneLoader == null)
                 {
-                    Debug.LogError("Bootstrap requires a SceneLoad reference to load scenes.", this);
-                    return;
+                    sceneLoader = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoader) ? resolvedSceneLoader : null;
+                    if (sceneLoader == null)                    {
+                        Debug.LogError("Bootstrap requires a SceneLoad reference to load scenes.", this);
+                        return;
+                    }
                 }
 
-                sceneLoad.LoadScene(nextScene.BuildIndex, mode);
+                sceneLoader.LoadScene(nextScene.BuildIndex, mode);
                 return;
             }
 
             if (!string.IsNullOrWhiteSpace(nextScene.SceneName))
             {
-                if (sceneLoad == null)
+                if (sceneLoader == null)
                 {
                     Debug.LogError("Bootstrap requires a SceneLoad reference to load scenes.", this);
                     return;
                 }
 
-                sceneLoad.LoadScene(nextScene.SceneName, mode);
+                sceneLoader.LoadScene(nextScene.SceneName, mode);
                 return;
             }
         }
