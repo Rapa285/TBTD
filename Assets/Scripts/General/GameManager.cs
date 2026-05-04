@@ -12,14 +12,16 @@ public class GameManager : MonoBehaviour
     {
         // Mulai mendengarkan event BaseDamagedEvent
         GeneralEventBus<BaseDamagedEvent>.Subscribe(DamageBase);
-        GeneralEventBus<PauseState>.Subscribe(PauseGame);
+        GeneralEventBus<GamePausedEvent>.Subscribe(PauseGame);
+        GeneralEventBus<GameUnPausedEvent>.Subscribe(UnPauseGame);
     }
 
     private void OnDisable()
     {
         // Mulai mendengarkan event BaseDamagedEvent
         GeneralEventBus<BaseDamagedEvent>.Unsubscribe(DamageBase);
-        GeneralEventBus<PauseState>.Unsubscribe(PauseGame);
+        GeneralEventBus<GamePausedEvent>.Unsubscribe(PauseGame);
+        GeneralEventBus<GameUnPausedEvent>.Unsubscribe(UnPauseGame);
 
     }
 
@@ -36,12 +38,17 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent{});
-        GeneralEventBus<PauseState>.Publish(new PauseState{});
+        GeneralEventBus<GamePausedEvent>.Publish(new GamePausedEvent{});
     }
 
-    private void PauseGame(PauseState eventData)
+    private void PauseGame(GamePausedEvent eventData)
     {
         Time.timeScale = 0f;
+    }
+
+    private void UnPauseGame(GameUnPausedEvent eventData)
+    {
+        Time.timeScale = 1f;
     }
 
 

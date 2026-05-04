@@ -14,7 +14,18 @@ public struct BaseDamagedEvent
 
 // Contoh event tanpa data (hanya butuh trigger-nya saja)
 public struct GamePausedEvent { }
+public struct GameUnPausedEvent { }
 
 public struct GameOverEvent { }
 public struct SettingsEvent { }
+
+public struct SlowDownGameEvent
+{
+    public float SlowDownScale;
+}
+
+public struct KeyboardInput
+{
+    public KeyCode inputKey;
+}
 
