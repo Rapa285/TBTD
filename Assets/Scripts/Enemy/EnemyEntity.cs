@@ -14,6 +14,7 @@ public class EnemyEntity : MonoBehaviour
 {
     [Header("Stats")]
     public EnemyStats stats = new EnemyStats { health = 100f, damage = 10f, movementSpeed = 3f, initialShield = 0f };
+    public EnemyDataSO enemyData;
     [SerializeField, Min(0f)] private float experienceReward = 1f;
 
     [Header("Targeting")]

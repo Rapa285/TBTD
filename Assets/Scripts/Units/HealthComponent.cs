@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -23,6 +25,10 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     [SerializeField, Min(0f), Tooltip("Starting shield used when auto-initializing. Shield absorbs incoming damage before health.")]
     private float startingShield = 0f;
 
+    [Header("Revive")]
+    [SerializeField, Tooltip("Number of extra lives this entity has. When health reaches zero, it will be revived with full health until extra lives are exhausted. Shield is not restored on revive.")]
+    private int extraLives = 0;
+
     [Header("Death")]
     [SerializeField, Tooltip("What happens to this GameObject after health reaches zero.")]
     private HealthDeathMode deathMode = HealthDeathMode.DestroyGameObject;
@@ -33,6 +39,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     private bool isDead;
     private bool hasLastHitContext;
     private AttackHitContext lastHitContext;
+    private CancellationTokenSource lifeTokenSource;
+    private CancellationToken activeLifeToken;
 
     [HideInInspector] public UnityEvent OnDeath = new UnityEvent();
 
@@ -72,6 +80,11 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     /// </summary>
     public void Initialize(float health, float shield = 0f)
     {
+        lifeTokenSource?.Cancel();
+        lifeTokenSource?.Dispose();
+        lifeTokenSource=CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        activeLifeToken=lifeTokenSource.Token;
+
         maxHealth = Mathf.Max(1f, health);
         currentHealth = maxHealth;
         currentShield = Mathf.Max(0f, shield);
@@ -125,6 +138,14 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 
         if (currentHealth <= 0f)
         {
+            if (extraLives > 0)
+            {
+                extraLives--;
+                currentHealth = maxHealth;
+                currentShield = 0f;
+                Debug.Log($"{gameObject.name} has been revived! Remaining extra lives: {extraLives}");
+                return;
+            }
             Die();
         }
     }
@@ -137,6 +158,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         }
 
         isDead = true;
+        lifeTokenSource?.Cancel();
         Debug.Log($"{gameObject.name} has died.");
         EnsureDeathEvent();
         OnDeath?.Invoke();
@@ -160,6 +182,32 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         if (OnDeath == null)
         {
             OnDeath = new UnityEvent();
+        }
+    }
+
+    public void ApplyTemporaryShieldBuff(float amount, float duration)
+    {
+        if (isDead) return;
+        currentShield+= amount;
+        Debug.Log($"{gameObject.name} received a temporary shield buff of {amount}. Current Shield: {currentShield}");
+        _ = RemoveShieldBuffAfterDuration(amount, duration);
+    }
+
+    private async Awaitable RemoveShieldBuffAfterDuration(float amount, float duration)
+    {
+        try
+        {
+            await Awaitable.WaitForSecondsAsync(duration, activeLifeToken);
+
+            if (!isDead && currentShield > 0f)
+            {
+                float amountToRemove = Mathf.Min(amount, currentShield);
+                currentShield -= amountToRemove;
+                Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 }

@@ -46,6 +46,8 @@ public class UnitStateManager : MonoBehaviour
         [NonSerialized] private float cooldownDuration;
         [NonSerialized] private float cooldownEndTime;
         [NonSerialized] private bool cooldownActive;
+        [NonSerialized] private bool hasCompiledDeploymentCost;
+        [NonSerialized] private int deploymentCost;
 
         public string UnitId => unitId;
         public string DisplayName => displayName;
@@ -67,6 +69,8 @@ public class UnitStateManager : MonoBehaviour
             : 0f;
         public bool HasNextExperienceThreshold => TryGetNextExperienceThreshold(out _);
         public float NextExperienceThreshold => TryGetNextExperienceThreshold(out float threshold) ? threshold : 0f;
+        public bool HasCompiledDeploymentCost => hasCompiledDeploymentCost;
+        public int DeploymentCost => hasCompiledDeploymentCost ? deploymentCost : 0;
 
         /// <summary>
         /// Returns whether this unit has already selected the given upgrade asset.
@@ -161,6 +165,18 @@ public class UnitStateManager : MonoBehaviour
             cooldownEndTime = 0f;
             cooldownActive = false;
         }
+
+        internal void SetCompiledDeploymentCost(int value)
+        {
+            deploymentCost = Mathf.Max(0, value);
+            hasCompiledDeploymentCost = true;
+        }
+
+        internal void ClearCompiledDeploymentCost()
+        {
+            deploymentCost = 0;
+            hasCompiledDeploymentCost = false;
+        }
     }
 
     [SerializeField, Tooltip("Event bus used to mirror runtime progression changes back into roster state.")]
@@ -177,6 +193,7 @@ public class UnitStateManager : MonoBehaviour
         RegisterWithServiceLocator();
         ResolveEventBus();
         ValidateUnitIds();
+        Precompile();
     }
 
     private void Start()
@@ -252,6 +269,32 @@ public class UnitStateManager : MonoBehaviour
         return unit.UnitPrefab != null
             && unit.CurrentRuntimeInstance == null
             && !unit.IsCoolingDown;
+    }
+
+    /// <summary>
+    /// Refreshes cached deployment costs for every roster unit without instantiating runtime previews.
+    /// </summary>
+    public void Precompile()
+    {
+        for (int i = 0; i < ownedUnits.Count; i++)
+        {
+            RefreshCompiledDeploymentCost(ownedUnits[i]);
+        }
+    }
+
+    /// <summary>
+    /// Reads the cached deployment cost for a roster unit when precompilation succeeded.
+    /// </summary>
+    public bool TryGetDeploymentCost(string unitId, out int cost)
+    {
+        if (TryGetUnit(unitId, out OwnedUnitState unit) && unit.HasCompiledDeploymentCost)
+        {
+            cost = unit.DeploymentCost;
+            return true;
+        }
+
+        cost = 0;
+        return false;
     }
 
     /// <summary>
@@ -437,6 +480,7 @@ public class UnitStateManager : MonoBehaviour
             unit.CurrentRuntimeInstance.AddUpgrade(upgrade);
         }
 
+        RefreshCompiledDeploymentCost(unit);
         RefreshRuntimeProgression(unit, true);
         return true;
     }
@@ -458,6 +502,41 @@ public class UnitStateManager : MonoBehaviour
     private void HandleUnitExperienceChanged(UnitExperienceChangedEvent eventData)
     {
         RecordExperience(eventData.UnitId, eventData.CurrentExperience);
+    }
+
+    private void RefreshCompiledDeploymentCost(OwnedUnitState unit)
+    {
+        if (unit == null || unit.UnitPrefab == null)
+        {
+            if (unit != null)
+            {
+                unit.ClearCompiledDeploymentCost();
+                RaiseUnitDeploymentCostCompiled(unit);
+            }
+
+            return;
+        }
+
+        float cost = unit.UnitPrefab.CalculateFinalStat(ENTITY_STATS.DeploymentCost, unit.AppliedUpgrades);
+        unit.SetCompiledDeploymentCost(Mathf.CeilToInt(Mathf.Max(0f, cost)));
+        RaiseUnitDeploymentCostCompiled(unit);
+    }
+
+    private void RaiseUnitDeploymentCostCompiled(OwnedUnitState unit)
+    {
+        if (unit == null || string.IsNullOrWhiteSpace(unit.UnitId))
+        {
+            return;
+        }
+
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitDeploymentCostCompiled(new UnitDeploymentCostCompiledEvent(
+                unit.UnitId,
+                unit.HasCompiledDeploymentCost,
+                unit.DeploymentCost));
+        }
     }
 
     private void ExpireCooldowns()

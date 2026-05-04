@@ -70,6 +70,8 @@ MonoBehaviour:
     value: 30
   - stat: 6
     value: 10
+  - stat: 7
+    value: 50
   upgrades: []
   onDeploy:
     m_PersistentCalls:

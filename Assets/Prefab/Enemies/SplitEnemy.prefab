@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: enemyData
+      value: 
+      objectReference: {fileID: 11400000, guid: e791efdcc210e5f4c9aeb14153147baf, type: 2}
     - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -80,3 +84,4 @@ MonoBehaviour:
   prefabsToSpawn:
   - {fileID: 6615277949804604673, guid: 625b7c72d6bda2d498e06fb29feca740, type: 3}
   - {fileID: 6615277949804604673, guid: 625b7c72d6bda2d498e06fb29feca740, type: 3}
+  pathSpacing: 0.02
