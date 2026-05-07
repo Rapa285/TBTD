@@ -29,6 +29,8 @@ This documment explains the AttackBehaviour implementations that are going to be
 - An attackbehaviour that doesnt rely on SplineLeading like the others
 - instead whenever an enemy enters the range, starts a countdown before attacking all enemies in range
 - this countdown to attack will repeat until no enemies are inside
+- Aura hit feedback is visual-only and lives in `AuraAttackFXComponent`, assigned through `AttackBehaviour`'s `attackFX` reference
+- Aura should call `AttackFX.PlayAttackFX(AttackFXContext)` only after a target is successfully damaged
 
 There are also changes to the leading attack behaviour :
 - The current attack system does not prioritize first/forward enemies

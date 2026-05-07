@@ -39,6 +39,12 @@ Current projectile modifier behavior:
 - Projectile weapons pass modifier prefabs into `BaseProjectile.Initialize`.
 - `BaseProjectile` instantiates modifier instances as projectile children so in-flight projectiles keep their fired-time behavior and full projectile lifecycle hooks.
 
+Visual attack feedback is separate from upgrade-authored projectile modifiers:
+- `AttackBehaviour` exposes an optional `AttackFX` hook backed by a serialized `MonoBehaviour` reference.
+- Assigned FX behaviours must implement `AttackFXComponent`.
+- Concrete attacks decide when to call `AttackFX.PlayAttackFX(AttackFXContext)`.
+- Attack FX components are presentation-only and should not be used for damage, upgrade effects, ammo, or projectile lifecycle behavior.
+
 ## Offer And Selection Flow
 `UpgradesManager` listens for `UnitUpgradeThresholdReached` events from `UnitEventBus`.
 
@@ -98,6 +104,7 @@ Damage scaling should normally be authored as `ENTITY_STATS.GlobalDamage` stat e
 ## Extension Rules
 - Add new stats in `EntityConstants.cs` and update `TowerEntity.GetDefaultStat()`.
 - Add new attack behaviours by deriving from `AttackBehaviour`; do not put weapon-specific logic in `TowerEntity`.
+- Add visual-only attack feedback by implementing `AttackFXComponent` and wiring it through the attack's `attackFX` reference.
 - Add new hit modifiers or projectile modifiers by deriving from `ProjectileModifierBehaviour`; do not hard-code modifier-specific behavior into `TowerEntity`, `AttackBehaviour`, or `BaseProjectile`.
 - Keep offer pools and complex offer rules out of `UnitStateManager`. If rarity, prerequisites, tags, or synergies grow, extract offer generation behind `UpgradesManager`.
 - Future upgrade gating metadata should live on `UpgradeSO`, such as prerequisite upgrades, class/tag gates, or level-specific offer hints. Do not implement those rules until the design is ready.

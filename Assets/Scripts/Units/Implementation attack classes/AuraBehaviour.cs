@@ -13,7 +13,13 @@ public sealed class AuraBehaviour : AttackBehaviour
         UnitVision vision = OwnerTower != null ? OwnerTower.Vision : null;
         if (vision == null)
         {
-            return target != null && TryApplyDamage(target, damage);
+            if (target == null || !TryApplyDamage(target, damage))
+            {
+                return false;
+            }
+
+            PlayAuraHitFX(target, damage);
+            return true;
         }
 
         if (!vision.HasValidTargets)
@@ -31,9 +37,28 @@ public sealed class AuraBehaviour : AttackBehaviour
                 continue;
             }
 
-            damagedAnyTarget |= TryApplyDamage(candidate, damage);
+            if (TryApplyDamage(candidate, damage))
+            {
+                PlayAuraHitFX(candidate, damage);
+                damagedAnyTarget = true;
+            }
         }
 
         return damagedAnyTarget;
+    }
+
+    private void PlayAuraHitFX(Transform target, float damage)
+    {
+        AttackFX?.PlayAttackFX(new AttackFXContext(
+            this,
+            OwnerTower,
+            OwnerRoot,
+            target,
+            damage,
+            transform.position,
+            true,
+            GetAimPoint(target),
+            true,
+            null));
     }
 }

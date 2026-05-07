@@ -6,9 +6,19 @@ Class implementations in this folder are template/base behaviours for future att
 - Concrete weapons should implement `ExecuteAttack(Transform target, float damage)`.
 - Keep damage multiplier handling in `AttackBehaviour.Attack`; concrete attacks receive the final damage value.
 - `TowerEntity` configures active attack behaviours with owner/root context, runtime hit modifiers, and projectile modifier prefabs.
+- `AttackBehaviour` has an optional serialized `attackFX` reference exposed through `AttackFX`. Store it as a `MonoBehaviour` in the inspector and assign a component that implements `AttackFXComponent`.
+- `AttackBehaviour.Attack` does not automatically play attack FX. Concrete attack scripts decide when a gameplay action should trigger `AttackFX.PlayAttackFX(AttackFXContext)`.
 - `CombatDamageUtility` owns the shared context-aware damage, legacy `IDamageable`, and `SendMessage` fallback order used by attacks and projectiles.
 - New non-projectile weapons such as direct damage, laser, beam, or hitscan attacks should explicitly decide how `ProjectileModifierBehaviour` hooks participate. Use `TryApplyDamage()` for normal single-hit weapons, or call `DispatchHitModifiers(...)` when a custom damage path still needs upgrade-authored hit behavior.
 - Do not put projectile, hitscan, beam, or leading-specific logic directly into `TowerEntity`.
+
+## Attack FX Components
+
+- `AttackFXComponent` is the shared interface for attack visualization components layered on top of attack logic and projectiles.
+- `AttackFXContext` carries source attack, owner tower, owner root, target, damage, optional origin, optional hit/FX position, and optional hit collider data.
+- Attack FX components are visual-only. They should not apply damage, dispatch projectile modifiers, spend ammo, retarget, or mutate tower runtime stats.
+- Missing, null, or non-`AttackFXComponent` `attackFX` assignments should be treated as no visual output.
+- `AuraAttackFXComponent` is the current production example: it owns an aura `ParticleSystem` and emits one particle at the context hit position for each successfully damaged target.
 
 ## Hit And Projectile Modifiers
 
@@ -24,6 +34,7 @@ Class implementations in this folder are template/base behaviours for future att
 - `ProjectilePropertiesModifierBehaviour` provides common authored changes for lifetime, destroy-on-hit, straight projectile speed, and supported collider dimensions.
 - Damage upgrades should normally use `ENTITY_STATS.GlobalDamage` on `UpgradeSO` stat effects; projectile damage is passed in from the weapon's `AttackBehaviour.BaseDamage` after tower damage multipliers are applied.
 - Do not hard-code effect-specific behavior into `AttackBehaviour`, `BaseProjectile`, or `TowerEntity`.
+- Do not use projectile modifiers for visual-only attack feedback. Use `AttackFXComponent` when the behavior is presentation-only.
 
 ## Leading Bases
 
