@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1683619560227403597}
   - component: {fileID: 5929984254154990258}
   - component: {fileID: 3249204317369271761}
-  m_Layer: 8
+  m_Layer: 12
   m_Name: DebugUnit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35,6 +35,7 @@ Transform:
   - {fileID: 6706637941902643104}
   - {fileID: 1039512237251317013}
   - {fileID: 8342355722193339825}
+  - {fileID: 594182883195470239}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5929984254154990258
@@ -54,6 +55,7 @@ MonoBehaviour:
   deployed: 0
   activelyPollEnemies: 1
   enemyPollPeriod: 1
+  targetRefreshPeriod: 0.25
   baseStats:
   - stat: 0
     value: 150
@@ -104,7 +106,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8342355722193339825}
   - component: {fileID: 2627076634440530655}
-  m_Layer: 8
+  m_Layer: 12
   m_Name: Pistol
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -142,6 +144,7 @@ MonoBehaviour:
   attacksPerAmmo: 1
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.5, z: 0}
+  attackFX: {fileID: 0}
   distanceFactor: 0.05
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}
@@ -167,7 +170,7 @@ GameObject:
   - component: {fileID: 6706637941902643104}
   - component: {fileID: 8499077314356354358}
   - component: {fileID: 6597249124547463550}
-  m_Layer: 8
+  m_Layer: 12
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -276,7 +279,7 @@ GameObject:
   - component: {fileID: 316828089561551405}
   - component: {fileID: 6355932389240316297}
   - component: {fileID: 1917748325057834136}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -460,6 +463,75 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerAmmoUnitDisplay
   tower: {fileID: 5929984254154990258}
   textDisplay: {fileID: 6355932389240316297}
+--- !u!1 &6932999301285739116
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 594182883195470239}
+  - component: {fileID: 7401127552645490998}
+  - component: {fileID: 6157850217773065917}
+  m_Layer: 12
+  m_Name: SelectionTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &594182883195470239
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6932999301285739116}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1683619560227403597}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &7401127552645490998
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6932999301285739116}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_LayerOverridePriority: 1
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2, y: 1.2, z: 1.2}
+  m_Center: {x: 0, y: 0.15, z: 0}
+--- !u!114 &6157850217773065917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6932999301285739116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69bef6e73497e1d43ac7362f35699702, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TowerSelectionTarget
+  tower: {fileID: 5929984254154990258}
+  selectionCollider: {fileID: 7401127552645490998}
+  playerStateController: {fileID: 0}
 --- !u!1 &6969237254070908502
 GameObject:
   m_ObjectHideFlags: 0
@@ -470,7 +542,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1039512237251317013}
   - component: {fileID: 1495543637394770891}
-  m_Layer: 8
+  m_Layer: 12
   m_Name: Footing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -708,10 +780,10 @@ SphereCollider:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 192
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 3895
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
@@ -736,3 +808,4 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 192
   visualization: {fileID: 7444403660851936854}
+  visualizationVisibleByDefault: 0

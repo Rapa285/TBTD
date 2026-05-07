@@ -81,9 +81,12 @@ public partial class TowerEntity : MonoBehaviour
     private bool deploymentBroadcasted;
     private bool targetSelectionDirty;
     private bool hadValidTargets;
+    private bool isSelected;
+    private bool isDeploymentPreviewRangeVisible;
     private UnitVision subscribedVision;
 
     public bool Deployed => deployed;
+    public bool IsSelected => isSelected;
     public UnitVision Vision => vision;
     public AttackBehaviour ActiveAttackBehaviour => GetActiveAttackBehaviour();
     public IReadOnlyList<AttackBehaviour> ActiveAttackBehaviours => activeAttackBehaviours;
@@ -94,6 +97,8 @@ public partial class TowerEntity : MonoBehaviour
     private TowerDeploymentEvent onDeploy = new TowerDeploymentEvent();
 
     public TowerDeploymentEvent OnDeploy => onDeploy;
+    public event Action Selected;
+    public event Action Deselected;
 
     private void Awake()
     {
@@ -111,6 +116,8 @@ public partial class TowerEntity : MonoBehaviour
         ResetAmmoStateForPreview();
         ReleaseResolvedUnitIdForPreview();
         ResolveTowerCoreState();
+        SetSelected(false);
+        SetDeploymentPreviewRangeVisible(true);
     }
 
     /// <summary>
@@ -119,7 +126,28 @@ public partial class TowerEntity : MonoBehaviour
     public void Deploy()
     {
         deployed = true;
+        SetDeploymentPreviewRangeVisible(false);
         RunDeploymentActivation();
+    }
+
+    public void SetSelected(bool selected)
+    {
+        if (isSelected == selected)
+        {
+            return;
+        }
+
+        isSelected = selected;
+        RefreshRangeVisualization();
+
+        if (isSelected)
+        {
+            Selected?.Invoke();
+        }
+        else
+        {
+            Deselected?.Invoke();
+        }
     }
 
     private void BroadcastDeployment()
@@ -323,6 +351,30 @@ public partial class TowerEntity : MonoBehaviour
     {
         CacheComponentReferences();
         CompileFinalStats();
+    }
+
+    private void SetDeploymentPreviewRangeVisible(bool visible)
+    {
+        if (isDeploymentPreviewRangeVisible == visible)
+        {
+            return;
+        }
+
+        isDeploymentPreviewRangeVisible = visible;
+        RefreshRangeVisualization();
+    }
+
+    private void RefreshRangeVisualization()
+    {
+        if (vision == null)
+        {
+            CacheComponentReferences();
+        }
+
+        if (vision != null)
+        {
+            vision.SetVisualizationVisible(isSelected || isDeploymentPreviewRangeVisible);
+        }
     }
 
     private void ResolvePrimaryRuntimeFeatures(bool isInitialActivation)

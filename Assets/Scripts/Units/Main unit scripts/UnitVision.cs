@@ -18,12 +18,17 @@ public sealed class UnitVision : MonoBehaviour
     [SerializeField, Tooltip("Optional object scaled to the vision diameter for range previews.")]
     private GameObject visualization;
 
+    [SerializeField, Tooltip("Whether the range visualization starts visible at runtime.")]
+    private bool visualizationVisibleByDefault;
+
     private readonly List<Transform> validTargets = new List<Transform>();
     private readonly Dictionary<Transform, HealthComponent> targetHealthComponents = new Dictionary<Transform, HealthComponent>();
     private readonly Dictionary<HealthComponent, int> trackedHealthCounts = new Dictionary<HealthComponent, int>();
     private SphereCollider visionCollider;
+    private bool isVisualizationVisible;
 
     public IReadOnlyList<Transform> ValidTargets => validTargets;
+    public bool IsVisualizationVisible => isVisualizationVisible;
     public bool HasValidTargets
     {
         get
@@ -51,6 +56,7 @@ public sealed class UnitVision : MonoBehaviour
     private void Awake()
     {
         visionCollider = GetComponent<SphereCollider>();
+        isVisualizationVisible = visualizationVisibleByDefault;
         SyncCollider();
         SyncVisualization();
     }
@@ -219,6 +225,15 @@ public sealed class UnitVision : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Shows or hides the optional range visualization without changing tower targeting range.
+    /// </summary>
+    public void SetVisualizationVisible(bool visible)
+    {
+        isVisualizationVisible = visible;
+        SyncVisualization();
+    }
+
     private bool TryAddTarget(Transform target)
     {
         return TryAddTarget(target, true);
@@ -375,6 +390,15 @@ public sealed class UnitVision : MonoBehaviour
         }
 
         visualization.transform.localScale = Vector3.one * (range * 2f);
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (visualization.activeSelf != isVisualizationVisible)
+        {
+            visualization.SetActive(isVisualizationVisible);
+        }
     }
 
     private Vector3 GetWorldCenter()

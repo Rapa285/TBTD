@@ -19,6 +19,8 @@ This Unity project is a roster-managed tower combat prototype. Keep future agent
 - Compiles final runtime stats in `TowerEntity.CompileFinalStats()`.
 - Owns the active primary `AttackBehaviour`, runtime override weapon instance, augment weapon instances, and active tower-level projectile modifier instances.
 - Owns attack timing, setup delay, target retention, and primary attack ammo state.
+- Owns selected state for deployed towers and is the only runtime owner that changes `UnitVision` range visualization visibility.
+- Keeps range visualization visible when selected or while in deployment preview; deployment preview state and selected state are separate reasons.
 - Pushes compiled `VisualRange` into `UnitVision.Range`.
 - Resolves a stable runtime `unitId` from `UnitProgression` when roster-managed, otherwise generates a unique runtime ID.
 - Raises `OnDeploy` only after activation has completed and a resolved unit ID exists.
@@ -46,6 +48,7 @@ Do not create a second runtime stat/combat composition pipeline. Extend `TowerEn
 - Checks cached roster deployment cost before preview creation when available.
 - Instantiates a preview root.
 - Calls `TowerEntity.PrepareForDeploymentPreview()` before placement.
+- Preview preparation enables the tower range preview; `TowerEntity.Deploy()` disables preview range visibility before runtime activation.
 - Applies roster state during preview without running deployment-only activation work.
 - Raises deployment preview started/ended events for UI state.
 - Spends roster deployment currency only on successful final placement.
@@ -105,6 +108,25 @@ Deployment UI state is separate from deployment input eligibility.
 - The deployable indicator is visible for `CanDeploy` and `InDeployPreview`.
 - `UnitUICost` displays cached cost for undeployed roster units and hides it while deployed or when no cached cost exists.
 - `UICurrencyDisplayer` displays the current currency balance and refreshes from `CurrencyChanged`.
+
+## Player Selection And Range Preview
+
+`PlayerStateController` is the scene-level authority for player interaction state and selected tower identity.
+
+- Uses `PlayerInput` click actions, resolved in order from `Click`, `Attack`, then a direct pointer press binding.
+- Checks UI through `EventSystem.RaycastAll` only to block gameplay clicks when UI is under the pointer.
+- Uses direct `Physics.RaycastAll` from the active selection camera for world tower selection.
+- Sorts physics hits by distance and resolves exact `RaycastHit.collider` matches against `TowerSelectionTarget.SelectionCollider`.
+- Uses `selectionLayers` for selectable tower body colliders, `selectionPassThroughLayers` for layers like `TowerVision`, and `selectionBlockingLayers` for geometry that should prevent click-through selection.
+- Clears selection on empty world clicks or blocking/non-selectable physics hits while selection is allowed.
+
+`TowerSelectionTarget` is a data/event bridge, not an input owner.
+
+- Stores the selectable `TowerEntity` and directly assigned selection `Collider`.
+- Does not implement pointer handlers and does not call `UnitVision.SetVisualizationVisible(...)`.
+- Relays `TowerEntity.Selected` and `TowerEntity.Deselected` through optional UnityEvents for target-local visuals.
+
+Do not add a second pointer or event-system physics selection path unless the selection architecture is deliberately refactored.
 
 ## Combat Loop
 
@@ -178,6 +200,7 @@ Current behavior is one pending upgrade choice at a time. Do not assume multi-th
 - Targetability is currently layer-based through `targetLayers`.
 - Uses `ColliderTargetUtility.GetTargetTransform(...)` so rigidbody-rooted targets resolve consistently.
 - Invalid targets are pruned when null or inactive.
+- Range visualization is exposed through `SetVisualizationVisible(...)`, but runtime callers should go through `TowerEntity` selected/preview state instead of manipulating it directly.
 
 There is still no faction/team system or targeting priority beyond first valid target. Do not assume targetability implies hostility beyond layer configuration.
 
@@ -244,6 +267,8 @@ A functional tower GameObject should have:
 - `UnitVision` on the same object or a child.
 - A `SphereCollider` on the `UnitVision` object.
 - Target layers configured on `UnitVision`.
+- A `TowerSelectionTarget` with its `TowerEntity` and exact selection collider assigned when the tower should be player-selectable.
+- A selectable tower-body layer such as `TowerUnit` on the assigned selection collider, and a pass-through layer such as `TowerVision` on vision trigger colliders when using `PlayerStateController`.
 
 Roster-managed deployed units also expect:
 

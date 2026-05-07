@@ -6,4 +6,6 @@
 - `CurrencyManager` tracks current player currency for deployment only. Enemy gold rewards, recall refunds, and currency persistence are not implemented yet.
 - `UnitUIDeployment` separates input gating from display state with `DeploymentUIState.CannotDeploy`, `CanDeploy`, and `InDeployPreview`.
 - `UnitUICost` displays cached cost for undeployed roster units; `UICurrencyDisplayer` displays current currency.
-- Future visual work: deployment preview pooling, unit vision circle/range synchronization, tube-like vision volume for map height differences, and showing unit vision only while hovered.
+- Tower selection is centralized in `PlayerStateController` through direct physics raycasts. Configure selectable tower colliders on `TowerUnit`, vision triggers on `TowerVision`, and assign each `TowerSelectionTarget.SelectionCollider` exactly.
+- `TowerEntity` owns selected state and range visualization. `UnitVision` range is visible while a tower is selected or in deployment preview.
+- Future visual work: deployment preview pooling, richer selected-tower visuals through `TowerSelectionTarget` UnityEvents, and tube-like vision volume support for map height differences.
