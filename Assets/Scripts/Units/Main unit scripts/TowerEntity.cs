@@ -267,6 +267,30 @@ public partial class TowerEntity : MonoBehaviour
         RefreshTowerStateForCurrentMode();
     }
 
+    /// <summary>
+    /// Replaces one resolved upgrade asset with another and refreshes runtime state once.
+    /// </summary>
+    public void ReplaceUpgrade(UpgradeSO oldUpgrade, UpgradeSO newUpgrade)
+    {
+        bool changed = false;
+
+        if (oldUpgrade != null && oldUpgrade != newUpgrade)
+        {
+            changed = upgrades.Remove(oldUpgrade) || changed;
+        }
+
+        if (newUpgrade != null && !upgrades.Contains(newUpgrade))
+        {
+            upgrades.Add(newUpgrade);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            RefreshTowerStateForCurrentMode();
+        }
+    }
+
     private void CacheComponentReferences()
     {
         if (vision == null)

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
+  m_Name: Shotgun_MU
+  m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  levelUpgrades:
+  - {fileID: 11400000, guid: 1d09326969d6b6944b9e1469477e0c6e, type: 2}
+  - {fileID: 11400000, guid: 977029ebd8c67ac47beaf6215025e174, type: 2}
+  - {fileID: 11400000, guid: 7bb54164e51b9da49a887b427963f2c1, type: 2}

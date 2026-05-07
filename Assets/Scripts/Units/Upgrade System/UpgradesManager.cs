@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Generates shared-pool upgrade offers and records selected upgrades for roster units.
+/// Generates shared-pool multi-upgrade offers and records selected upgrade-line levels for roster units.
 /// </summary>
 [DefaultExecutionOrder(-800)]
 public class UpgradesManager : MonoBehaviour
@@ -10,16 +10,16 @@ public class UpgradesManager : MonoBehaviour
     [SerializeField, Tooltip("Event bus used to listen for level-up requests and publish offers/selections.")]
     private UnitEventBus eventBus;
 
-    [SerializeField, Tooltip("Roster manager that owns unit progression state and applied upgrade lists.")]
+    [SerializeField, Tooltip("Roster manager that owns unit progression state and applied multi-upgrade levels.")]
     private UnitStateManager unitStateManager;
 
-    [SerializeField, Tooltip("Shared pool of upgrade assets that every current unit can be offered.")]
-    private List<UpgradeSO> upgradePool = new List<UpgradeSO>();
+    [SerializeField, Tooltip("Shared pool of multi-upgrade lines that every current unit can be offered.")]
+    private List<MultiUpgradeSO> upgradePool = new List<MultiUpgradeSO>();
 
     [SerializeField, Min(0), Tooltip("Maximum number of unique choices generated for one offer.")]
     private int upgradeChoiceCount = 3;
 
-    private readonly Dictionary<string, List<UpgradeSO>> pendingOffers = new Dictionary<string, List<UpgradeSO>>();
+    private readonly Dictionary<string, List<UnitUpgradeOfferChoice>> pendingOffers = new Dictionary<string, List<UnitUpgradeOfferChoice>>();
     private bool eventBusSubscribed;
 
     private void Awake()
@@ -61,9 +61,9 @@ public class UpgradesManager : MonoBehaviour
     /// <summary>
     /// Gets the pending offer choices for a unit without exposing the mutable backing list.
     /// </summary>
-    public bool TryGetPendingChoices(string unitId, out IReadOnlyList<UpgradeSO> choices)
+    public bool TryGetPendingChoices(string unitId, out IReadOnlyList<UnitUpgradeOfferChoice> choices)
     {
-        if (pendingOffers.TryGetValue(unitId, out List<UpgradeSO> offer))
+        if (pendingOffers.TryGetValue(unitId, out List<UnitUpgradeOfferChoice> offer))
         {
             choices = offer;
             return true;
@@ -78,7 +78,7 @@ public class UpgradesManager : MonoBehaviour
     /// </summary>
     public bool SelectUpgrade(string unitId, int choiceIndex)
     {
-        if (!pendingOffers.TryGetValue(unitId, out List<UpgradeSO> offer)
+        if (!pendingOffers.TryGetValue(unitId, out List<UnitUpgradeOfferChoice> offer)
             || choiceIndex < 0
             || choiceIndex >= offer.Count)
         {
@@ -89,18 +89,25 @@ public class UpgradesManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects one pending upgrade choice by asset reference from the currently stored offer.
+    /// Selects one pending multi-upgrade choice by asset reference from the currently stored offer.
     /// </summary>
-    public bool SelectUpgrade(string unitId, UpgradeSO upgrade)
+    public bool SelectUpgrade(string unitId, MultiUpgradeSO upgrade)
     {
         if (upgrade == null
-            || !pendingOffers.TryGetValue(unitId, out List<UpgradeSO> offer)
-            || !offer.Contains(upgrade))
+            || !pendingOffers.TryGetValue(unitId, out List<UnitUpgradeOfferChoice> offer))
         {
             return false;
         }
 
-        return SelectPendingUpgrade(unitId, upgrade);
+        for (int i = 0; i < offer.Count; i++)
+        {
+            if (offer[i].MultiUpgrade == upgrade)
+            {
+                return SelectPendingUpgrade(unitId, offer[i]);
+            }
+        }
+
+        return false;
     }
 
     private void HandleUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
@@ -117,10 +124,10 @@ public class UpgradesManager : MonoBehaviour
             return;
         }
 
-        List<UpgradeSO> offer = BuildOffer(unit);
+        List<UnitUpgradeOfferChoice> offer = BuildOffer(unit);
         if (offer.Count == 0)
         {
-            RecordSelection(unitId, null);
+            RecordSelection(unitId, default);
             return;
         }
 
@@ -143,20 +150,34 @@ public class UpgradesManager : MonoBehaviour
         SelectUpgrade(eventData.UnitId, eventData.ChoiceIndex);
     }
 
-    private List<UpgradeSO> BuildOffer(UnitStateManager.OwnedUnitState unit)
+    private List<UnitUpgradeOfferChoice> BuildOffer(UnitStateManager.OwnedUnitState unit)
     {
-        List<UpgradeSO> candidates = new List<UpgradeSO>();
-        // Shared-pool filtering: skip nulls, already-applied upgrades, and duplicate asset references.
+        List<UnitUpgradeOfferChoice> candidates = new List<UnitUpgradeOfferChoice>();
+        // Shared-pool filtering: skip nulls, maxed lines, invalid next levels, and duplicate asset references.
         for (int i = 0; i < upgradePool.Count; i++)
         {
-            UpgradeSO upgrade = upgradePool[i];
-            if (upgrade != null && !unit.HasAppliedUpgrade(upgrade) && !candidates.Contains(upgrade))
+            MultiUpgradeSO upgrade = upgradePool[i];
+            if (upgrade == null || ContainsMultiUpgrade(candidates, upgrade))
             {
-                candidates.Add(upgrade);
+                continue;
+            }
+
+            if (unit.TryGetNextMultiUpgradeLevel(
+                upgrade,
+                out int currentLevel,
+                out int nextLevel,
+                out UpgradeSO resolvedUpgrade))
+            {
+                candidates.Add(new UnitUpgradeOfferChoice(
+                    upgrade,
+                    resolvedUpgrade,
+                    currentLevel,
+                    nextLevel,
+                    upgrade.MaxLevel));
             }
         }
 
-        List<UpgradeSO> offer = new List<UpgradeSO>();
+        List<UnitUpgradeOfferChoice> offer = new List<UnitUpgradeOfferChoice>();
         int choiceCount = Mathf.Min(Mathf.Max(0, upgradeChoiceCount), candidates.Count);
 
         // Remove each picked candidate so a single offer never contains duplicates.
@@ -170,16 +191,16 @@ public class UpgradesManager : MonoBehaviour
         return offer;
     }
 
-    private bool SelectPendingUpgrade(string unitId, UpgradeSO upgrade)
+    private bool SelectPendingUpgrade(string unitId, UnitUpgradeOfferChoice choice)
     {
-        if (!pendingOffers.TryGetValue(unitId, out List<UpgradeSO> offer))
+        if (!pendingOffers.TryGetValue(unitId, out List<UnitUpgradeOfferChoice> offer))
         {
             return false;
         }
 
         pendingOffers.Remove(unitId);
 
-        if (RecordSelection(unitId, upgrade))
+        if (RecordSelection(unitId, choice))
         {
             return true;
         }
@@ -188,11 +209,17 @@ public class UpgradesManager : MonoBehaviour
         return false;
     }
 
-    private bool RecordSelection(string unitId, UpgradeSO upgrade)
+    private bool RecordSelection(string unitId, UnitUpgradeOfferChoice choice)
     {
         ResolveReferences();
 
-        if (unitStateManager == null || !unitStateManager.RecordSelectedUpgrade(unitId, upgrade))
+        MultiUpgradeSO selectedMultiUpgrade = choice.MultiUpgrade;
+        if (unitStateManager == null
+            || !unitStateManager.RecordSelectedUpgrade(
+                unitId,
+                selectedMultiUpgrade,
+                out UpgradeSO selectedUpgrade,
+                out int selectedUpgradeLevel))
         {
             return false;
         }
@@ -202,7 +229,9 @@ public class UpgradesManager : MonoBehaviour
         {
             eventBus.RaiseUnitUpgradeSelected(new UnitUpgradeSelectedEvent(
                 unitId,
-                upgrade,
+                selectedMultiUpgrade,
+                selectedUpgrade,
+                selectedUpgradeLevel,
                 unit.Level,
                 unit.Experience,
                 unit.HasNextExperienceThreshold,
@@ -210,6 +239,19 @@ public class UpgradesManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    private static bool ContainsMultiUpgrade(IReadOnlyList<UnitUpgradeOfferChoice> choices, MultiUpgradeSO upgrade)
+    {
+        for (int i = 0; i < choices.Count; i++)
+        {
+            if (choices[i].MultiUpgrade == upgrade)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void ResolveReferences()

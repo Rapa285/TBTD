@@ -7832,7 +7832,7 @@ MonoBehaviour:
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: Keyboard&Mouse
-  m_DefaultActionMap: 272f6d14-89ba-496f-b7ff-215263d3219f
+  m_DefaultActionMap: UI
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
 --- !u!1 &2065337883
@@ -8018,11 +8018,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStateController
   eventBus: {fileID: 1820636296}
   deploymentController: {fileID: 782014709274359620}
+  playerInput: {fileID: 1970770415}
   raycastCamera: {fileID: 0}
   selectionLayers:
     serializedVersion: 2
-    m_Bits: 256
-  maxRayDistance: 1000
+    m_Bits: 4096
+  selectionPassThroughLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  selectionBlockingLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  maxSelectionRayDistance: 1000
 --- !u!1 &2142792486
 GameObject:
   m_ObjectHideFlags: 0
@@ -8358,6 +8365,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameManagers
       objectReference: {fileID: 0}
+    - target: {fileID: 6690634716085344392, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: upgradePool.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6690634716085344392, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: 'upgradePool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 99793ee5ecfe4b14aae46ba2ab070ed7, type: 2}
+    - target: {fileID: 6690634716085344392, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: 'upgradePool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: a4aaf6b4d549c0448a6358bd861952ac, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

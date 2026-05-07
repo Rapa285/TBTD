@@ -9,6 +9,54 @@ using UnityEngine;
 public class UnitStateManager : MonoBehaviour
 {
     /// <summary>
+    /// Persistent selected level for one multi-upgrade line.
+    /// </summary>
+    [Serializable]
+    public sealed class AppliedMultiUpgradeState
+    {
+        [SerializeField, Tooltip("Selected multi-upgrade line.")]
+        private MultiUpgradeSO multiUpgrade;
+
+        [SerializeField, Min(0), Tooltip("Current selected level in this multi-upgrade line. Zero means inactive.")]
+        private int level;
+
+        public MultiUpgradeSO MultiUpgrade => multiUpgrade;
+        public int Level => Mathf.Max(0, level);
+        public int MaxLevel => multiUpgrade != null ? multiUpgrade.MaxLevel : 0;
+
+        public AppliedMultiUpgradeState()
+        {
+        }
+
+        public AppliedMultiUpgradeState(MultiUpgradeSO multiUpgrade, int level)
+        {
+            SetMultiUpgrade(multiUpgrade);
+            SetLevel(level);
+        }
+
+        public bool TryGetActiveUpgrade(out UpgradeSO upgrade)
+        {
+            if (multiUpgrade != null && Level > 0)
+            {
+                return multiUpgrade.TryGetLevelUpgrade(Level, out upgrade);
+            }
+
+            upgrade = null;
+            return false;
+        }
+
+        internal void SetMultiUpgrade(MultiUpgradeSO value)
+        {
+            multiUpgrade = value;
+        }
+
+        internal void SetLevel(int value)
+        {
+            level = Mathf.Clamp(value, 0, MaxLevel);
+        }
+    }
+
+    /// <summary>
     /// Serialized persistent state for one owned unit plus transient runtime bindings.
     /// </summary>
     [Serializable]
@@ -38,9 +86,10 @@ public class UnitStateManager : MonoBehaviour
         [SerializeField, Tooltip("Whether this unit is waiting for an upgrade selection.")]
         private bool upgradePending;
 
-        [SerializeField, Tooltip("Append-only list of upgrades selected for this owned unit. Runtime stat and weapon composition still happens inside TowerEntity.")]
-        private List<UpgradeSO> appliedUpgrades = new List<UpgradeSO>();
+        [SerializeField, Tooltip("Selected multi-upgrade lines for this owned unit. Runtime stat and weapon composition still happens inside TowerEntity.")]
+        private List<AppliedMultiUpgradeState> appliedMultiUpgrades = new List<AppliedMultiUpgradeState>();
 
+        [NonSerialized] private List<UpgradeSO> resolvedAppliedUpgrades;
         [NonSerialized] private TowerEntity currentRuntimeInstance;
         [NonSerialized] private GameObject currentRuntimeRoot;
         [NonSerialized] private float cooldownDuration;
@@ -57,7 +106,8 @@ public class UnitStateManager : MonoBehaviour
         public int Level => Mathf.Max(1, level);
         public float Experience => Mathf.Max(0f, experience);
         public bool UpgradePending => upgradePending;
-        public IReadOnlyList<UpgradeSO> AppliedUpgrades => appliedUpgrades;
+        public IReadOnlyList<AppliedMultiUpgradeState> AppliedMultiUpgrades => appliedMultiUpgrades;
+        public IReadOnlyList<UpgradeSO> AppliedUpgrades => GetResolvedAppliedUpgrades();
         public TowerEntity CurrentRuntimeInstance => currentRuntimeInstance;
         public GameObject CurrentRuntimeRoot => currentRuntimeRoot;
         public bool IsDeployed => currentRuntimeInstance != null;
@@ -73,11 +123,64 @@ public class UnitStateManager : MonoBehaviour
         public int DeploymentCost => hasCompiledDeploymentCost ? deploymentCost : 0;
 
         /// <summary>
-        /// Returns whether this unit has already selected the given upgrade asset.
+        /// Returns whether this unit has the given resolved upgrade active through any multi-upgrade line.
         /// </summary>
         public bool HasAppliedUpgrade(UpgradeSO upgrade)
         {
-            return upgrade != null && appliedUpgrades.Contains(upgrade);
+            if (upgrade == null)
+            {
+                return false;
+            }
+
+            IReadOnlyList<UpgradeSO> resolvedUpgrades = GetResolvedAppliedUpgrades();
+            for (int i = 0; i < resolvedUpgrades.Count; i++)
+            {
+                if (resolvedUpgrades[i] == upgrade)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns the currently selected level for one multi-upgrade line.
+        /// </summary>
+        public int GetAppliedMultiUpgradeLevel(MultiUpgradeSO multiUpgrade)
+        {
+            AppliedMultiUpgradeState state = FindAppliedMultiUpgradeState(multiUpgrade);
+            return state != null ? state.Level : 0;
+        }
+
+        /// <summary>
+        /// Returns whether this unit has already reached the final configured level for a multi-upgrade line.
+        /// </summary>
+        public bool HasMaxMultiUpgradeLevel(MultiUpgradeSO multiUpgrade)
+        {
+            return multiUpgrade != null
+                && multiUpgrade.MaxLevel > 0
+                && GetAppliedMultiUpgradeLevel(multiUpgrade) >= multiUpgrade.MaxLevel;
+        }
+
+        /// <summary>
+        /// Resolves the next selectable level for a multi-upgrade line without changing roster state.
+        /// </summary>
+        public bool TryGetNextMultiUpgradeLevel(
+            MultiUpgradeSO multiUpgrade,
+            out int currentLevel,
+            out int nextLevel,
+            out UpgradeSO upgrade)
+        {
+            currentLevel = GetAppliedMultiUpgradeLevel(multiUpgrade);
+            if (multiUpgrade != null)
+            {
+                return multiUpgrade.TryGetNextLevelUpgrade(currentLevel, out nextLevel, out upgrade);
+            }
+
+            nextLevel = 0;
+            upgrade = null;
+            return false;
         }
 
         /// <summary>
@@ -111,14 +214,33 @@ public class UnitStateManager : MonoBehaviour
             level = Level + 1;
         }
 
-        internal bool AddAppliedUpgrade(UpgradeSO upgrade)
+        internal bool ApplyNextMultiUpgradeLevel(
+            MultiUpgradeSO multiUpgrade,
+            out UpgradeSO previousUpgrade,
+            out UpgradeSO nextUpgrade,
+            out int nextLevel)
         {
-            if (upgrade == null || appliedUpgrades.Contains(upgrade))
+            previousUpgrade = null;
+            nextUpgrade = null;
+            nextLevel = 0;
+
+            if (!TryGetNextMultiUpgradeLevel(multiUpgrade, out _, out nextLevel, out nextUpgrade))
             {
                 return false;
             }
 
-            appliedUpgrades.Add(upgrade);
+            AppliedMultiUpgradeState state = FindAppliedMultiUpgradeState(multiUpgrade);
+            if (state == null)
+            {
+                state = new AppliedMultiUpgradeState(multiUpgrade, nextLevel);
+                appliedMultiUpgrades.Add(state);
+                InvalidateResolvedAppliedUpgrades();
+                return true;
+            }
+
+            state.TryGetActiveUpgrade(out previousUpgrade);
+            state.SetLevel(nextLevel);
+            InvalidateResolvedAppliedUpgrades();
             return true;
         }
 
@@ -176,6 +298,64 @@ public class UnitStateManager : MonoBehaviour
         {
             deploymentCost = 0;
             hasCompiledDeploymentCost = false;
+        }
+
+        private IReadOnlyList<UpgradeSO> GetResolvedAppliedUpgrades()
+        {
+            if (resolvedAppliedUpgrades == null)
+            {
+                resolvedAppliedUpgrades = new List<UpgradeSO>();
+            }
+
+            RebuildResolvedAppliedUpgrades();
+            return resolvedAppliedUpgrades;
+        }
+
+        private void InvalidateResolvedAppliedUpgrades()
+        {
+            if (resolvedAppliedUpgrades != null)
+            {
+                RebuildResolvedAppliedUpgrades();
+            }
+        }
+
+        private void RebuildResolvedAppliedUpgrades()
+        {
+            resolvedAppliedUpgrades.Clear();
+            if (appliedMultiUpgrades == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < appliedMultiUpgrades.Count; i++)
+            {
+                AppliedMultiUpgradeState state = appliedMultiUpgrades[i];
+                if (state != null
+                    && state.TryGetActiveUpgrade(out UpgradeSO upgrade)
+                    && !resolvedAppliedUpgrades.Contains(upgrade))
+                {
+                    resolvedAppliedUpgrades.Add(upgrade);
+                }
+            }
+        }
+
+        private AppliedMultiUpgradeState FindAppliedMultiUpgradeState(MultiUpgradeSO multiUpgrade)
+        {
+            if (multiUpgrade == null || appliedMultiUpgrades == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < appliedMultiUpgrades.Count; i++)
+            {
+                AppliedMultiUpgradeState state = appliedMultiUpgrades[i];
+                if (state != null && state.MultiUpgrade == multiUpgrade)
+                {
+                    return state;
+                }
+            }
+
+            return null;
         }
     }
 
@@ -463,11 +643,32 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Records the selected upgrade, advances level, and applies it immediately to the deployed tower when present.
+    /// Records the selected multi-upgrade, advances level, and applies its active level to the deployed tower when present.
     /// </summary>
-    public bool RecordSelectedUpgrade(string unitId, UpgradeSO upgrade)
+    public bool RecordSelectedUpgrade(string unitId, MultiUpgradeSO multiUpgrade)
     {
+        return RecordSelectedUpgrade(unitId, multiUpgrade, out _, out _);
+    }
+
+    /// <summary>
+    /// Records the selected multi-upgrade and returns the resolved active level upgrade.
+    /// </summary>
+    public bool RecordSelectedUpgrade(
+        string unitId,
+        MultiUpgradeSO multiUpgrade,
+        out UpgradeSO selectedUpgrade,
+        out int selectedUpgradeLevel)
+    {
+        selectedUpgrade = null;
+        selectedUpgradeLevel = 0;
+
         if (!TryGetUnit(unitId, out OwnedUnitState unit) || !unit.UpgradePending)
+        {
+            return false;
+        }
+
+        if (multiUpgrade != null
+            && !unit.TryGetNextMultiUpgradeLevel(multiUpgrade, out _, out selectedUpgradeLevel, out selectedUpgrade))
         {
             return false;
         }
@@ -475,9 +676,15 @@ public class UnitStateManager : MonoBehaviour
         unit.SetUpgradePending(false);
         unit.AdvanceLevel();
 
-        if (upgrade != null && unit.AddAppliedUpgrade(upgrade) && unit.CurrentRuntimeInstance != null)
+        if (multiUpgrade != null
+            && unit.ApplyNextMultiUpgradeLevel(
+                multiUpgrade,
+                out UpgradeSO previousUpgrade,
+                out selectedUpgrade,
+                out selectedUpgradeLevel)
+            && unit.CurrentRuntimeInstance != null)
         {
-            unit.CurrentRuntimeInstance.AddUpgrade(upgrade);
+            unit.CurrentRuntimeInstance.ReplaceUpgrade(previousUpgrade, selectedUpgrade);
         }
 
         RefreshCompiledDeploymentCost(unit);
@@ -605,9 +812,10 @@ public class UnitStateManager : MonoBehaviour
     private void ApplyRuntimeUpgrades(OwnedUnitState unit, TowerEntity tower)
     {
         // This is the roster-to-runtime bridge; TowerEntity remains responsible for compiling upgrade effects.
-        for (int i = 0; i < unit.AppliedUpgrades.Count; i++)
+        IReadOnlyList<UpgradeSO> appliedUpgrades = unit.AppliedUpgrades;
+        for (int i = 0; i < appliedUpgrades.Count; i++)
         {
-            tower.AddUpgrade(unit.AppliedUpgrades[i]);
+            tower.AddUpgrade(appliedUpgrades[i]);
         }
     }
 

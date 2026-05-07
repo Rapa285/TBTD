@@ -20,10 +20,12 @@ public class UpgradeChoiceItem : MonoBehaviour
     private TMP_Text descriptionText;
 
     private UpgradeSelectionUI owner;
-    private UpgradeSO upgrade;
+    private UnitUpgradeOfferChoice choice;
     private int choiceIndex = -1;
 
-    public UpgradeSO Upgrade => upgrade;
+    public UnitUpgradeOfferChoice Choice => choice;
+    public MultiUpgradeSO MultiUpgrade => choice.MultiUpgrade;
+    public UpgradeSO Upgrade => choice.ResolvedUpgrade;
     public int ChoiceIndex => choiceIndex;
 
     private void Awake()
@@ -52,9 +54,9 @@ public class UpgradeChoiceItem : MonoBehaviour
     /// <summary>
     /// Binds this item to one offered upgrade and its UI choice index.
     /// </summary>
-    public void Bind(UpgradeSO upgrade, int choiceIndex, UpgradeSelectionUI owner)
+    public void Bind(UnitUpgradeOfferChoice choice, int choiceIndex, UpgradeSelectionUI owner)
     {
-        this.upgrade = upgrade;
+        this.choice = choice;
         this.choiceIndex = choiceIndex;
         this.owner = owner;
 
@@ -62,7 +64,7 @@ public class UpgradeChoiceItem : MonoBehaviour
 
         if (button != null)
         {
-            button.interactable = upgrade != null && owner != null && choiceIndex >= 0;
+            button.interactable = choice.IsValid && owner != null && choiceIndex >= 0;
         }
     }
 
@@ -78,6 +80,7 @@ public class UpgradeChoiceItem : MonoBehaviour
 
     private void RefreshDisplay()
     {
+        UpgradeSO upgrade = Upgrade;
         if (upgradeNameText != null)
         {
             upgradeNameText.text = GetDisplayName();
@@ -98,6 +101,7 @@ public class UpgradeChoiceItem : MonoBehaviour
 
     private string GetDisplayName()
     {
+        UpgradeSO upgrade = Upgrade;
         if (upgrade == null)
         {
             return string.Empty;

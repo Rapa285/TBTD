@@ -59,14 +59,44 @@ public struct UnitUpgradeThresholdReachedEvent
 }
 
 /// <summary>
+/// One generated upgrade offer choice resolved from a multi-upgrade line to its next active level.
+/// </summary>
+public readonly struct UnitUpgradeOfferChoice
+{
+    public MultiUpgradeSO MultiUpgrade { get; }
+    public UpgradeSO ResolvedUpgrade { get; }
+    public int CurrentLevel { get; }
+    public int NextLevel { get; }
+    public int MaxLevel { get; }
+    public bool IsValid => MultiUpgrade != null
+        && ResolvedUpgrade != null
+        && NextLevel > CurrentLevel
+        && NextLevel <= MaxLevel;
+
+    public UnitUpgradeOfferChoice(
+        MultiUpgradeSO multiUpgrade,
+        UpgradeSO resolvedUpgrade,
+        int currentLevel,
+        int nextLevel,
+        int maxLevel)
+    {
+        MultiUpgrade = multiUpgrade;
+        ResolvedUpgrade = resolvedUpgrade;
+        CurrentLevel = Mathf.Max(0, currentLevel);
+        NextLevel = Mathf.Max(0, nextLevel);
+        MaxLevel = Mathf.Max(0, maxLevel);
+    }
+}
+
+/// <summary>
 /// Raised when upgrade choices are available for a unit.
 /// </summary>
 public struct UnitUpgradeChoicesOfferedEvent
 {
     public string UnitId { get; }
-    public UpgradeSO[] Choices { get; }
+    public UnitUpgradeOfferChoice[] Choices { get; }
 
-    public UnitUpgradeChoicesOfferedEvent(string unitId, UpgradeSO[] choices)
+    public UnitUpgradeChoicesOfferedEvent(string unitId, UnitUpgradeOfferChoice[] choices)
     {
         UnitId = unitId;
         Choices = choices;
@@ -94,7 +124,9 @@ public struct UnitUpgradeChoiceRequestedEvent
 public struct UnitUpgradeSelectedEvent
 {
     public string UnitId { get; }
+    public MultiUpgradeSO SelectedMultiUpgrade { get; }
     public UpgradeSO SelectedUpgrade { get; }
+    public int SelectedUpgradeLevel { get; }
     public int NewLevel { get; }
     public float CurrentExperience { get; }
     public bool HasNextExperienceThreshold { get; }
@@ -102,14 +134,18 @@ public struct UnitUpgradeSelectedEvent
 
     public UnitUpgradeSelectedEvent(
         string unitId,
+        MultiUpgradeSO selectedMultiUpgrade,
         UpgradeSO selectedUpgrade,
+        int selectedUpgradeLevel,
         int newLevel,
         float currentExperience,
         bool hasNextExperienceThreshold,
         float nextExperienceThreshold)
     {
         UnitId = unitId;
+        SelectedMultiUpgrade = selectedMultiUpgrade;
         SelectedUpgrade = selectedUpgrade;
+        SelectedUpgradeLevel = Mathf.Max(0, selectedUpgradeLevel);
         NewLevel = newLevel;
         CurrentExperience = currentExperience;
         HasNextExperienceThreshold = hasNextExperienceThreshold;
@@ -344,7 +380,7 @@ public class UnitEventBus : MonoBehaviour
     }
 
     /// <summary>
-    /// Publishes the selected upgrade and resulting progression state.
+    /// Publishes the selected multi-upgrade line, resolved upgrade level, and resulting progression state.
     /// </summary>
     public void RaiseUnitUpgradeSelected(UnitUpgradeSelectedEvent eventData)
     {

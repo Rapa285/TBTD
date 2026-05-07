@@ -34,12 +34,12 @@ Do not create a second runtime stat/combat composition pipeline. Extend `TowerEn
 `UnitStateManager` is the persistent roster authority for player-owned units.
 
 - Stores `OwnedUnitState` entries keyed by stable `unitId`.
-- Owns display metadata, prefab reference, XP thresholds, level, stored XP, pending-upgrade state, and selected `UpgradeSO` list.
+- Owns display metadata, prefab reference, XP thresholds, level, stored XP, pending-upgrade state, and selected `MultiUpgradeSO` level state.
 - Stores transient runtime bindings with `currentRuntimeInstance` and `currentRuntimeRoot`.
-- Applies persistent upgrades and progression state into runtime towers through `ApplyStateTo(...)`.
+- Applies persistent upgrades and progression state into runtime towers through `ApplyStateTo(...)` after resolving each active multi-upgrade level to a normal `UpgradeSO`.
 - Precompiles cached deployment costs for roster units through `TowerEntity.CalculateFinalStat(...)`.
 - Finalizes managed deployments through `CompleteRuntimeDeployment(...)`.
-- Applies selected upgrades immediately to the deployed runtime tower when present.
+- Applies selected multi-upgrade levels immediately to the deployed runtime tower when present by replacing the previous resolved `UpgradeSO` leaf with the new leaf.
 - Refreshes cached deployment cost when selected upgrades change.
 - Recalls deployed units while preserving persistent XP and upgrades.
 
@@ -144,12 +144,20 @@ Debug-only target rescanning currently exists through `activelyPollEnemies` and 
 
 ## Upgrades
 
-`UpgradeSO` is the single authored upgrade asset type.
+`UpgradeSO` is the tower-facing upgrade leaf asset.
 
 - Create assets through `Create > TBTD > Upgrade`.
 - Stores display name, description, optional icon, stat effects, weapon upgrade mode, weapon behaviour prefab, and projectile modifier prefabs.
-- Selected upgrade references are stored persistently on `UnitStateManager.OwnedUnitState`.
 - Runtime weapon override, augment, stat, and projectile-modifier composition is applied by `TowerEntity.CompileFinalStats()`.
+- `TowerEntity` only stores and compiles `UpgradeSO` references.
+
+`MultiUpgradeSO` is the roster/offer-facing upgrade-line asset.
+
+- Create assets through `Create > TBTD > Multi Upgrade`.
+- Stores an ordered list of `UpgradeSO` level assets; levels are 1-based by list order and can have any positive count.
+- `UnitStateManager.OwnedUnitState` stores selected `MultiUpgradeSO` line state plus the current selected level.
+- Only one resolved `UpgradeSO` level from a `MultiUpgradeSO` can be active on a unit at a time.
+- Upgrade UI displays the next resolved `UpgradeSO` level's name, description, and icon.
 
 Weapon upgrade fields:
 
@@ -157,24 +165,25 @@ Weapon upgrade fields:
 - `WEAPON_UPGRADE_TYPE.Override`: latest valid override replaces the primary attack behaviour at runtime.
 - `WEAPON_UPGRADE_TYPE.Augment`: each valid augment is instantiated as an extra runtime weapon that fires on the same attack tick.
 
-Do not add a second upgrade asset model. Extend `UpgradeSO` and `TowerEntity.CompileFinalStats()` unless there is a deliberate refactor.
+Do not add another runtime upgrade/effect pipeline. Extend `UpgradeSO` for tower-facing effects, `MultiUpgradeSO` for roster offer/level grouping, and `TowerEntity.CompileFinalStats()` for runtime composition unless there is a deliberate refactor.
 
 ## Upgrade Flow
 
 Upgrade selection is event-bus driven.
 
 - `UnitProgression` raises `UnitUpgradeThresholdReached` when runtime XP reaches the current threshold.
-- `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds an offer from its shared `upgradePool`.
+- `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds an offer from its shared `MultiUpgradeSO` `upgradePool`.
 - `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
 - `UpgradesManager` validates the pending offer, calls `UnitStateManager.RecordSelectedUpgrade`, and raises `UnitUpgradeSelected`.
-- `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances level, records the selected upgrade when non-null, applies it immediately to the deployed tower if present, and refreshes runtime progression.
+- `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances unit level, advances the selected multi-upgrade line when non-null, applies the resolved `UpgradeSO` leaf immediately to the deployed tower if present, and refreshes runtime progression.
 - The UI hides only after `UnitUpgradeSelected` confirms the active unit's choice.
 
 Current offer rules:
 
-- `UpgradesManager.upgradePool` is shared across all units.
-- Null upgrades, duplicate asset references, and already-applied upgrades are filtered out.
-- Offers contain up to `upgradeChoiceCount` unique random choices.
+- `UpgradesManager.upgradePool` is a shared list of `MultiUpgradeSO` lines across all units.
+- Null multi-upgrades, duplicate asset references, invalid next-level assets, and maxed multi-upgrades are filtered out.
+- Already-selected non-max multi-upgrades can be offered again and resolve to their next level.
+- Offers contain up to `upgradeChoiceCount` unique random multi-upgrade choices.
 - If no valid choices remain, a null selection is recorded so level progression can continue.
 
 ## Progression
@@ -301,6 +310,6 @@ Targets that should take damage should have:
 
 - No faction/team/allegiance model yet.
 - No targeting priority beyond first valid target.
-- Upgrade offers are still built from one shared pool with simple duplicate/already-owned filtering.
+- Upgrade offers are still built from one shared multi-upgrade pool with simple duplicate/max-level filtering.
 - Runtime-generated unit IDs exist for unmanaged towers, but broader persistence/save-load infrastructure is not implemented here.
 - Currency rewards, recall refunds, and save/load persistence for currency are not implemented yet.
