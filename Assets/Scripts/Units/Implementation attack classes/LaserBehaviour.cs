@@ -1,16 +1,37 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Piercing hitscan beam that damages each valid target along the beam once.
+/// Spawns a timed beam projectile that owns laser width checks and damage ticks.
 /// </summary>
 public sealed class LaserBehaviour : AttackBehaviour
 {
+    [SerializeField, Tooltip("Beam projectile prefab expected to contain a BeamProjectile component.")]
+    private GameObject beamProjectilePrefab;
+
     [SerializeField, Tooltip("Optional muzzle transform used as the beam start. Falls back to this transform.")]
     private Transform firePoint;
 
+    [SerializeField, Tooltip("Optional parent assigned to spawned beam projectile instances.")]
+    private Transform projectileParent;
+
     [SerializeField, Tooltip("Layers this laser ray is allowed to hit.")]
     private LayerMask hitLayers = ~0;
+
+    [SerializeField, Min(1), Tooltip("Number of parallel rays cast across the beam width.")]
+    private int rayResolution = 5;
+
+    [SerializeField, Min(0f), Tooltip("World-space width covered by the parallel beam rays.")]
+    private float beamWidth = 0.75f;
+
+    [SerializeField, Min(1), Tooltip("Number of damage ticks used to distribute each attack's total damage.")]
+    private int damageTicks = 5;
+
+    private void OnValidate()
+    {
+        rayResolution = Mathf.Max(1, rayResolution);
+        beamWidth = Mathf.Max(0f, beamWidth);
+        damageTicks = Mathf.Max(1, damageTicks);
+    }
 
     protected override bool ExecuteAttack(Transform target, float damage)
     {
@@ -28,60 +49,56 @@ public sealed class LaserBehaviour : AttackBehaviour
 
         direction = direction.sqrMagnitude > Mathf.Epsilon ? direction.normalized : Vector3.forward;
         float range = GetBeamRange();
-        Vector3 end = start + direction * range;
+        float duration = GetBeamDuration();
+        Vector3 widthReferenceAxis = firePoint != null ? firePoint.right : transform.right;
 
-        bool hitAnyTarget = DamageTargetsAlongBeam(start, direction, range, damage);
-        PlayBeamFX(target, damage, start, end);
-        return hitAnyTarget;
-    }
+        if (beamProjectilePrefab == null)
+        {
+            Debug.LogWarning($"{nameof(LaserBehaviour)} requires a beam projectile prefab.", this);
+            return false;
+        }
 
-    private bool DamageTargetsAlongBeam(Vector3 start, Vector3 direction, float range, float damage)
-    {
-        RaycastHit[] hits = Physics.RaycastAll(
+        GameObject beamObject = Instantiate(
+            beamProjectilePrefab,
+            start,
+            Quaternion.LookRotation(direction, ResolveBeamUpAxis(direction, widthReferenceAxis)),
+            projectileParent);
+
+        BeamProjectile beamProjectile = beamObject.GetComponent<BeamProjectile>();
+        if (beamProjectile == null)
+        {
+            Debug.LogWarning($"{nameof(LaserBehaviour)} requires a beam projectile prefab with {nameof(BeamProjectile)}.", this);
+            Destroy(beamObject);
+            return false;
+        }
+
+        beamProjectile.ConfigureBeam(
             start,
             direction,
+            widthReferenceAxis,
             range,
-            hitLayers,
-            QueryTriggerInteraction.Collide);
+            duration,
+            rayResolution,
+            beamWidth,
+            damageTicks,
+            hitLayers);
 
-        if (hits.Length == 0)
+        beamProjectile.Initialize(damage, OwnerRoot, OwnerTower, this, ProjectileModifiers);
+
+        if (!beamProjectile.ReadyToFire())
         {
+            Destroy(beamObject);
             return false;
         }
 
-        System.Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
-
-        bool hitAnyTarget = false;
-        HashSet<Transform> damagedTargets = new HashSet<Transform>();
-        for (int i = 0; i < hits.Length; i++)
+        beamProjectile.Fire();
+        if (!beamProjectile.Fired)
         {
-            Collider hitCollider = hits[i].collider;
-            Transform hitTarget = ColliderTargetUtility.GetTargetTransform(hitCollider);
-            if (!CanDamageTarget(hitTarget) || !damagedTargets.Add(hitTarget))
-            {
-                continue;
-            }
-
-            hitAnyTarget |= TryApplyDamage(hitTarget, damage, hitCollider, hits[i].point, true);
-        }
-
-        return hitAnyTarget;
-    }
-
-    private bool CanDamageTarget(Transform target)
-    {
-        if (target == null || !target.gameObject.activeInHierarchy)
-        {
+            Destroy(beamObject);
             return false;
         }
 
-        if ((hitLayers.value & (1 << target.gameObject.layer)) == 0)
-        {
-            return false;
-        }
-
-        Transform root = OwnerRoot;
-        return root == null || (target != root && !target.IsChildOf(root));
+        return true;
     }
 
     private float GetBeamRange()
@@ -94,23 +111,30 @@ public sealed class LaserBehaviour : AttackBehaviour
         return 10f;
     }
 
+    private float GetBeamDuration()
+    {
+        if (OwnerTower != null)
+        {
+            return Mathf.Max(0.01f, OwnerTower.GetStat(ENTITY_STATS.AttackSpeed));
+        }
+
+        return 1f;
+    }
+
     private Vector3 GetBeamStart()
     {
         return firePoint != null ? firePoint.position : transform.position;
     }
 
-    private void PlayBeamFX(Transform target, float damage, Vector3 start, Vector3 end)
+    private static Vector3 ResolveBeamUpAxis(Vector3 direction, Vector3 widthReferenceAxis)
     {
-        AttackFX?.PlayAttackFX(new AttackFXContext(
-            this,
-            OwnerTower,
-            OwnerRoot,
-            target,
-            damage,
-            start,
-            true,
-            end,
-            true,
-            null));
+        Vector3 widthAxis = Vector3.ProjectOnPlane(widthReferenceAxis, direction);
+        if (widthAxis.sqrMagnitude <= Mathf.Epsilon)
+        {
+            widthAxis = Vector3.Cross(direction, Vector3.up);
+        }
+
+        Vector3 upAxis = Vector3.Cross(widthAxis, direction);
+        return upAxis.sqrMagnitude > Mathf.Epsilon ? upAxis.normalized : Vector3.up;
     }
 }

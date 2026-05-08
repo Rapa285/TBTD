@@ -8190,6 +8190,10 @@ PrefabInstance:
       value: Unit E
       objectReference: {fileID: 0}
     - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[2].selectedEvolution
+      value: 
+      objectReference: {fileID: 11400000, guid: ec4d2aafbb534266bb35283612373493, type: 2}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
       propertyPath: ownedUnits.Array.data[3].selectedEvolution
       value: 
       objectReference: {fileID: 11400000, guid: e9f543ba36f54da785c1b8cc7aba90b2, type: 2}
@@ -8338,12 +8342,24 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 6222e05e3fd38524b91911f830e478d6, type: 2}
     - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[2].appliedMultiUpgrades.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
       propertyPath: ownedUnits.Array.data[3].appliedMultiUpgrades.Array.size
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
       propertyPath: ownedUnits.Array.data[4].appliedMultiUpgrades.Array.size
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[2].appliedMultiUpgrades.Array.data[0].level
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[2].appliedMultiUpgrades.Array.data[1].level
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
       propertyPath: ownedUnits.Array.data[3].appliedMultiUpgrades.Array.data[0].level
@@ -8361,6 +8377,14 @@ PrefabInstance:
       propertyPath: ownedUnits.Array.data[4].appliedMultiUpgrades.Array.data[1].level
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[2].appliedMultiUpgrades.Array.data[0].multiUpgrade
+      value: 
+      objectReference: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
+    - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
+      propertyPath: ownedUnits.Array.data[2].appliedMultiUpgrades.Array.data[1].multiUpgrade
+      value: 
+      objectReference: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
     - target: {fileID: 3373104255058332114, guid: e55be2b46ec88814385775d52508b781, type: 3}
       propertyPath: ownedUnits.Array.data[3].appliedMultiUpgrades.Array.data[0].multiUpgrade
       value: 
