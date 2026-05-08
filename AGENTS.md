@@ -34,7 +34,7 @@ Do not create a second runtime stat/combat composition pipeline. Extend `TowerEn
 `UnitStateManager` is the persistent roster authority for player-owned units.
 
 - Stores `OwnedUnitState` entries keyed by stable `unitId`.
-- Owns display metadata, prefab reference, XP thresholds, level, stored XP, pending-upgrade state, selected `MultiUpgradeSO` level state, and one selected `EvolutionSO`.
+- Owns shared XP thresholds plus per-unit display metadata, prefab reference, level, stored XP, pending-upgrade state, selected `MultiUpgradeSO` level state, and one selected `EvolutionSO`.
 - Stores transient runtime bindings with `currentRuntimeInstance` and `currentRuntimeRoot`.
 - Applies persistent upgrades and progression state into runtime towers through `ApplyStateTo(...)` after resolving each active multi-upgrade level and selected evolution to normal `UpgradeSO` leaves.
 - Precompiles cached deployment costs for roster units through `TowerEntity.CalculateFinalStat(...)`.

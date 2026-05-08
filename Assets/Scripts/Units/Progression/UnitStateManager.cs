@@ -74,9 +74,6 @@ public class UnitStateManager : MonoBehaviour
         [SerializeField, Tooltip("Plain tower prefab deployed for this owned unit.")]
         private TowerEntity unitPrefab;
 
-        [SerializeField, Tooltip("XP thresholds by level; index 0 is the threshold from level 1 to 2.")]
-        private List<float> xpThresholds = new List<float>();
-
         [SerializeField, Tooltip("Current persistent level for this owned unit.")]
         private int level = 1;
 
@@ -105,7 +102,6 @@ public class UnitStateManager : MonoBehaviour
         public string DisplayName => displayName;
         public Sprite Icon => icon;
         public TowerEntity UnitPrefab => unitPrefab;
-        public IReadOnlyList<float> XpThresholds => xpThresholds;
         public int Level => Mathf.Max(1, level);
         public float Experience => Mathf.Max(0f, experience);
         public bool UpgradePending => upgradePending;
@@ -122,8 +118,6 @@ public class UnitStateManager : MonoBehaviour
         public float CooldownNormalizedRemaining => cooldownDuration > 0f
             ? Mathf.Clamp01(CooldownRemaining / cooldownDuration)
             : 0f;
-        public bool HasNextExperienceThreshold => TryGetNextExperienceThreshold(out _);
-        public float NextExperienceThreshold => TryGetNextExperienceThreshold(out float threshold) ? threshold : 0f;
         public bool HasCompiledDeploymentCost => hasCompiledDeploymentCost;
         public int DeploymentCost => hasCompiledDeploymentCost ? deploymentCost : 0;
 
@@ -213,22 +207,6 @@ public class UnitStateManager : MonoBehaviour
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Reads the next XP threshold for the current level when one exists.
-        /// </summary>
-        public bool TryGetNextExperienceThreshold(out float threshold)
-        {
-            int thresholdIndex = Level - 1;
-            if (thresholdIndex >= 0 && thresholdIndex < xpThresholds.Count)
-            {
-                threshold = Mathf.Max(0f, xpThresholds[thresholdIndex]);
-                return true;
-            }
-
-            threshold = 0f;
-            return false;
         }
 
         internal void SetExperience(float value)
@@ -412,10 +390,14 @@ public class UnitStateManager : MonoBehaviour
     [SerializeField, Tooltip("Event bus used to mirror runtime progression changes back into roster state.")]
     private UnitEventBus eventBus;
 
+    [SerializeField, Tooltip("Shared XP thresholds by level; index 0 is the threshold from level 1 to 2.")]
+    private List<float> xpThresholds = new List<float> { 5f, 10f, 15f, 20f };
+
     [SerializeField, Tooltip("Inspector-authored roster of player-owned units.")]
     private List<OwnedUnitState> ownedUnits = new List<OwnedUnitState>();
     private bool eventBusSubscribed;
 
+    public IReadOnlyList<float> XpThresholds => xpThresholds;
     public IReadOnlyList<OwnedUnitState> OwnedUnits => ownedUnits;
 
     private void Awake()
@@ -782,7 +764,22 @@ public class UnitStateManager : MonoBehaviour
     {
         if (TryGetUnit(unitId, out OwnedUnitState unit))
         {
-            return unit.TryGetNextExperienceThreshold(out threshold);
+            return TryGetNextExperienceThreshold(unit, out threshold);
+        }
+
+        threshold = 0f;
+        return false;
+    }
+
+    private bool TryGetNextExperienceThreshold(OwnedUnitState unit, out float threshold)
+    {
+        int thresholdIndex = unit != null ? unit.Level - 1 : -1;
+        if (xpThresholds != null
+            && thresholdIndex >= 0
+            && thresholdIndex < xpThresholds.Count)
+        {
+            threshold = Mathf.Max(0f, xpThresholds[thresholdIndex]);
+            return true;
         }
 
         threshold = 0f;
@@ -865,7 +862,7 @@ public class UnitStateManager : MonoBehaviour
     {
         ResolveEventBus();
 
-        bool hasThreshold = unit.TryGetNextExperienceThreshold(out float threshold);
+        bool hasThreshold = TryGetNextExperienceThreshold(unit, out float threshold);
         progression.Initialize(
             unit.UnitId,
             unit.Level,

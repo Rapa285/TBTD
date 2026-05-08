@@ -1,7 +1,7 @@
 # UnitStateManager Current State
 
 ## Role
-`UnitStateManager` is the player roster state manager. It stores long-lived per-unit identity, progression, selected multi-upgrade levels, one selected evolution, cached deployment cost, and the transient scene reference for the unit's currently deployed tower.
+`UnitStateManager` is the player roster state manager. It stores shared XP thresholds, long-lived per-unit identity, progression, selected multi-upgrade levels, one selected evolution, cached deployment cost, and the transient scene reference for the unit's currently deployed tower.
 
 It does not own combat execution. Runtime stats, weapon override/augment composition, targeting, attack timing, vision range, and projectile modifiers remain owned by `TowerEntity`, `UnitVision`, `AttackBehaviour`, and projectile scripts.
 
@@ -9,8 +9,8 @@ It does not own combat execution. Runtime stats, weapon override/augment composi
 Each roster entry is a nested serializable `OwnedUnitState` keyed by a stable `unitId`.
 
 Stored inspector/runtime state:
+- Shared progression config: `UnitStateManager.xpThresholds`, indexed by level; index 0 is the threshold from level 1 to 2.
 - Unit identity: `unitId`, `displayName`, `icon`, and `TowerEntity unitPrefab`.
-- Progression config: `xpThresholds`.
 - Persistent progression state: `level`, `experience`, `upgradePending`, `appliedMultiUpgrades`, and `selectedEvolution`.
 - Transient deployment state: `currentRuntimeInstance` and `currentRuntimeRoot`.
 - Transient economy/UI cache: `hasCompiledDeploymentCost` and `deploymentCost`.

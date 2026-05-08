@@ -267,6 +267,10 @@ public class UpgradesManager : MonoBehaviour
         ResolveReferences();
         if (eventBus != null && unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
         {
+            bool hasNextExperienceThreshold = unitStateManager.TryGetNextExperienceThreshold(
+                unitId,
+                out float nextExperienceThreshold);
+
             eventBus.RaiseUnitUpgradeSelected(new UnitUpgradeSelectedEvent(
                 unitId,
                 selectedMultiUpgrade,
@@ -274,8 +278,8 @@ public class UpgradesManager : MonoBehaviour
                 selectedUpgradeLevel,
                 unit.Level,
                 unit.Experience,
-                unit.HasNextExperienceThreshold,
-                unit.NextExperienceThreshold,
+                hasNextExperienceThreshold,
+                nextExperienceThreshold,
                 selectedEvolution));
         }
 
