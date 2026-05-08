@@ -25,6 +25,7 @@ public class UpgradeChoiceItem : MonoBehaviour
 
     public UnitUpgradeOfferChoice Choice => choice;
     public MultiUpgradeSO MultiUpgrade => choice.MultiUpgrade;
+    public EvolutionSO Evolution => choice.Evolution;
     public UpgradeSO Upgrade => choice.ResolvedUpgrade;
     public int ChoiceIndex => choiceIndex;
 

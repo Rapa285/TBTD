@@ -16,6 +16,9 @@ public class UpgradesManager : MonoBehaviour
     [SerializeField, Tooltip("Shared pool of multi-upgrade lines that every current unit can be offered.")]
     private List<MultiUpgradeSO> upgradePool = new List<MultiUpgradeSO>();
 
+    [SerializeField, Tooltip("Shared pool of weapon evolutions offered when their prerequisites are met.")]
+    private List<EvolutionSO> evolutionPool = new List<EvolutionSO>();
+
     [SerializeField, Min(0), Tooltip("Maximum number of unique choices generated for one offer.")]
     private int upgradeChoiceCount = 3;
 
@@ -110,6 +113,28 @@ public class UpgradesManager : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Selects one pending evolution choice by asset reference from the currently stored offer.
+    /// </summary>
+    public bool SelectUpgrade(string unitId, EvolutionSO evolution)
+    {
+        if (evolution == null
+            || !pendingOffers.TryGetValue(unitId, out List<UnitUpgradeOfferChoice> offer))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < offer.Count; i++)
+        {
+            if (offer[i].Evolution == evolution)
+            {
+                return SelectPendingUpgrade(unitId, offer[i]);
+            }
+        }
+
+        return false;
+    }
+
     private void HandleUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
     {
         ResolveReferences();
@@ -177,6 +202,19 @@ public class UpgradesManager : MonoBehaviour
             }
         }
 
+        for (int i = 0; i < evolutionPool.Count; i++)
+        {
+            EvolutionSO evolution = evolutionPool[i];
+            if (evolution == null
+                || ContainsEvolution(candidates, evolution)
+                || !unit.CanSelectEvolution(evolution))
+            {
+                continue;
+            }
+
+            candidates.Add(new UnitUpgradeOfferChoice(evolution));
+        }
+
         List<UnitUpgradeOfferChoice> offer = new List<UnitUpgradeOfferChoice>();
         int choiceCount = Mathf.Min(Mathf.Max(0, upgradeChoiceCount), candidates.Count);
 
@@ -214,10 +252,12 @@ public class UpgradesManager : MonoBehaviour
         ResolveReferences();
 
         MultiUpgradeSO selectedMultiUpgrade = choice.MultiUpgrade;
+        EvolutionSO selectedEvolution = choice.Evolution;
         if (unitStateManager == null
             || !unitStateManager.RecordSelectedUpgrade(
                 unitId,
                 selectedMultiUpgrade,
+                selectedEvolution,
                 out UpgradeSO selectedUpgrade,
                 out int selectedUpgradeLevel))
         {
@@ -235,7 +275,8 @@ public class UpgradesManager : MonoBehaviour
                 unit.Level,
                 unit.Experience,
                 unit.HasNextExperienceThreshold,
-                unit.NextExperienceThreshold));
+                unit.NextExperienceThreshold,
+                selectedEvolution));
         }
 
         return true;
@@ -246,6 +287,19 @@ public class UpgradesManager : MonoBehaviour
         for (int i = 0; i < choices.Count; i++)
         {
             if (choices[i].MultiUpgrade == upgrade)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ContainsEvolution(IReadOnlyList<UnitUpgradeOfferChoice> choices, EvolutionSO evolution)
+    {
+        for (int i = 0; i < choices.Count; i++)
+        {
+            if (choices[i].Evolution == evolution)
             {
                 return true;
             }

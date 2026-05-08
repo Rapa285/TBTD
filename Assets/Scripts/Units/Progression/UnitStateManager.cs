@@ -89,6 +89,9 @@ public class UnitStateManager : MonoBehaviour
         [SerializeField, Tooltip("Selected multi-upgrade lines for this owned unit. Runtime stat and weapon composition still happens inside TowerEntity.")]
         private List<AppliedMultiUpgradeState> appliedMultiUpgrades = new List<AppliedMultiUpgradeState>();
 
+        [SerializeField, Tooltip("Selected weapon evolution for this owned unit. Only one evolution can be active.")]
+        private EvolutionSO selectedEvolution;
+
         [NonSerialized] private List<UpgradeSO> resolvedAppliedUpgrades;
         [NonSerialized] private TowerEntity currentRuntimeInstance;
         [NonSerialized] private GameObject currentRuntimeRoot;
@@ -107,6 +110,8 @@ public class UnitStateManager : MonoBehaviour
         public float Experience => Mathf.Max(0f, experience);
         public bool UpgradePending => upgradePending;
         public IReadOnlyList<AppliedMultiUpgradeState> AppliedMultiUpgrades => appliedMultiUpgrades;
+        public EvolutionSO SelectedEvolution => selectedEvolution;
+        public bool HasSelectedEvolution => selectedEvolution != null;
         public IReadOnlyList<UpgradeSO> AppliedUpgrades => GetResolvedAppliedUpgrades();
         public TowerEntity CurrentRuntimeInstance => currentRuntimeInstance;
         public GameObject CurrentRuntimeRoot => currentRuntimeRoot;
@@ -184,6 +189,33 @@ public class UnitStateManager : MonoBehaviour
         }
 
         /// <summary>
+        /// Returns whether this unit can select the supplied evolution based on current roster state.
+        /// </summary>
+        public bool CanSelectEvolution(EvolutionSO evolution)
+        {
+            if (selectedEvolution != null
+                || evolution == null
+                || !evolution.HasResolvedUpgrade)
+            {
+                return false;
+            }
+
+            IReadOnlyList<EvolutionSO.Prerequisite> prerequisites = evolution.Prerequisites;
+            for (int i = 0; i < prerequisites.Count; i++)
+            {
+                EvolutionSO.Prerequisite prerequisite = prerequisites[i];
+                MultiUpgradeSO multiUpgrade = prerequisite.MultiUpgrade;
+                if (multiUpgrade == null
+                    || GetAppliedMultiUpgradeLevel(multiUpgrade) < prerequisite.MinimumLevel)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Reads the next XP threshold for the current level when one exists.
         /// </summary>
         public bool TryGetNextExperienceThreshold(out float threshold)
@@ -242,6 +274,20 @@ public class UnitStateManager : MonoBehaviour
             state.SetLevel(nextLevel);
             InvalidateResolvedAppliedUpgrades();
             return true;
+        }
+
+        internal bool TrySelectEvolution(EvolutionSO evolution, out UpgradeSO resolvedUpgrade)
+        {
+            resolvedUpgrade = null;
+            if (!CanSelectEvolution(evolution))
+            {
+                return false;
+            }
+
+            selectedEvolution = evolution;
+            resolvedUpgrade = evolution.ResolvedUpgrade;
+            InvalidateResolvedAppliedUpgrades();
+            return resolvedUpgrade != null;
         }
 
         internal void SetRuntimeInstance(TowerEntity tower, GameObject root)
@@ -322,20 +368,24 @@ public class UnitStateManager : MonoBehaviour
         private void RebuildResolvedAppliedUpgrades()
         {
             resolvedAppliedUpgrades.Clear();
-            if (appliedMultiUpgrades == null)
+            if (appliedMultiUpgrades != null)
             {
-                return;
+                for (int i = 0; i < appliedMultiUpgrades.Count; i++)
+                {
+                    AppliedMultiUpgradeState state = appliedMultiUpgrades[i];
+                    if (state != null
+                        && state.TryGetActiveUpgrade(out UpgradeSO upgrade)
+                        && !resolvedAppliedUpgrades.Contains(upgrade))
+                    {
+                        resolvedAppliedUpgrades.Add(upgrade);
+                    }
+                }
             }
 
-            for (int i = 0; i < appliedMultiUpgrades.Count; i++)
+            UpgradeSO evolutionUpgrade = selectedEvolution != null ? selectedEvolution.ResolvedUpgrade : null;
+            if (evolutionUpgrade != null && !resolvedAppliedUpgrades.Contains(evolutionUpgrade))
             {
-                AppliedMultiUpgradeState state = appliedMultiUpgrades[i];
-                if (state != null
-                    && state.TryGetActiveUpgrade(out UpgradeSO upgrade)
-                    && !resolvedAppliedUpgrades.Contains(upgrade))
-                {
-                    resolvedAppliedUpgrades.Add(upgrade);
-                }
+                resolvedAppliedUpgrades.Add(evolutionUpgrade);
             }
         }
 
@@ -659,10 +709,25 @@ public class UnitStateManager : MonoBehaviour
         out UpgradeSO selectedUpgrade,
         out int selectedUpgradeLevel)
     {
+        return RecordSelectedUpgrade(unitId, multiUpgrade, null, out selectedUpgrade, out selectedUpgradeLevel);
+    }
+
+    /// <summary>
+    /// Records the selected upgrade choice and returns the resolved tower-facing upgrade leaf.
+    /// </summary>
+    public bool RecordSelectedUpgrade(
+        string unitId,
+        MultiUpgradeSO multiUpgrade,
+        EvolutionSO evolution,
+        out UpgradeSO selectedUpgrade,
+        out int selectedUpgradeLevel)
+    {
         selectedUpgrade = null;
         selectedUpgradeLevel = 0;
 
-        if (!TryGetUnit(unitId, out OwnedUnitState unit) || !unit.UpgradePending)
+        if (!TryGetUnit(unitId, out OwnedUnitState unit)
+            || !unit.UpgradePending
+            || (multiUpgrade != null && evolution != null))
         {
             return false;
         }
@@ -671,6 +736,17 @@ public class UnitStateManager : MonoBehaviour
             && !unit.TryGetNextMultiUpgradeLevel(multiUpgrade, out _, out selectedUpgradeLevel, out selectedUpgrade))
         {
             return false;
+        }
+
+        if (evolution != null)
+        {
+            if (!unit.CanSelectEvolution(evolution))
+            {
+                return false;
+            }
+
+            selectedUpgrade = evolution.ResolvedUpgrade;
+            selectedUpgradeLevel = 1;
         }
 
         unit.SetUpgradePending(false);
@@ -685,6 +761,13 @@ public class UnitStateManager : MonoBehaviour
             && unit.CurrentRuntimeInstance != null)
         {
             unit.CurrentRuntimeInstance.ReplaceUpgrade(previousUpgrade, selectedUpgrade);
+        }
+
+        if (evolution != null
+            && unit.TrySelectEvolution(evolution, out selectedUpgrade)
+            && unit.CurrentRuntimeInstance != null)
+        {
+            unit.CurrentRuntimeInstance.AddUpgrade(selectedUpgrade);
         }
 
         RefreshCompiledDeploymentCost(unit);

@@ -64,14 +64,16 @@ public struct UnitUpgradeThresholdReachedEvent
 public readonly struct UnitUpgradeOfferChoice
 {
     public MultiUpgradeSO MultiUpgrade { get; }
+    public EvolutionSO Evolution { get; }
     public UpgradeSO ResolvedUpgrade { get; }
     public int CurrentLevel { get; }
     public int NextLevel { get; }
     public int MaxLevel { get; }
-    public bool IsValid => MultiUpgrade != null
-        && ResolvedUpgrade != null
-        && NextLevel > CurrentLevel
-        && NextLevel <= MaxLevel;
+    public bool IsEvolution => Evolution != null;
+    public bool IsMultiUpgrade => MultiUpgrade != null;
+    public bool IsValid => ResolvedUpgrade != null
+        && ((MultiUpgrade != null && NextLevel > CurrentLevel && NextLevel <= MaxLevel)
+            || Evolution != null);
 
     public UnitUpgradeOfferChoice(
         MultiUpgradeSO multiUpgrade,
@@ -81,10 +83,21 @@ public readonly struct UnitUpgradeOfferChoice
         int maxLevel)
     {
         MultiUpgrade = multiUpgrade;
+        Evolution = null;
         ResolvedUpgrade = resolvedUpgrade;
         CurrentLevel = Mathf.Max(0, currentLevel);
         NextLevel = Mathf.Max(0, nextLevel);
         MaxLevel = Mathf.Max(0, maxLevel);
+    }
+
+    public UnitUpgradeOfferChoice(EvolutionSO evolution)
+    {
+        MultiUpgrade = null;
+        Evolution = evolution;
+        ResolvedUpgrade = evolution != null ? evolution.ResolvedUpgrade : null;
+        CurrentLevel = 0;
+        NextLevel = evolution != null && evolution.ResolvedUpgrade != null ? 1 : 0;
+        MaxLevel = evolution != null && evolution.ResolvedUpgrade != null ? 1 : 0;
     }
 }
 
@@ -125,6 +138,7 @@ public struct UnitUpgradeSelectedEvent
 {
     public string UnitId { get; }
     public MultiUpgradeSO SelectedMultiUpgrade { get; }
+    public EvolutionSO SelectedEvolution { get; }
     public UpgradeSO SelectedUpgrade { get; }
     public int SelectedUpgradeLevel { get; }
     public int NewLevel { get; }
@@ -140,10 +154,12 @@ public struct UnitUpgradeSelectedEvent
         int newLevel,
         float currentExperience,
         bool hasNextExperienceThreshold,
-        float nextExperienceThreshold)
+        float nextExperienceThreshold,
+        EvolutionSO selectedEvolution = null)
     {
         UnitId = unitId;
         SelectedMultiUpgrade = selectedMultiUpgrade;
+        SelectedEvolution = selectedEvolution;
         SelectedUpgrade = selectedUpgrade;
         SelectedUpgradeLevel = Mathf.Max(0, selectedUpgradeLevel);
         NewLevel = newLevel;
