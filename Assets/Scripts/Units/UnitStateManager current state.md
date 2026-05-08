@@ -1,7 +1,7 @@
 # UnitStateManager Current State
 
 ## Role
-`UnitStateManager` is the player roster state manager. It stores long-lived per-unit identity, progression, selected multi-upgrade levels, cached deployment cost, and the transient scene reference for the unit's currently deployed tower.
+`UnitStateManager` is the player roster state manager. It stores long-lived per-unit identity, progression, selected multi-upgrade levels, one selected evolution, cached deployment cost, and the transient scene reference for the unit's currently deployed tower.
 
 It does not own combat execution. Runtime stats, weapon override/augment composition, targeting, attack timing, vision range, and projectile modifiers remain owned by `TowerEntity`, `UnitVision`, `AttackBehaviour`, and projectile scripts.
 
@@ -11,7 +11,7 @@ Each roster entry is a nested serializable `OwnedUnitState` keyed by a stable `u
 Stored inspector/runtime state:
 - Unit identity: `unitId`, `displayName`, `icon`, and `TowerEntity unitPrefab`.
 - Progression config: `xpThresholds`.
-- Persistent progression state: `level`, `experience`, `upgradePending`, and `appliedMultiUpgrades`.
+- Persistent progression state: `level`, `experience`, `upgradePending`, `appliedMultiUpgrades`, and `selectedEvolution`.
 - Transient deployment state: `currentRuntimeInstance` and `currentRuntimeRoot`.
 - Transient economy/UI cache: `hasCompiledDeploymentCost` and `deploymentCost`.
 
@@ -20,7 +20,8 @@ Important rules:
 - Duplicate `unitId` values log an error; empty IDs log a warning.
 - `currentRuntimeInstance` and `currentRuntimeRoot` are scene references only. They are not save data.
 - `appliedMultiUpgrades` stores selected `MultiUpgradeSO` line state plus the active selected level for each line. It does not cache offer pools, runtime weapons, or projectile modifier instances.
-- `AppliedUpgrades` is a resolved read-only view of the active `UpgradeSO` leaves from `appliedMultiUpgrades`.
+- `selectedEvolution` stores the one selected `EvolutionSO` for the unit when it has evolved.
+- `AppliedUpgrades` is a resolved read-only view of the active `UpgradeSO` leaves from `appliedMultiUpgrades` plus the selected evolution's resolved `UpgradeSO` leaf.
 - Cached deployment cost is a runtime/pre-UI value compiled from `TowerEntity.CalculateFinalStat(DeploymentCost, AppliedUpgrades)`. It is not a second runtime stat pipeline.
 
 ## Runtime Bridge
@@ -47,7 +48,11 @@ Current flow:
 - `UnitProgression` raises `UnitExperienceChanged`; `UnitStateManager` records the latest XP for the matching `unitId`.
 - When XP reaches the next threshold, `UnitProgression` raises `UnitUpgradeThresholdReached`.
 - `UpgradesManager` listens, asks `UnitStateManager.TryBeginUpgradeSelection(unitId)` to mark the unit pending, builds an offer from its shared `MultiUpgradeSO` pool, and records the final selected multi-upgrade line.
-- `UnitStateManager.RecordSelectedUpgrade(unitId, multiUpgrade)` clears pending state, advances the unit level, advances the selected multi-upgrade line when non-null, applies the resolved next-level `UpgradeSO` to the deployed tower through `TowerEntity.ReplaceUpgrade`, refreshes cached deployment cost, and refreshes `UnitProgression`.
+- `UpgradesManager` builds offers from its shared `MultiUpgradeSO` pool plus eligible `EvolutionSO` entries from its evolution pool.
+- `UnitStateManager.RecordSelectedUpgrade(unitId, multiUpgrade, evolution)` clears pending state, advances the unit level, and records either a selected multi-upgrade level or a selected evolution.
+- Multi-upgrade selections apply the resolved next-level `UpgradeSO` to the deployed tower through `TowerEntity.ReplaceUpgrade`.
+- Evolution selections are accepted only if the unit has no selected evolution and all prerequisites are met, then apply the resolved `UpgradeSO` to the deployed tower through `TowerEntity.AddUpgrade`.
+- After either selection, cached deployment cost is refreshed and runtime `UnitProgression` is refreshed.
 
 ## Currency And UI Events
 Roster deployment cost is exposed through `UnitEventBus`.
@@ -77,4 +82,5 @@ Current limitation:
 - Cached deployment cost updates on startup and after selected upgrades.
 - `UnitDeploymentCostCompiled` is raised when cost cache changes.
 - Selecting a multi-upgrade while deployed updates only that unit's active runtime tower.
+- Selecting an evolution while deployed updates only that unit's active runtime tower and prevents later evolution selections for that unit.
 - Duplicate or empty `unitId` entries report configuration errors.

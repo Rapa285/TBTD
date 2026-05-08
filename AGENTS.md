@@ -34,12 +34,13 @@ Do not create a second runtime stat/combat composition pipeline. Extend `TowerEn
 `UnitStateManager` is the persistent roster authority for player-owned units.
 
 - Stores `OwnedUnitState` entries keyed by stable `unitId`.
-- Owns display metadata, prefab reference, XP thresholds, level, stored XP, pending-upgrade state, and selected `MultiUpgradeSO` level state.
+- Owns display metadata, prefab reference, XP thresholds, level, stored XP, pending-upgrade state, selected `MultiUpgradeSO` level state, and one selected `EvolutionSO`.
 - Stores transient runtime bindings with `currentRuntimeInstance` and `currentRuntimeRoot`.
-- Applies persistent upgrades and progression state into runtime towers through `ApplyStateTo(...)` after resolving each active multi-upgrade level to a normal `UpgradeSO`.
+- Applies persistent upgrades and progression state into runtime towers through `ApplyStateTo(...)` after resolving each active multi-upgrade level and selected evolution to normal `UpgradeSO` leaves.
 - Precompiles cached deployment costs for roster units through `TowerEntity.CalculateFinalStat(...)`.
 - Finalizes managed deployments through `CompleteRuntimeDeployment(...)`.
 - Applies selected multi-upgrade levels immediately to the deployed runtime tower when present by replacing the previous resolved `UpgradeSO` leaf with the new leaf.
+- Applies the selected evolution immediately to the deployed runtime tower when present by adding the evolution's resolved `UpgradeSO` leaf.
 - Refreshes cached deployment cost when selected upgrades change.
 - Recalls deployed units while preserving persistent XP and upgrades.
 
@@ -135,7 +136,7 @@ Do not add a second pointer or event-system physics selection path unless the se
 - Deployment sets `activeAfterTime = Time.time + SetupTime`.
 - `AttackSpeed` is used as cooldown seconds between attack ticks.
 - The current target is retained until it becomes null, inactive, or leaves `UnitVision`.
-- The tower reacquires with `UnitVision.GetFirstValidTarget()`.
+- The tower reacquires with `UnitVision.GetFrontMostValidTarget()`.
 - One attack tick fires the primary attack behaviour first, then augment attack behaviours in order while the target remains valid.
 - Only the primary weapon can consume tower ammo.
 - A finite primary weapon cannot start a new attack tick when `CurrentAmmoUnits == 0`.
@@ -159,6 +160,14 @@ Debug-only target rescanning currently exists through `activelyPollEnemies` and 
 - Only one resolved `UpgradeSO` level from a `MultiUpgradeSO` can be active on a unit at a time.
 - Upgrade UI displays the next resolved `UpgradeSO` level's name, description, and icon.
 
+`EvolutionSO` is the roster/offer-facing weapon-evolution asset.
+
+- Create assets through `Create > TBTD > Evolution`.
+- Stores one resolved `UpgradeSO` leaf plus prerequisite `MultiUpgradeSO` level requirements.
+- `UnitStateManager.OwnedUnitState` stores at most one selected `EvolutionSO`.
+- Evolutions are eligible only when every prerequisite line has reached the required level and the unit has not already evolved.
+- Runtime composition still receives only the resolved `UpgradeSO`; `TowerEntity` does not store `EvolutionSO`.
+
 Weapon upgrade fields:
 
 - `WEAPON_UPGRADE_TYPE.None`: no weapon change.
@@ -172,18 +181,20 @@ Do not add another runtime upgrade/effect pipeline. Extend `UpgradeSO` for tower
 Upgrade selection is event-bus driven.
 
 - `UnitProgression` raises `UnitUpgradeThresholdReached` when runtime XP reaches the current threshold.
-- `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds an offer from its shared `MultiUpgradeSO` `upgradePool`.
+- `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds an offer from its shared `MultiUpgradeSO` `upgradePool` plus eligible entries in its `EvolutionSO` `evolutionPool`.
 - `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
 - `UpgradesManager` validates the pending offer, calls `UnitStateManager.RecordSelectedUpgrade`, and raises `UnitUpgradeSelected`.
-- `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances unit level, advances the selected multi-upgrade line when non-null, applies the resolved `UpgradeSO` leaf immediately to the deployed tower if present, and refreshes runtime progression.
+- `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances unit level, advances the selected multi-upgrade line or records the selected evolution, applies the resolved `UpgradeSO` leaf immediately to the deployed tower if present, and refreshes runtime progression.
 - The UI hides only after `UnitUpgradeSelected` confirms the active unit's choice.
 
 Current offer rules:
 
 - `UpgradesManager.upgradePool` is a shared list of `MultiUpgradeSO` lines across all units.
+- `UpgradesManager.evolutionPool` is a shared list of `EvolutionSO` assets across all units.
 - Null multi-upgrades, duplicate asset references, invalid next-level assets, and maxed multi-upgrades are filtered out.
 - Already-selected non-max multi-upgrades can be offered again and resolve to their next level.
-- Offers contain up to `upgradeChoiceCount` unique random multi-upgrade choices.
+- Null evolutions, duplicate evolution references, invalid resolved upgrades, unmet prerequisites, and all evolutions for already-evolved units are filtered out.
+- Offers contain up to `upgradeChoiceCount` unique random choices from the combined multi-upgrade/evolution candidate list.
 - If no valid choices remain, a null selection is recorded so level progression can continue.
 
 ## Progression
@@ -232,7 +243,9 @@ Damage application order currently lives in `CombatDamageUtility`:
 - Then tries `IDamageable.TakeDamage(float)` on the target or its parents.
 - Falls back to `SendMessage("TakeDamage", damage, DontRequireReceiver)`.
 
-Existing implementations include direct damage, debug beam/hitscan, and projectile weapons such as `TestGunAttackBehaviour`.
+Existing implementations include direct damage, debug beam/hitscan, line-FX direct Sniper, piercing Laser, tick-skip-ramping Machine Gun, Aura, Grenade Launcher, Shotgun, and projectile weapons such as `BaseGunBehaviour` and `TestGunAttackBehaviour`.
+
+`LineAttackFXComponent` is the shared visual-only line effect for Laser and Sniper. It draws the full line immediately from attack origin to hit/end point, then eases line width from thick to thin before hiding. Keep damage and hit modifier dispatch in the attack behaviour, not in the FX component.
 
 When adding a new weapon, derive from `AttackBehaviour` and keep attack-specific logic there. Do not put weapon-specific behavior directly into `TowerEntity`.
 
@@ -310,6 +323,6 @@ Targets that should take damage should have:
 
 - No faction/team/allegiance model yet.
 - No targeting priority beyond first valid target.
-- Upgrade offers are still built from one shared multi-upgrade pool with simple duplicate/max-level filtering.
+- Upgrade offers are built from shared multi-upgrade and evolution pools with simple duplicate/max-level/prerequisite filtering.
 - Runtime-generated unit IDs exist for unmanaged towers, but broader persistence/save-load infrastructure is not implemented here.
 - Currency rewards, recall refunds, and save/load persistence for currency are not implemented yet.

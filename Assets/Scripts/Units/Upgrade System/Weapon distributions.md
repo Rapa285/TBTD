@@ -1,5 +1,12 @@
 Implement the first draft of the tower weapon evolution upgrade system.
 
+Implementation status:
+- The six square-node `MultiUpgradeSO` lines now exist under `Assets/SOs/Square Upgrades/`, each with Lv1-Lv3 `UpgradeSO` leaves.
+- Weapon evolutions are represented by `EvolutionSO` assets under `Assets/SOs/Evolutions/`.
+- Current evolution offer rules require both adjacent square-node prerequisites at Lv2 and allow only one selected evolution per roster unit.
+- Machine Gun and Sniper now have concrete attack prefabs; Machine Gun uses internal tick-skip wind-up, and Sniper uses direct damage plus shared line FX.
+- Laser and Sniper share `LineAttackFXComponent`, which draws the full line immediately and thins it out.
+
 Game context:
 - Tower defense game.
 - Player starts with 8 default towers.
