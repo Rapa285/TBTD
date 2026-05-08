@@ -1,47 +1,16 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
 /// Piercing hitscan beam that damages each valid target along the beam once.
 /// </summary>
-[RequireComponent(typeof(LineRenderer))]
 public sealed class LaserBehaviour : AttackBehaviour
 {
-    [SerializeField, Tooltip("Line renderer used to draw the temporary laser beam.")]
-    private LineRenderer lineRenderer;
-
     [SerializeField, Tooltip("Optional muzzle transform used as the beam start. Falls back to this transform.")]
     private Transform firePoint;
 
     [SerializeField, Tooltip("Layers this laser ray is allowed to hit.")]
     private LayerMask hitLayers = ~0;
-
-    [SerializeField, Min(0f), Tooltip("How long the beam remains visible after each attack.")]
-    private float beamDuration = 0.08f;
-
-    private Coroutine activeBeam;
-
-    private void Awake()
-    {
-        if (lineRenderer == null)
-        {
-            lineRenderer = GetComponent<LineRenderer>();
-        }
-
-        ConfigureLineRenderer();
-    }
-
-    private void OnValidate()
-    {
-        if (lineRenderer == null)
-        {
-            lineRenderer = GetComponent<LineRenderer>();
-        }
-
-        beamDuration = Mathf.Max(0f, beamDuration);
-        ConfigureLineRenderer();
-    }
 
     protected override bool ExecuteAttack(Transform target, float damage)
     {
@@ -62,7 +31,7 @@ public sealed class LaserBehaviour : AttackBehaviour
         Vector3 end = start + direction * range;
 
         bool hitAnyTarget = DamageTargetsAlongBeam(start, direction, range, damage);
-        RenderBeam(start, end);
+        PlayBeamFX(target, damage, start, end);
         return hitAnyTarget;
     }
 
@@ -130,44 +99,18 @@ public sealed class LaserBehaviour : AttackBehaviour
         return firePoint != null ? firePoint.position : transform.position;
     }
 
-    private void RenderBeam(Vector3 start, Vector3 end)
+    private void PlayBeamFX(Transform target, float damage, Vector3 start, Vector3 end)
     {
-        if (lineRenderer == null)
-        {
-            return;
-        }
-
-        if (activeBeam != null)
-        {
-            StopCoroutine(activeBeam);
-        }
-
-        activeBeam = StartCoroutine(RenderBeamRoutine(start, end));
-    }
-
-    private IEnumerator RenderBeamRoutine(Vector3 start, Vector3 end)
-    {
-        lineRenderer.enabled = true;
-        lineRenderer.SetPosition(0, start);
-        lineRenderer.SetPosition(1, end);
-
-        if (beamDuration > 0f)
-        {
-            yield return new WaitForSeconds(beamDuration);
-        }
-
-        lineRenderer.enabled = false;
-        activeBeam = null;
-    }
-
-    private void ConfigureLineRenderer()
-    {
-        if (lineRenderer == null)
-        {
-            return;
-        }
-
-        lineRenderer.positionCount = 2;
-        lineRenderer.enabled = false;
+        AttackFX?.PlayAttackFX(new AttackFXContext(
+            this,
+            OwnerTower,
+            OwnerRoot,
+            target,
+            damage,
+            start,
+            true,
+            end,
+            true,
+            null));
     }
 }
