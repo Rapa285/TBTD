@@ -123,11 +123,84 @@ MonoBehaviour:
   eventBus: {fileID: 5627124984122599137}
   unitStateManager: {fileID: 3373104255058332114}
   upgradePool:
-  - {fileID: 11400000, guid: e1215ca3a5519be4aacb6c67d0121c26, type: 2}
-  - {fileID: 11400000, guid: 7cd2e8093f95d77468e0b8b506fecb58, type: 2}
-  - {fileID: 11400000, guid: 16b756b9d3ed61a4c9a10e1896638963, type: 2}
-  - {fileID: 11400000, guid: ed5be96ed66a9084dbc9de92bc6bc713, type: 2}
-  upgradeChoiceCount: 2
+  - {fileID: 11400000, guid: b9fdf24d92c2405aa3db038d2f0ba181, type: 2}
+  - {fileID: 11400000, guid: 6ce6731e33c34edf914b03c6d50ca254, type: 2}
+  - {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
+  - {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
+  - {fileID: 11400000, guid: f3232636c921451c9d7fe5354279f0bb, type: 2}
+  - {fileID: 11400000, guid: 5080456803ee499b895b611c7b94053f, type: 2}
+  evolutionPool:
+  - {fileID: 11400000, guid: 750d59f3a0cc446da6cdd0acd39253f8, type: 2}
+  - {fileID: 11400000, guid: 6f75673c4fcb4b6da8c0c6d2be1a3f73, type: 2}
+  - {fileID: 11400000, guid: ec4d2aafbb534266bb35283612373493, type: 2}
+  - {fileID: 11400000, guid: 0ea66aef64244669908fa8ae29e10339, type: 2}
+  - {fileID: 11400000, guid: 6aaa92746b404756a20150c3c8f8fce5, type: 2}
+  - {fileID: 11400000, guid: e9f543ba36f54da785c1b8cc7aba90b2, type: 2}
+  upgradeChoiceCount: 3
+  baseRerollCost: 10
+  rerollCostIncrement: 5
+--- !u!1 &3909670730836931370
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6564508759490660469}
+  - component: {fileID: 549201767616431203}
+  m_Layer: 0
+  m_Name: PlayerInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6564508759490660469
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3909670730836931370}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4658590519654865812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &549201767616431203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3909670730836931370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
+  m_Actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  m_NotificationBehavior: 0
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents: []
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: Keyboard&Mouse
+  m_DefaultActionMap: UI
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!1 &4353301881453114405
 GameObject:
   m_ObjectHideFlags: 0
@@ -173,20 +246,75 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitStateManager
   eventBus: {fileID: 5627124984122599137}
+  xpThresholds:
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+  - 30
+  - 35
+  - 40
+  - 45
+  - 50
   ownedUnits:
   - unitId: 1
     displayName: Unit A
     icon: {fileID: 0}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
-    xpThresholds:
-    - 5
-    - 10
-    - 15
-    - 20
     level: 0
     experience: 0
     upgradePending: 0
-    appliedUpgrades: []
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
+  - unitId: 2
+    displayName: Unit B
+    icon: {fileID: 0}
+    unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
+    level: 0
+    experience: 0
+    upgradePending: 0
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
+  - unitId: 3
+    displayName: Unit C
+    icon: {fileID: 0}
+    unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
+    level: 0
+    experience: 0
+    upgradePending: 0
+    appliedMultiUpgrades:
+    - multiUpgrade: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
+      level: 3
+    - multiUpgrade: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
+      level: 3
+    selectedEvolution: {fileID: 11400000, guid: ec4d2aafbb534266bb35283612373493, type: 2}
+  - unitId: 4
+    displayName: Unit D
+    icon: {fileID: 0}
+    unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
+    level: 0
+    experience: 0
+    upgradePending: 0
+    appliedMultiUpgrades:
+    - multiUpgrade: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
+      level: 3
+    - multiUpgrade: {fileID: 11400000, guid: 6ce6731e33c34edf914b03c6d50ca254, type: 2}
+      level: 3
+    selectedEvolution: {fileID: 11400000, guid: e9f543ba36f54da785c1b8cc7aba90b2, type: 2}
+  - unitId: 5
+    displayName: Unit E
+    icon: {fileID: 0}
+    unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
+    level: 100
+    experience: 100
+    upgradePending: 0
+    appliedMultiUpgrades:
+    - multiUpgrade: {fileID: 11400000, guid: f3232636c921451c9d7fe5354279f0bb, type: 2}
+      level: 3
+    - multiUpgrade: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
+      level: 3
+    selectedEvolution: {fileID: 11400000, guid: 0ea66aef64244669908fa8ae29e10339, type: 2}
 --- !u!1 &5125289146615075792
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,7 +359,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14859f1f197e45b41999d98fb239b939, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
-  startingCurrency: 1000
+  startingCurrency: 300
 --- !u!1 &6288702567745977837
 GameObject:
   m_ObjectHideFlags: 0
@@ -266,6 +394,8 @@ Transform:
   - {fileID: 233155863455361324}
   - {fileID: 5942756785211926667}
   - {fileID: 646395135148070483}
+  - {fileID: 5288108152175745210}
+  - {fileID: 6564508759490660469}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5627124984122599137
@@ -280,3 +410,62 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a78dfaf4619a45fca66c2574604c4e28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitEventBus
+--- !u!1 &8280353463047374803
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5288108152175745210}
+  - component: {fileID: 8597949208850362278}
+  m_Layer: 0
+  m_Name: PlayerStateController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5288108152175745210
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8280353463047374803}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4658590519654865812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8597949208850362278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8280353463047374803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ebdc80343bf0574b8dc6a034612cc7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStateController
+  eventBus: {fileID: 5627124984122599137}
+  deploymentController: {fileID: 4761625655830654051}
+  upgradesManager: {fileID: 6690634716085344392}
+  playerInput: {fileID: 549201767616431203}
+  raycastCamera: {fileID: 0}
+  selectionLayers:
+    serializedVersion: 2
+    m_Bits: 4096
+  selectionPassThroughLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  selectionBlockingLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  maxSelectionRayDistance: 1000
