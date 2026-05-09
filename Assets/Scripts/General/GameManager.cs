@@ -6,7 +6,16 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private float baseHealth = 100f;
     private GameObject SelectedTower;
+    [SerializeField] SceneLoader sceneLoader;
 
+    private void Awake()
+    {
+        if (sceneLoader == null)
+        {
+            // sceneLoader = FindFirstObjectByType<SceneLoader>(FindObjectsInactive.Include);
+            sceneLoader = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoader) ? resolvedSceneLoader : sceneLoader;
+        }
+    }
 
     private void OnEnable()
     {
@@ -14,6 +23,8 @@ public class GameManager : MonoBehaviour
         GeneralEventBus<BaseDamagedEvent>.Subscribe(DamageBase);
         GeneralEventBus<GamePausedEvent>.Subscribe(PauseGame);
         GeneralEventBus<GameUnPausedEvent>.Subscribe(UnPauseGame);
+        GeneralEventBus<RetryGameEvent>.Subscribe(RetryGame);
+        GeneralEventBus<ExitToMainMenuEvent>.Subscribe(ExitToMainMenu);
     }
 
     private void OnDisable()
@@ -22,7 +33,8 @@ public class GameManager : MonoBehaviour
         GeneralEventBus<BaseDamagedEvent>.Unsubscribe(DamageBase);
         GeneralEventBus<GamePausedEvent>.Unsubscribe(PauseGame);
         GeneralEventBus<GameUnPausedEvent>.Unsubscribe(UnPauseGame);
-
+        GeneralEventBus<RetryGameEvent>.Unsubscribe(RetryGame);
+        GeneralEventBus<ExitToMainMenuEvent>.Unsubscribe(ExitToMainMenu);
     }
 
     private void DamageBase(BaseDamagedEvent eventData)
@@ -38,7 +50,7 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent{});
-        GeneralEventBus<GamePausedEvent>.Publish(new GamePausedEvent{});
+        // GeneralEventBus<GamePausedEvent>.Publish(new GamePausedEvent{});
     }
 
     private void PauseGame(GamePausedEvent eventData)
@@ -52,4 +64,14 @@ public class GameManager : MonoBehaviour
     }
 
 
+    private void RetryGame(RetryGameEvent eventData)
+    {
+        sceneLoader.LoadScene("InGame");
+        // UnPauseGame(new GameUnPausedEvent{});
+    }
+
+    private void ExitToMainMenu(ExitToMainMenuEvent eventData)
+    {
+        sceneLoader.LoadScene("Title Screen");
+    }
 }

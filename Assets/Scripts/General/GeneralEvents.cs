@@ -36,3 +36,7 @@ public readonly struct SettingsChangedEvent
         Config = config;
     }
 }
+
+public readonly struct RetryGameEvent { }
+
+public readonly struct ExitToMainMenuEvent { }

@@ -532,7 +532,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerSelectionTarget
   tower: {fileID: 5929984254154990258}
   selectionCollider: {fileID: 7401127552645490998}
-  playerStateController: {fileID: 0}
+  onSelected:
+    m_PersistentCalls:
+      m_Calls: []
+  onDeselected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &6969237254070908502
 GameObject:
   m_ObjectHideFlags: 0
@@ -642,7 +647,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &305816377279671769
 Transform:
   m_ObjectHideFlags: 0
