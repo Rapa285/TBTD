@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -99,6 +100,7 @@ public class EnemySpawner : MonoBehaviour
         
         waveTimer = waveDuration;
         spawnTimer = 0;
+        RaiseNewWaveEvent();
     }
 
     public void GenerateEnemies()
@@ -106,9 +108,7 @@ public class EnemySpawner : MonoBehaviour
         if (mapSpline == null) {
             Debug.Log("Missing mapSpline on Spawner!");
             return;
-        }
-
-        
+        }        
 
         List<GameObject> generatedEnemies = new List<GameObject>();
 
@@ -155,6 +155,27 @@ public class EnemySpawner : MonoBehaviour
     public void SetPauseSpawner(bool isPause)
     {
         isPaused = isPause;
+    }
+
+    // Event Bus Stuff
+    [SerializeField]
+    private WaveEventBus eventBus;
+
+    private void ResolveEventBus()
+    {
+        if (eventBus == null)
+        {
+            ServiceLocator.TryResolve(out eventBus);
+        }
+    }
+
+    private void RaiseNewWaveEvent()
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyToSpawn));
+        }
     }
 }
 
