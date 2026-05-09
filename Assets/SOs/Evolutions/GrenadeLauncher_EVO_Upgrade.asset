@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Grenade Launcher EVO
   description: Evolves the pistol into a slow explosive launcher.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: de34fadff253d4147b640892ff0a59d7, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 2253173422970491529, guid: 8b52bea37e2c1974bb19218fd3be1ef2, type: 3}
   projectileModifierPrefabs: []

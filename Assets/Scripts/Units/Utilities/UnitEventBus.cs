@@ -117,6 +117,19 @@ public struct UnitUpgradeChoicesOfferedEvent
 }
 
 /// <summary>
+/// Raised by roster UI when the player wants to view one unit's stored pending upgrade offer.
+/// </summary>
+public readonly struct UnitUpgradeOfferRequestedEvent
+{
+    public string UnitId { get; }
+
+    public UnitUpgradeOfferRequestedEvent(string unitId)
+    {
+        UnitId = unitId;
+    }
+}
+
+/// <summary>
 /// Raised by UI when a player requests one pending upgrade choice.
 /// </summary>
 public struct UnitUpgradeChoiceRequestedEvent
@@ -128,6 +141,32 @@ public struct UnitUpgradeChoiceRequestedEvent
     {
         UnitId = unitId;
         ChoiceIndex = choiceIndex;
+    }
+}
+
+/// <summary>
+/// Raised by upgrade UI when the player requests a reroll for the active pending offer.
+/// </summary>
+public readonly struct UnitUpgradeRerollRequestedEvent
+{
+    public string UnitId { get; }
+
+    public UnitUpgradeRerollRequestedEvent(string unitId)
+    {
+        UnitId = unitId;
+    }
+}
+
+/// <summary>
+/// Raised by upgrade UI when the player closes the menu without selecting an upgrade.
+/// </summary>
+public readonly struct UnitUpgradeMenuClosedEvent
+{
+    public string UnitId { get; }
+
+    public UnitUpgradeMenuClosedEvent(string unitId)
+    {
+        UnitId = unitId;
     }
 }
 
@@ -334,7 +373,10 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitExperienceChangedEvent> UnitExperienceChanged;
     public event Action<UnitUpgradeThresholdReachedEvent> UnitUpgradeThresholdReached;
     public event Action<UnitUpgradeChoicesOfferedEvent> UnitUpgradeChoicesOffered;
+    public event Action<UnitUpgradeOfferRequestedEvent> UnitUpgradeOfferRequested;
     public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
+    public event Action<UnitUpgradeRerollRequestedEvent> UnitUpgradeRerollRequested;
+    public event Action<UnitUpgradeMenuClosedEvent> UnitUpgradeMenuClosed;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
     public event Action<UnitCooldownEndedEvent> UnitCooldownEnded;
@@ -388,11 +430,35 @@ public class UnitEventBus : MonoBehaviour
     }
 
     /// <summary>
+    /// Publishes that UI wants to view one stored pending offer.
+    /// </summary>
+    public void RaiseUnitUpgradeOfferRequested(UnitUpgradeOfferRequestedEvent eventData)
+    {
+        UnitUpgradeOfferRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
     /// Publishes that UI requested one pending upgrade choice.
     /// </summary>
     public void RaiseUnitUpgradeChoiceRequested(UnitUpgradeChoiceRequestedEvent eventData)
     {
         UnitUpgradeChoiceRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that UI requested a reroll for one stored pending offer.
+    /// </summary>
+    public void RaiseUnitUpgradeRerollRequested(UnitUpgradeRerollRequestedEvent eventData)
+    {
+        UnitUpgradeRerollRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that UI closed the active upgrade menu without selecting.
+    /// </summary>
+    public void RaiseUnitUpgradeMenuClosed(UnitUpgradeMenuClosedEvent eventData)
+    {
+        UnitUpgradeMenuClosed?.Invoke(eventData);
     }
 
     /// <summary>

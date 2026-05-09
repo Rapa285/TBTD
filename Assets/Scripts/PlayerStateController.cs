@@ -60,6 +60,9 @@ public class PlayerStateController : MonoBehaviour
     [SerializeField, Tooltip("Deployment controller cancelled when entering pause or gameover.")]
     private UnitDeploymentController deploymentController;
 
+    [SerializeField, Tooltip("Upgrade manager used to detect chained pending offers after a selection.")]
+    private UpgradesManager upgradesManager;
+
     [SerializeField, Tooltip("PlayerInput used for click-driven selection. Falls back to the first scene PlayerInput.")]
     private PlayerInput playerInput;
 
@@ -324,6 +327,30 @@ public class PlayerStateController : MonoBehaviour
             return;
         }
 
+        if (upgradesManager == null)
+        {
+            ResolveReferences();
+        }
+
+        if (upgradesManager != null && upgradesManager.HasPendingOffer(eventData.UnitId))
+        {
+            return;
+        }
+
+        activeUpgradeUnitId = null;
+        isUpgradeMenuActive = false;
+        RefreshInteractionState();
+    }
+
+    private void HandleUpgradeMenuClosed(UnitUpgradeMenuClosedEvent eventData)
+    {
+        if (!string.IsNullOrWhiteSpace(activeUpgradeUnitId)
+            && !string.IsNullOrWhiteSpace(eventData.UnitId)
+            && eventData.UnitId != activeUpgradeUnitId)
+        {
+            return;
+        }
+
         activeUpgradeUnitId = null;
         isUpgradeMenuActive = false;
         RefreshInteractionState();
@@ -403,6 +430,11 @@ public class PlayerStateController : MonoBehaviour
         if (deploymentController == null)
         {
             ServiceLocator.TryResolve(out deploymentController);
+        }
+
+        if (upgradesManager == null)
+        {
+            ServiceLocator.TryResolve(out upgradesManager);
         }
 
         ResolvePlayerInput();
@@ -779,6 +811,7 @@ public class PlayerStateController : MonoBehaviour
         eventBus.UnitDeploymentPreviewEnded += HandleDeploymentPreviewEnded;
         eventBus.UnitUpgradeChoicesOffered += HandleUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected += HandleUpgradeSelected;
+        eventBus.UnitUpgradeMenuClosed += HandleUpgradeMenuClosed;
         eventBus.UnitRecalled += HandleUnitRecalled;
         eventBusSubscribed = true;
     }
@@ -794,6 +827,7 @@ public class PlayerStateController : MonoBehaviour
         eventBus.UnitDeploymentPreviewEnded -= HandleDeploymentPreviewEnded;
         eventBus.UnitUpgradeChoicesOffered -= HandleUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected -= HandleUpgradeSelected;
+        eventBus.UnitUpgradeMenuClosed -= HandleUpgradeMenuClosed;
         eventBus.UnitRecalled -= HandleUnitRecalled;
         eventBusSubscribed = false;
     }

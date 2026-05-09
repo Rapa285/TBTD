@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: AoE LV2
   description: Wider area pressure with faster attacks and lower damage.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3e84b6a1ec7480543b32c8b1a36de9fe, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []

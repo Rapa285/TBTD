@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Sniper EVO
   description: Evolves the pistol into an immediate long-range precision shot.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 468d3daea9f91e249aba21fdf81e4ca5, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 680011001100110003, guid: a163208e0af04202a97788f4d3d1a0f9, type: 3}
   projectileModifierPrefabs: []

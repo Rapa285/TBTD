@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Shotgun EVO
   description: Evolves the pistol into a short-range burst cone weapon.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 851d8c6d213013a4b870f229702940aa, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 6971942567615480730, guid: 753de46d91a41c447be6f722d240fa70, type: 3}
   projectileModifierPrefabs: []

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Relentless Assault LV2
   description: Much faster pressure with lower ammo and longer setup.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 210cfd8620ec63247a43f320ee83a495, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []

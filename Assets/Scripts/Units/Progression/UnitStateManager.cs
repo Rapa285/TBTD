@@ -675,6 +675,14 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns whether the roster unit is waiting for the player to choose an upgrade.
+    /// </summary>
+    public bool HasPendingUpgradeSelection(string unitId)
+    {
+        return TryGetUnit(unitId, out OwnedUnitState unit) && unit.UpgradePending;
+    }
+
+    /// <summary>
     /// Records the selected multi-upgrade, advances level, and applies its active level to the deployed tower when present.
     /// </summary>
     public bool RecordSelectedUpgrade(string unitId, MultiUpgradeSO multiUpgrade)

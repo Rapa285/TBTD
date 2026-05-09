@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Displays one offered upgrade and reports choice clicks to the owning selection UI.
 /// </summary>
-public class UpgradeChoiceItem : MonoBehaviour
+public class UpgradeChoiceItem : MonoBehaviour, IPointerEnterHandler, ISelectHandler
 {
     [SerializeField, Tooltip("Clickable control used to select this upgrade.")]
     private Button button;
@@ -69,6 +70,16 @@ public class UpgradeChoiceItem : MonoBehaviour
         }
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        NotifyFocused();
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        NotifyFocused();
+    }
+
     private void HandleButtonClicked()
     {
         if (owner == null || choiceIndex < 0)
@@ -77,6 +88,16 @@ public class UpgradeChoiceItem : MonoBehaviour
         }
 
         owner.HandleChoiceSelected(choiceIndex);
+    }
+
+    private void NotifyFocused()
+    {
+        if (owner == null || choiceIndex < 0)
+        {
+            return;
+        }
+
+        owner.HandleChoiceFocused(choiceIndex);
     }
 
     private void RefreshDisplay()

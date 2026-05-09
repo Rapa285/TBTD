@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Laser EVO
   description: Evolves the pistol into a focused piercing laser.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 713fc2d067ef6e345940e854473b4076, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 4193822597861781449, guid: 309e314473188fc48aa9b75d74ee959d, type: 3}
   projectileModifierPrefabs: []
