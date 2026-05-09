@@ -10,6 +10,7 @@ The upgrade system is split between persistent roster selection and runtime towe
 - `UnitStateManager` stores selected multi-upgrade line levels plus at most one selected evolution per owned unit.
 - `TowerEntity` compiles resolved `UpgradeSO` leaves into runtime stats, active weapon behaviours, and projectile modifier prefabs.
 - `UnitStateManager` uses `TowerEntity.CalculateFinalStat(...)` to cache deployment cost for UI and deployment preflight without building runtime weapon/modifier composition.
+- Upgrade UI scripts present pending offers, focused-choice details, stat comparisons, and evolution hints only. They do not validate choices, mutate roster state directly, or compose runtime upgrades.
 
 The normal roster flow records selected `MultiUpgradeSO` levels and optionally one selected `EvolutionSO`. Different multi-upgrade lines remain additive, but leveling the same multi-upgrade line replaces the previous resolved `UpgradeSO` leaf with the next one so only one level from that line is active at a time. A selected evolution contributes its resolved `UpgradeSO` leaf alongside the active multi-upgrade leaves.
 
@@ -54,6 +55,7 @@ Current multi-upgrade behavior:
 - A unit that already owns a non-max multi-upgrade can be offered that same line again and resolves to the next level.
 - A unit at max level for a multi-upgrade line will not be offered that line again.
 - `UpgradeChoiceItem` displays the resolved next-level `UpgradeSO` name, description, and icon.
+- Focused multi-upgrade details can compare the current level leaf to the offered next level leaf in `UpgradeStatInfoUI`.
 - `TowerEntity` never receives or stores `MultiUpgradeSO`; it only receives resolved `UpgradeSO` leaves.
 
 Current square-node assets live under `Assets/SOs/Square Upgrades/`:
@@ -97,6 +99,9 @@ Current offer configuration lives on `UpgradesManager`:
 - `upgradePool`: one shared `MultiUpgradeSO` pool used by all units.
 - `evolutionPool`: one shared `EvolutionSO` pool used by all units.
 - `upgradeChoiceCount`: one shared number of choices to offer when enough valid candidates exist.
+- `baseRerollCost` and `rerollCostIncrement`: shared currency cost controls for rerolling pending offers.
+- `EvolutionPool`: read-only public view used by UI hint panels to inspect evolution relationships without duplicating the pool.
+- `CurrentRerollCost`: the current shared reroll price, computed from successful rerolls.
 
 When a threshold is reached:
 - Ignore missing unit IDs, missing managers, units that already have a pending offer, unknown units, or units that cannot begin upgrade selection.
@@ -104,7 +109,8 @@ When a threshold is reached:
 - Filter out null multi-upgrades, duplicate multi-upgrade references, invalid next-level assets, and multi-upgrades where the unit is already at max level.
 - Filter out null evolutions, duplicate evolution references, evolutions with invalid resolved upgrades, evolutions whose prerequisites are not met, and all evolutions once the unit already has a selected evolution.
 - Randomly offer up to `upgradeChoiceCount` unique choices from the combined multi-upgrade/evolution candidate list.
-- Raise `UnitUpgradeChoicesOffered` when choices exist.
+- Store the generated offer by stable `unitId` as a pending offer.
+- Raise `UnitUpgradeChoicesOffered` when the offer is opened or rerolled.
 - If no choices exist, record a null selection so the unit can advance and clear pending state.
 
 Selection API:
@@ -112,9 +118,50 @@ Selection API:
 - `SelectUpgrade(unitId, MultiUpgradeSO upgrade)` selects by asset reference.
 - `SelectUpgrade(unitId, EvolutionSO evolution)` selects by asset reference.
 - `UnitUpgradeChoiceRequestedEvent` is the decoupled UI request path; `UpgradesManager` handles it by calling the index-based selection API.
+- `UnitUpgradeOfferRequestedEvent` asks `UpgradesManager` to raise a stored pending offer for a unit, creating one if the roster unit is pending and no offer is stored yet.
+- `UnitUpgradeRerollRequestedEvent` asks `UpgradesManager` to replace an active pending offer with a different generated offer when possible.
+- `UnitUpgradeMenuClosedEvent` clears `UpgradesManager`'s active menu unit tracking without selecting.
 - Selection is only valid while a pending offer exists and the selected multi-upgrade or evolution belongs to that offer.
 
-On successful selection, `UpgradesManager` calls `UnitStateManager.RecordSelectedUpgrade`, then raises `UnitUpgradeSelected`.
+Reroll behavior:
+- Rerolls require an existing pending offer and a candidate pool that can produce an alternate offer.
+- If a `CurrencyManager` exists, `TrySpend(CurrentRerollCost)` must succeed before replacing the offer.
+- Successful rerolls increment the shared reroll count, replace the stored offer, and raise `UnitUpgradeChoicesOffered`.
+- Failed rerolls leave the current pending offer unchanged.
+
+On successful selection, `UpgradesManager` removes the pending offer, calls `UnitStateManager.RecordSelectedUpgrade`, then raises `UnitUpgradeSelected`. If recording fails, the removed pending offer is restored.
+
+## Upgrade Selection UI
+Upgrade selection UI is event-bus driven and presentation-only.
+
+Main components:
+- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries under `choicesRoot`, and sends `UnitUpgradeChoiceRequestedEvent` for clicks.
+- `UpgradeSelectionUI` owns optional close and reroll buttons. Close raises `UnitUpgradeMenuClosed`; reroll raises `UnitUpgradeRerollRequested`.
+- `UpgradeSelectionUI` refreshes reroll visibility, affordability, and cost text from `UpgradesManager` plus `CurrencyManager`.
+- `UpgradeSelectionUI` initializes focused details from the first valid choice in a new offer and updates details when a child choice is hovered or UI-focused.
+- `UpgradeChoiceItem` displays the resolved `UpgradeSO` name, description, and icon, then notifies its owner on click, pointer enter, or UI selection.
+- `UnitUIUpgrade` is the roster-item upgrade button that requests a stored pending offer for its unit through `UnitUpgradeOfferRequestedEvent`.
+
+Focused details:
+- `UpgradeInfoDetailsUI` is the details coordinator. It owns an optional root, title TMP text, `UpgradeStatInfoUI`, and `EvoHintUI`.
+- The title uses `UpgradeSO.UpgradeName` with the asset name as fallback.
+- `UpgradeStatInfoUI` lists the focused upgrade's stat effects. For multi-upgrade offers above level 1, it compares the currently active leaf to the offered next leaf with `current >>> next` for matching stats.
+- `GenericIconDisplay` binds either an `UpgradeSO` or raw `Sprite`, updates its image, and toggles its configured root when no icon exists.
+- `UpgradeIconLevelUI` binds a `MultiUpgradeSO` against a roster unit. Normal display shows `LVL X`; requirement display shows `LVL X/Y`. Icons resolve from the required level for requirement display, otherwise from the current level with level 1 fallback.
+
+Evolution hint behavior:
+- For a focused `MultiUpgradeSO`, `EvoHintUI` shows the focused upgrade in the middle, hides the target evolution icon, and searches `UpgradesManager.EvolutionPool` for evolutions whose prerequisites include the focused line.
+- Related evolutions are ranked by lowest total missing prerequisite levels, then highest met-prerequisite count, then shared pool order.
+- The two side slots show up to two related evolutions. Each side slot shows the evolution's resolved upgrade icon plus the other prerequisite line as `LVL current/required`.
+- If a focused multi-upgrade has no related evolutions, the middle focused-upgrade slot stays visible and both side slots clear.
+- For a focused `EvolutionSO`, `EvoHintUI` clears the middle focused-upgrade slot, shows `targetEvo` with the evolution's resolved upgrade icon, and uses the two side related-upgrade slots for the evolution's prerequisites.
+- If the active unit already has a selected evolution, multi-upgrade hinting clears all hint slots.
+- `EvoHintUI` does not decide evolution eligibility; eligibility is still authored through `EvolutionSO` and validated by `OwnedUnitState.CanSelectEvolution(...)`.
+
+UI boundaries:
+- UI scripts may read `UnitUpgradeOfferChoice`, `UpgradesManager.EvolutionPool`, and `OwnedUnitState` levels for display.
+- UI scripts must not change roster upgrade state directly, generate offers independently, validate selections as authoritative, inspect runtime tower composition, or instantiate runtime weapons/modifiers.
+- Prefab wiring is expected for `UpgradeSelectionUI`, `UpgradeChoiceItem`, `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, `EvoHintUI`, `GenericIconDisplay`, and `UpgradeIconLevelUI`.
 
 ## Runtime Composition
 `TowerEntity.CompileFinalStats()` is the single runtime compilation point for tower upgrades.
@@ -174,9 +221,16 @@ Damage scaling should normally be authored as `ENTITY_STATS.GlobalDamage` stat e
 - `UnitStateManager.OwnedUnitState` does not expose per-unit offer pool or offer count.
 - `UpgradesManager` exposes one shared multi-upgrade pool and one shared offer count.
 - `UpgradesManager` exposes one shared evolution pool and combines eligible evolutions with normal multi-upgrade choices.
+- Upgrade UI uses `UpgradesManager.EvolutionPool` for hinting instead of maintaining a parallel evolution list.
 - Fresh multi-upgrades offer level 1, non-max owned multi-upgrades offer the next level, and maxed multi-upgrades are omitted.
 - Evolutions are offered only when all prerequisites are met and the unit has no selected evolution.
+- Reroll is disabled when no alternate offer can be produced or the player cannot afford the current reroll cost.
+- Reroll replaces the displayed pending offer without recording a selection.
+- Closing the upgrade menu does not clear the pending offer.
 - Selected evolutions persist through recall and redeploy as resolved `UpgradeSO` leaves.
+- Focused multi-upgrade details show title, stat effects, current-level display, and related evolution hints.
+- Focused evolution details show title, stat effects, target evolution icon, and prerequisite progress.
+- Stat comparisons display `current >>> next` only when there is a comparable previous multi-upgrade level effect.
 - Stat-only upgrades still update final tower stats and vision range.
 - `DeploymentCost` upgrades update cached roster cost and deployment UI.
 - Leveling a multi-upgrade replaces the previous level leaf instead of stacking it.

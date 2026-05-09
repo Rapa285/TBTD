@@ -49,6 +49,9 @@ Current flow:
 - When XP reaches the next threshold, `UnitProgression` raises `UnitUpgradeThresholdReached`.
 - `UpgradesManager` listens, asks `UnitStateManager.TryBeginUpgradeSelection(unitId)` to mark the unit pending, builds an offer from its shared `MultiUpgradeSO` pool, and records the final selected multi-upgrade line.
 - `UpgradesManager` builds offers from its shared `MultiUpgradeSO` pool plus eligible `EvolutionSO` entries from its evolution pool.
+- Pending offers are stored by `UpgradesManager` until a valid selection is recorded; closing the upgrade UI does not clear the roster pending state.
+- Roster UI can reopen a pending offer through `UnitUpgradeOfferRequestedEvent`.
+- Upgrade UI can request a reroll through `UnitUpgradeRerollRequestedEvent`; this replaces the stored pending offer only when `UpgradesManager` can build an alternate offer and currency payment succeeds when currency is present.
 - `UnitStateManager.RecordSelectedUpgrade(unitId, multiUpgrade, evolution)` clears pending state, advances the unit level, and records either a selected multi-upgrade level or a selected evolution.
 - Multi-upgrade selections apply the resolved next-level `UpgradeSO` to the deployed tower through `TowerEntity.ReplaceUpgrade`.
 - Evolution selections are accepted only if the unit has no selected evolution and all prerequisites are met, then apply the resolved `UpgradeSO` to the deployed tower through `TowerEntity.AddUpgrade`.
@@ -62,6 +65,9 @@ Roster deployment cost is exposed through `UnitEventBus`.
 - `UnitDeploymentPreviewStarted` and `UnitDeploymentPreviewEnded` allow UI to distinguish `CanDeploy` from `InDeployPreview`.
 - `UnitUICost` shows cached cost only while the roster unit is undeployed.
 - `UnitUIDeployment.CurrentState` is display state; input gating still blocks deployment while any preview is active.
+- `UnitUpgradeChoicesOffered` carries the generated `UnitUpgradeOfferChoice` array used by `UpgradeSelectionUI`.
+- `UnitUpgradeChoiceRequested`, `UnitUpgradeOfferRequested`, `UnitUpgradeRerollRequested`, and `UnitUpgradeMenuClosed` are UI request events handled by `UpgradesManager`.
+- `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, and `EvoHintUI` read offer and roster state for display only; they do not write roster progression or upgrade state.
 
 Current limitation:
 - Multi-threshold catch-up is not implemented. After an upgrade is selected, refreshed progression may evaluate the next threshold, but the system still resolves one pending upgrade selection at a time.
@@ -70,6 +76,7 @@ Current limitation:
 - Do not move runtime stat math, weapon composition, or projectile modifier composition into `UnitStateManager`; extend `TowerEntity.CompileFinalStats()` or side-effect-free `TowerEntity` stat helpers instead.
 - Do not inspect `UpgradeSO` effect contents in `UnitStateManager`; resolve active level references from `MultiUpgradeSO` and pass those `UpgradeSO` leaves to `TowerEntity` helpers when a cached single-stat preview is needed.
 - Do not store upgrade offer pools or offer counts on `OwnedUnitState`; shared offer generation currently belongs to `UpgradesManager`.
+- Do not store focused-upgrade UI state, evolution hint state, reroll UI state, or stat comparison data on `OwnedUnitState`; those are transient UI concerns.
 - Do not put targeting, cooldowns, attack behaviour selection, vision, projectile logic, raycasts, mouse input, or placement validation in `UnitStateManager`.
 - Keep roster state per-unit. XP, upgrades, pending status, and runtime instance references must not leak between `OwnedUnitState` entries.
 - Keep scripts in the global namespace unless the whole project is intentionally migrated.
@@ -83,4 +90,6 @@ Current limitation:
 - `UnitDeploymentCostCompiled` is raised when cost cache changes.
 - Selecting a multi-upgrade while deployed updates only that unit's active runtime tower.
 - Selecting an evolution while deployed updates only that unit's active runtime tower and prevents later evolution selections for that unit.
+- Closing and reopening the upgrade UI preserves the pending offer.
+- Rerolling an upgrade offer does not clear pending state or advance the unit level.
 - Duplicate or empty `unitId` entries report configuration errors.

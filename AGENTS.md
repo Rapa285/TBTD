@@ -181,21 +181,43 @@ Do not add another runtime upgrade/effect pipeline. Extend `UpgradeSO` for tower
 Upgrade selection is event-bus driven.
 
 - `UnitProgression` raises `UnitUpgradeThresholdReached` when runtime XP reaches the current threshold.
-- `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds an offer from its shared `MultiUpgradeSO` `upgradePool` plus eligible entries in its `EvolutionSO` `evolutionPool`.
+- `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds a stored pending offer from its shared `MultiUpgradeSO` `upgradePool` plus eligible entries in its `EvolutionSO` `evolutionPool`.
 - `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
 - `UpgradesManager` validates the pending offer, calls `UnitStateManager.RecordSelectedUpgrade`, and raises `UnitUpgradeSelected`.
 - `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances unit level, advances the selected multi-upgrade line or records the selected evolution, applies the resolved `UpgradeSO` leaf immediately to the deployed tower if present, and refreshes runtime progression.
-- The UI hides only after `UnitUpgradeSelected` confirms the active unit's choice.
+- `UnitUIUpgrade` can request a stored pending offer later through `UnitUpgradeOfferRequested`.
+- `UpgradeSelectionUI` can close a menu without selecting through `UnitUpgradeMenuClosed`.
+- `UpgradeSelectionUI` can request a reroll through `UnitUpgradeRerollRequested`; `UpgradesManager` spends the current reroll cost when `CurrencyManager` is present, replaces the stored pending offer with a different generated offer when possible, and raises `UnitUpgradeChoicesOffered` again.
+- The UI hides only after `UnitUpgradeSelected` confirms the active unit's choice and no chained pending offer remains.
 
 Current offer rules:
 
 - `UpgradesManager.upgradePool` is a shared list of `MultiUpgradeSO` lines across all units.
 - `UpgradesManager.evolutionPool` is a shared list of `EvolutionSO` assets across all units.
+- `UpgradesManager.EvolutionPool` exposes a read-only view for UI hinting; it must not be mutated by UI.
+- `UpgradesManager.CurrentRerollCost` is shared across units and increases by `rerollCostIncrement` after each successful reroll.
 - Null multi-upgrades, duplicate asset references, invalid next-level assets, and maxed multi-upgrades are filtered out.
 - Already-selected non-max multi-upgrades can be offered again and resolve to their next level.
 - Null evolutions, duplicate evolution references, invalid resolved upgrades, unmet prerequisites, and all evolutions for already-evolved units are filtered out.
 - Offers contain up to `upgradeChoiceCount` unique random choices from the combined multi-upgrade/evolution candidate list.
+- Rerolls are allowed only when the current candidate pool can produce an alternate offer; they do not record a selection.
 - If no valid choices remain, a null selection is recorded so level progression can continue.
+
+## Upgrade Selection UI
+
+Upgrade selection presentation is UI-only and does not own upgrade state.
+
+- `UpgradeChoiceItem` displays the resolved `UpgradeSO` name, description, and icon for one `UnitUpgradeOfferChoice`.
+- `UpgradeChoiceItem` notifies `UpgradeSelectionUI` on click for selection and on pointer hover/UI focus for details.
+- `UpgradeSelectionUI` owns the active displayed offer, optional close/reroll controls, reroll affordability state, and the optional `UpgradeInfoDetailsUI` details panel.
+- `UpgradeInfoDetailsUI` shows the focused upgrade title, forwards stat display to `UpgradeStatInfoUI`, and forwards evolution/multi-upgrade context to `EvoHintUI`.
+- `UpgradeStatInfoUI` displays stat effects line by line. For non-first-level multi-upgrade choices, it compares the current level leaf to the offered next level as `current >>> next` where a comparable stat effect exists.
+- `GenericIconDisplay` shows one `UpgradeSO` icon or `Sprite` and toggles its configured `root` when no icon is available.
+- `UpgradeIconLevelUI` shows one `MultiUpgradeSO` icon plus current level text. Normal display uses `LVL X`; requirement display uses `LVL X/Y`.
+- `EvoHintUI` has two modes. For a focused `MultiUpgradeSO`, it shows the focused upgrade in the middle, hides `targetEvo`, and shows up to two closest related evolutions ranked from `UpgradesManager.EvolutionPool`. For a focused `EvolutionSO`, it clears the focused upgrade, shows `targetEvo`, and uses the two related-upgrade slots for that evolution's prerequisites.
+- `EvoHintUI` hides all hint slots for null input or when the active unit already has a selected evolution.
+
+Do not move offer generation, upgrade validation, roster state, stat composition, or runtime weapon composition into the upgrade UI scripts.
 
 ## Progression
 
@@ -307,6 +329,15 @@ Targets that should take damage should have:
 - A collider that enters the vision trigger or projectile trigger.
 - A layer included by the relevant vision/projectile layer masks.
 - `IAttackContextDamageable`, `IDamageable`, or a `TakeDamage(float)` method.
+
+Upgrade selection UI additionally expects:
+
+- One `UpgradeSelectionUI` with `canvasGroup`, `choicesRoot`, `choiceItemPrefab`, and optional close/reroll controls assigned.
+- `UpgradeChoiceItem` prefabs should assign their `Button`, icon `Image`, name TMP text, and description TMP text.
+- `UpgradeInfoDetailsUI` should be assigned under the selection UI when focused-choice details are desired.
+- `UpgradeInfoDetailsUI` can reference a TMP title, `UpgradeStatInfoUI`, and `EvoHintUI`.
+- `EvoHintUI` should wire `focusedUpgrade`, `targetEvo`, and both related evolution slots. Each side slot can use a `GenericIconDisplay` for the related evolution icon and an `UpgradeIconLevelUI` for the related prerequisite upgrade.
+- `GenericIconDisplay.root` and `UpgradeIconLevelUI.root` should point at the UI object that should hide when the display has no data.
 
 ## Coding Guidelines For Future Agents
 
