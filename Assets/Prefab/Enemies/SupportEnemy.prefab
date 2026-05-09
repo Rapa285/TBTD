@@ -9,6 +9,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: enemyData
+      value: 
+      objectReference: {fileID: 11400000, guid: 3835ce203ca58c24fa92f255e0b8c8dd, type: 2}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: stats.damage
       value: 6
       objectReference: {fileID: 0}
@@ -90,7 +94,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AuraSpeedBuffComponent
   auraRadius: 3
-  speedMultiplier: 1.5
   enemyLayer:
     serializedVersion: 2
     m_Bits: 64
+  speedMultiplier: 1.5
+  buffDuration: 2
+  buffCooldown: 4

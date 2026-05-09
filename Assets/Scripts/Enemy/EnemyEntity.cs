@@ -14,6 +14,7 @@ public class EnemyEntity : MonoBehaviour
 {
     [Header("Stats")]
     public EnemyStats stats = new EnemyStats { health = 100f, damage = 10f, movementSpeed = 3f, initialShield = 0f };
+    public EnemyDataSO enemyData;
     [SerializeField, Min(0f)] private float experienceReward = 1f;
 
     [Header("Targeting")]
@@ -99,6 +100,13 @@ public class EnemyEntity : MonoBehaviour
             Debug.Log($"{gameObject.name} reached the base and is dealing {stats.damage} damage.");
             CombatDamageUtility.TryApplyDamage(baseTarget, stats.damage);
         }
+
+        Debug.Log($"{gameObject.name} reached the base and is dealing {stats.damage} damage.");
+
+        GeneralEventBus<BaseDamagedEvent>.Publish(new BaseDamagedEvent
+        {
+            DamageAmount = stats.damage
+        });
         
         Destroy(gameObject);
     }
