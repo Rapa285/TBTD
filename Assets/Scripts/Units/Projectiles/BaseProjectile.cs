@@ -105,7 +105,7 @@ public abstract class BaseProjectile : MonoBehaviour
         }
 
         Transform target = ColliderTargetUtility.GetTargetTransform(other);
-        if (IsIgnoredTarget(target) || !IsInHitLayers(target.gameObject))
+        if (!CanHitTarget(target))
         {
             return;
         }
@@ -195,10 +195,7 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected virtual void OnHit(Collider other, Transform target)
     {
-        AttackHitContext context = CreateHitContext(other, target, damage);
-        TryApplyDamage(target, damage, context);
-        // Projectile modifiers run after damage, using the context captured when the shot was fired.
-        DispatchProjectileHitModifiers(other, target, damage);
+        ApplyProjectileHit(other, target, damage);
 
         if (destroyOnHit)
         {
@@ -233,6 +230,37 @@ public abstract class BaseProjectile : MonoBehaviour
         return CombatDamageUtility.TryApplyDamage(target, damageAmount, context);
     }
 
+    protected bool CanHitTarget(Transform target)
+    {
+        return target != null && !IsIgnoredTarget(target) && IsInHitLayers(target.gameObject);
+    }
+
+    protected bool ApplyProjectileHit(Collider hitCollider, Transform target, float damageAmount)
+    {
+        bool hasHitPosition = hitCollider != null;
+        Vector3 hitPosition = hasHitPosition ? hitCollider.ClosestPoint(transform.position) : Vector3.zero;
+        return ApplyProjectileHit(hitCollider, target, damageAmount, hitPosition, hasHitPosition);
+    }
+
+    protected bool ApplyProjectileHit(
+        Collider hitCollider,
+        Transform target,
+        float damageAmount,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        if (!CanHitTarget(target))
+        {
+            return false;
+        }
+
+        AttackHitContext context = CreateHitContext(hitCollider, target, damageAmount, hitPosition, hasHitPosition);
+        bool damageApplied = TryApplyDamage(target, damageAmount, context);
+        // Projectile modifiers run after damage, using the context captured when the shot was fired.
+        DispatchProjectileHitModifiers(hitCollider, target, damageAmount, hitPosition, hasHitPosition);
+        return damageApplied;
+    }
+
     private void DispatchProjectileInitializedModifiers()
     {
         DispatchProjectileModifiers(CreateProjectileModifierContext(null, null, Damage, 0f), ProjectileModifierPhase.Initialized);
@@ -245,7 +273,21 @@ public abstract class BaseProjectile : MonoBehaviour
 
     private void DispatchProjectileHitModifiers(Collider hitCollider, Transform target, float damageAmount)
     {
-        DispatchProjectileModifiers(CreateProjectileModifierContext(hitCollider, target, damageAmount, 0f), ProjectileModifierPhase.Hit);
+        bool hasHitPosition = hitCollider != null;
+        Vector3 hitPosition = hasHitPosition ? hitCollider.ClosestPoint(transform.position) : Vector3.zero;
+        DispatchProjectileHitModifiers(hitCollider, target, damageAmount, hitPosition, hasHitPosition);
+    }
+
+    private void DispatchProjectileHitModifiers(
+        Collider hitCollider,
+        Transform target,
+        float damageAmount,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        DispatchProjectileModifiers(
+            CreateProjectileModifierContext(hitCollider, target, damageAmount, 0f, hitPosition, hasHitPosition),
+            ProjectileModifierPhase.Hit);
     }
 
     private void DispatchProjectileExpiredModifiers()
@@ -304,7 +346,16 @@ public abstract class BaseProjectile : MonoBehaviour
     {
         bool hasHitPosition = hitCollider != null;
         Vector3 hitPosition = hasHitPosition ? hitCollider.ClosestPoint(transform.position) : Vector3.zero;
+        return CreateHitContext(hitCollider, target, damageAmount, hitPosition, hasHitPosition);
+    }
 
+    private AttackHitContext CreateHitContext(
+        Collider hitCollider,
+        Transform target,
+        float damageAmount,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
         return new AttackHitContext(
             ownerTower,
             ownerRoot,
@@ -325,7 +376,17 @@ public abstract class BaseProjectile : MonoBehaviour
     {
         bool hasHitPosition = hitCollider != null;
         Vector3 hitPosition = hasHitPosition ? hitCollider.ClosestPoint(transform.position) : Vector3.zero;
+        return CreateProjectileModifierContext(hitCollider, target, damageAmount, deltaTime, hitPosition, hasHitPosition);
+    }
 
+    private ProjectileModifierContext CreateProjectileModifierContext(
+        Collider hitCollider,
+        Transform target,
+        float damageAmount,
+        float deltaTime,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
         return new ProjectileModifierContext(
             this,
             ownerTower,
@@ -378,7 +439,7 @@ public abstract class BaseProjectile : MonoBehaviour
         }
     }
 
-    private bool IsInHitLayers(GameObject target)
+    protected bool IsInHitLayers(GameObject target)
     {
         return target != null && (hitLayers.value & (1 << target.layer)) != 0;
     }

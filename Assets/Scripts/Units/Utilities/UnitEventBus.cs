@@ -59,17 +59,73 @@ public struct UnitUpgradeThresholdReachedEvent
 }
 
 /// <summary>
+/// One generated upgrade offer choice resolved from a multi-upgrade line to its next active level.
+/// </summary>
+public readonly struct UnitUpgradeOfferChoice
+{
+    public MultiUpgradeSO MultiUpgrade { get; }
+    public EvolutionSO Evolution { get; }
+    public UpgradeSO ResolvedUpgrade { get; }
+    public int CurrentLevel { get; }
+    public int NextLevel { get; }
+    public int MaxLevel { get; }
+    public bool IsEvolution => Evolution != null;
+    public bool IsMultiUpgrade => MultiUpgrade != null;
+    public bool IsValid => ResolvedUpgrade != null
+        && ((MultiUpgrade != null && NextLevel > CurrentLevel && NextLevel <= MaxLevel)
+            || Evolution != null);
+
+    public UnitUpgradeOfferChoice(
+        MultiUpgradeSO multiUpgrade,
+        UpgradeSO resolvedUpgrade,
+        int currentLevel,
+        int nextLevel,
+        int maxLevel)
+    {
+        MultiUpgrade = multiUpgrade;
+        Evolution = null;
+        ResolvedUpgrade = resolvedUpgrade;
+        CurrentLevel = Mathf.Max(0, currentLevel);
+        NextLevel = Mathf.Max(0, nextLevel);
+        MaxLevel = Mathf.Max(0, maxLevel);
+    }
+
+    public UnitUpgradeOfferChoice(EvolutionSO evolution)
+    {
+        MultiUpgrade = null;
+        Evolution = evolution;
+        ResolvedUpgrade = evolution != null ? evolution.ResolvedUpgrade : null;
+        CurrentLevel = 0;
+        NextLevel = evolution != null && evolution.ResolvedUpgrade != null ? 1 : 0;
+        MaxLevel = evolution != null && evolution.ResolvedUpgrade != null ? 1 : 0;
+    }
+}
+
+/// <summary>
 /// Raised when upgrade choices are available for a unit.
 /// </summary>
 public struct UnitUpgradeChoicesOfferedEvent
 {
     public string UnitId { get; }
-    public UpgradeSO[] Choices { get; }
+    public UnitUpgradeOfferChoice[] Choices { get; }
 
-    public UnitUpgradeChoicesOfferedEvent(string unitId, UpgradeSO[] choices)
+    public UnitUpgradeChoicesOfferedEvent(string unitId, UnitUpgradeOfferChoice[] choices)
     {
         UnitId = unitId;
         Choices = choices;
+    }
+}
+
+/// <summary>
+/// Raised by roster UI when the player wants to view one unit's stored pending upgrade offer.
+/// </summary>
+public readonly struct UnitUpgradeOfferRequestedEvent
+{
+    public string UnitId { get; }
+
+    public UnitUpgradeOfferRequestedEvent(string unitId)
+    {
+        UnitId = unitId;
     }
 }
 
@@ -89,12 +145,41 @@ public struct UnitUpgradeChoiceRequestedEvent
 }
 
 /// <summary>
+/// Raised by upgrade UI when the player requests a reroll for the active pending offer.
+/// </summary>
+public readonly struct UnitUpgradeRerollRequestedEvent
+{
+    public string UnitId { get; }
+
+    public UnitUpgradeRerollRequestedEvent(string unitId)
+    {
+        UnitId = unitId;
+    }
+}
+
+/// <summary>
+/// Raised by upgrade UI when the player closes the menu without selecting an upgrade.
+/// </summary>
+public readonly struct UnitUpgradeMenuClosedEvent
+{
+    public string UnitId { get; }
+
+    public UnitUpgradeMenuClosedEvent(string unitId)
+    {
+        UnitId = unitId;
+    }
+}
+
+/// <summary>
 /// Raised after a pending upgrade choice has been recorded on the roster.
 /// </summary>
 public struct UnitUpgradeSelectedEvent
 {
     public string UnitId { get; }
+    public MultiUpgradeSO SelectedMultiUpgrade { get; }
+    public EvolutionSO SelectedEvolution { get; }
     public UpgradeSO SelectedUpgrade { get; }
+    public int SelectedUpgradeLevel { get; }
     public int NewLevel { get; }
     public float CurrentExperience { get; }
     public bool HasNextExperienceThreshold { get; }
@@ -102,14 +187,20 @@ public struct UnitUpgradeSelectedEvent
 
     public UnitUpgradeSelectedEvent(
         string unitId,
+        MultiUpgradeSO selectedMultiUpgrade,
         UpgradeSO selectedUpgrade,
+        int selectedUpgradeLevel,
         int newLevel,
         float currentExperience,
         bool hasNextExperienceThreshold,
-        float nextExperienceThreshold)
+        float nextExperienceThreshold,
+        EvolutionSO selectedEvolution = null)
     {
         UnitId = unitId;
+        SelectedMultiUpgrade = selectedMultiUpgrade;
+        SelectedEvolution = selectedEvolution;
         SelectedUpgrade = selectedUpgrade;
+        SelectedUpgradeLevel = Mathf.Max(0, selectedUpgradeLevel);
         NewLevel = newLevel;
         CurrentExperience = currentExperience;
         HasNextExperienceThreshold = hasNextExperienceThreshold;
@@ -282,7 +373,10 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitExperienceChangedEvent> UnitExperienceChanged;
     public event Action<UnitUpgradeThresholdReachedEvent> UnitUpgradeThresholdReached;
     public event Action<UnitUpgradeChoicesOfferedEvent> UnitUpgradeChoicesOffered;
+    public event Action<UnitUpgradeOfferRequestedEvent> UnitUpgradeOfferRequested;
     public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
+    public event Action<UnitUpgradeRerollRequestedEvent> UnitUpgradeRerollRequested;
+    public event Action<UnitUpgradeMenuClosedEvent> UnitUpgradeMenuClosed;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
     public event Action<UnitCooldownEndedEvent> UnitCooldownEnded;
@@ -336,6 +430,14 @@ public class UnitEventBus : MonoBehaviour
     }
 
     /// <summary>
+    /// Publishes that UI wants to view one stored pending offer.
+    /// </summary>
+    public void RaiseUnitUpgradeOfferRequested(UnitUpgradeOfferRequestedEvent eventData)
+    {
+        UnitUpgradeOfferRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
     /// Publishes that UI requested one pending upgrade choice.
     /// </summary>
     public void RaiseUnitUpgradeChoiceRequested(UnitUpgradeChoiceRequestedEvent eventData)
@@ -344,7 +446,23 @@ public class UnitEventBus : MonoBehaviour
     }
 
     /// <summary>
-    /// Publishes the selected upgrade and resulting progression state.
+    /// Publishes that UI requested a reroll for one stored pending offer.
+    /// </summary>
+    public void RaiseUnitUpgradeRerollRequested(UnitUpgradeRerollRequestedEvent eventData)
+    {
+        UnitUpgradeRerollRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that UI closed the active upgrade menu without selecting.
+    /// </summary>
+    public void RaiseUnitUpgradeMenuClosed(UnitUpgradeMenuClosedEvent eventData)
+    {
+        UnitUpgradeMenuClosed?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes the selected multi-upgrade line, resolved upgrade level, and resulting progression state.
     /// </summary>
     public void RaiseUnitUpgradeSelected(UnitUpgradeSelectedEvent eventData)
     {

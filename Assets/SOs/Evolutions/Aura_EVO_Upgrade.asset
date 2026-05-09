@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
+  m_Name: Aura_EVO_Upgrade
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
+  upgradeName: Aura EVO
+  description: Evolves the pistol into a local damage field.
+  icon: {fileID: 21300000, guid: acfe05f35986e2c4894462784af98009, type: 3}
+  weaponUpgradeType: 1
+  weaponBehaviourPrefab: {fileID: 8744715735098940307, guid: a02dd6c2197f5a940902dc5af5e9aada, type: 3}
+  projectileModifierPrefabs: []
+  statEffects:
+  - stat: 0
+    type: 0
+    value: 0.55
+  - stat: 1
+    type: 0
+    value: 0.55
+  - stat: 2
+    type: 0
+    value: 0.55
+  - stat: 5
+    type: 0
+    value: 1.8
+  - stat: 3
+    type: 0
+    value: 0.5
+  - stat: 6
+    type: 0
+    value: 1.5

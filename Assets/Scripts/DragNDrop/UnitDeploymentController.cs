@@ -20,6 +20,7 @@ public class UnitDeploymentController : MonoBehaviour
     private UnitStateManager currentStateManager;
     private string currentUnitId;
     private GameObject currentUnitPrefab;
+    private PlayerStateController playerStateController;
     private int currentDeploymentCost;
     private bool hasCurrentPlacement;
     private bool warnedMissingCurrencyManager;
@@ -126,7 +127,7 @@ public class UnitDeploymentController : MonoBehaviour
 
     private bool BeginDeployment(GameObject unitPrefab, UnitStateManager stateManager, string unitId)
     {
-        if (unitPrefab == null || IsDragging || Mouse.current == null)
+        if (unitPrefab == null || IsDragging || Mouse.current == null || !CanStartDeploymentPreview())
         {
             return false;
         }
@@ -376,6 +377,16 @@ public class UnitDeploymentController : MonoBehaviour
         }
 
         return false;
+    }
+
+    private bool CanStartDeploymentPreview()
+    {
+        if (playerStateController == null)
+        {
+            ServiceLocator.TryResolve(out playerStateController);
+        }
+
+        return playerStateController == null || playerStateController.CanStartDeploymentPreview();
     }
 
     private void RegisterWithServiceLocator()

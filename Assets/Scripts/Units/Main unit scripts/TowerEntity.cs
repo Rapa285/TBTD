@@ -41,6 +41,9 @@ public partial class TowerEntity : MonoBehaviour
     [SerializeField, Min(0.01f), Tooltip("Seconds between debug target scans when active polling is enabled.")]
     private float enemyPollPeriod = 0.5f;
 
+    [SerializeField, Min(0.01f), Tooltip("Seconds between priority target refreshes while targets are tracked.")]
+    private float targetRefreshPeriod = 0.25f;
+
     [SerializeField, Tooltip("Base stat values before upgrade modifiers are applied.")]
     private List<EntityStat> baseStats = new List<EntityStat>
     {
@@ -73,10 +76,18 @@ public partial class TowerEntity : MonoBehaviour
     private float nextAttackTime;
     private float activeAfterTime;
     private float nextEnemyPollTime;
+    private float nextTargetRefreshTime;
     private bool deploymentTimersInitialized;
     private bool deploymentBroadcasted;
+    private bool targetSelectionDirty;
+    private bool hadValidTargets;
+    private bool isSelected;
+    private bool isDeploymentPreviewRangeVisible;
+    private UnitVision subscribedVision;
 
     public bool Deployed => deployed;
+    public bool IsSelected => isSelected;
+    public UnitVision Vision => vision;
     public AttackBehaviour ActiveAttackBehaviour => GetActiveAttackBehaviour();
     public IReadOnlyList<AttackBehaviour> ActiveAttackBehaviours => activeAttackBehaviours;
     public IReadOnlyList<ProjectileModifierBehaviour> ActiveProjectileModifiers => activeProjectileModifiers;
@@ -86,6 +97,8 @@ public partial class TowerEntity : MonoBehaviour
     private TowerDeploymentEvent onDeploy = new TowerDeploymentEvent();
 
     public TowerDeploymentEvent OnDeploy => onDeploy;
+    public event Action Selected;
+    public event Action Deselected;
 
     private void Awake()
     {
@@ -103,6 +116,8 @@ public partial class TowerEntity : MonoBehaviour
         ResetAmmoStateForPreview();
         ReleaseResolvedUnitIdForPreview();
         ResolveTowerCoreState();
+        SetSelected(false);
+        SetDeploymentPreviewRangeVisible(true);
     }
 
     /// <summary>
@@ -111,7 +126,28 @@ public partial class TowerEntity : MonoBehaviour
     public void Deploy()
     {
         deployed = true;
+        SetDeploymentPreviewRangeVisible(false);
         RunDeploymentActivation();
+    }
+
+    public void SetSelected(bool selected)
+    {
+        if (isSelected == selected)
+        {
+            return;
+        }
+
+        isSelected = selected;
+        RefreshRangeVisualization();
+
+        if (isSelected)
+        {
+            Selected?.Invoke();
+        }
+        else
+        {
+            Deselected?.Invoke();
+        }
     }
 
     private void BroadcastDeployment()
@@ -151,11 +187,7 @@ public partial class TowerEntity : MonoBehaviour
         }
 
         PollEnemiesForDebugIfNeeded();
-
-        if (currentTarget == null || !vision.Contains(currentTarget))
-        {
-            currentTarget = vision.GetFirstValidTarget();
-        }
+        UpdateTargetSelectionIfNeeded();
 
         if (currentTarget == null || Time.time < nextAttackTime)
         {
@@ -235,6 +267,30 @@ public partial class TowerEntity : MonoBehaviour
         RefreshTowerStateForCurrentMode();
     }
 
+    /// <summary>
+    /// Replaces one resolved upgrade asset with another and refreshes runtime state once.
+    /// </summary>
+    public void ReplaceUpgrade(UpgradeSO oldUpgrade, UpgradeSO newUpgrade)
+    {
+        bool changed = false;
+
+        if (oldUpgrade != null && oldUpgrade != newUpgrade)
+        {
+            changed = upgrades.Remove(oldUpgrade) || changed;
+        }
+
+        if (newUpgrade != null && !upgrades.Contains(newUpgrade))
+        {
+            upgrades.Add(newUpgrade);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            RefreshTowerStateForCurrentMode();
+        }
+    }
+
     private void CacheComponentReferences()
     {
         if (vision == null)
@@ -266,6 +322,8 @@ public partial class TowerEntity : MonoBehaviour
         {
             onDeploy = new TowerDeploymentEvent();
         }
+
+        SubscribeToVisionEventsIfNeeded();
     }
 
     private void RefreshTowerStateForCurrentMode()
@@ -317,6 +375,30 @@ public partial class TowerEntity : MonoBehaviour
     {
         CacheComponentReferences();
         CompileFinalStats();
+    }
+
+    private void SetDeploymentPreviewRangeVisible(bool visible)
+    {
+        if (isDeploymentPreviewRangeVisible == visible)
+        {
+            return;
+        }
+
+        isDeploymentPreviewRangeVisible = visible;
+        RefreshRangeVisualization();
+    }
+
+    private void RefreshRangeVisualization()
+    {
+        if (vision == null)
+        {
+            CacheComponentReferences();
+        }
+
+        if (vision != null)
+        {
+            vision.SetVisualizationVisible(isSelected || isDeploymentPreviewRangeVisible);
+        }
     }
 
     private void ResolvePrimaryRuntimeFeatures(bool isInitialActivation)

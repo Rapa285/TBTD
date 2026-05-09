@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Displays one offered upgrade and reports choice clicks to the owning selection UI.
 /// </summary>
-public class UpgradeChoiceItem : MonoBehaviour
+public class UpgradeChoiceItem : MonoBehaviour, IPointerEnterHandler, ISelectHandler
 {
     [SerializeField, Tooltip("Clickable control used to select this upgrade.")]
     private Button button;
@@ -20,10 +21,13 @@ public class UpgradeChoiceItem : MonoBehaviour
     private TMP_Text descriptionText;
 
     private UpgradeSelectionUI owner;
-    private UpgradeSO upgrade;
+    private UnitUpgradeOfferChoice choice;
     private int choiceIndex = -1;
 
-    public UpgradeSO Upgrade => upgrade;
+    public UnitUpgradeOfferChoice Choice => choice;
+    public MultiUpgradeSO MultiUpgrade => choice.MultiUpgrade;
+    public EvolutionSO Evolution => choice.Evolution;
+    public UpgradeSO Upgrade => choice.ResolvedUpgrade;
     public int ChoiceIndex => choiceIndex;
 
     private void Awake()
@@ -52,9 +56,9 @@ public class UpgradeChoiceItem : MonoBehaviour
     /// <summary>
     /// Binds this item to one offered upgrade and its UI choice index.
     /// </summary>
-    public void Bind(UpgradeSO upgrade, int choiceIndex, UpgradeSelectionUI owner)
+    public void Bind(UnitUpgradeOfferChoice choice, int choiceIndex, UpgradeSelectionUI owner)
     {
-        this.upgrade = upgrade;
+        this.choice = choice;
         this.choiceIndex = choiceIndex;
         this.owner = owner;
 
@@ -62,8 +66,18 @@ public class UpgradeChoiceItem : MonoBehaviour
 
         if (button != null)
         {
-            button.interactable = upgrade != null && owner != null && choiceIndex >= 0;
+            button.interactable = choice.IsValid && owner != null && choiceIndex >= 0;
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        NotifyFocused();
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        NotifyFocused();
     }
 
     private void HandleButtonClicked()
@@ -76,8 +90,19 @@ public class UpgradeChoiceItem : MonoBehaviour
         owner.HandleChoiceSelected(choiceIndex);
     }
 
+    private void NotifyFocused()
+    {
+        if (owner == null || choiceIndex < 0)
+        {
+            return;
+        }
+
+        owner.HandleChoiceFocused(choiceIndex);
+    }
+
     private void RefreshDisplay()
     {
+        UpgradeSO upgrade = Upgrade;
         if (upgradeNameText != null)
         {
             upgradeNameText.text = GetDisplayName();
@@ -98,6 +123,7 @@ public class UpgradeChoiceItem : MonoBehaviour
 
     private string GetDisplayName()
     {
+        UpgradeSO upgrade = Upgrade;
         if (upgrade == null)
         {
             return string.Empty;

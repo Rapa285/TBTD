@@ -34,6 +34,9 @@ public abstract class AttackBehaviour : MonoBehaviour
     [SerializeField, Tooltip("World-space offset added to the final aim point after the target position or weapon-specific aiming calculation is chosen. Use (0, 1, 0) to aim one Unity unit above the target.")]
     private Vector3 aimModifierVector = Vector3.zero;
 
+    [SerializeField, Tooltip("Optional MonoBehaviour that implements AttackFXComponent. Concrete attacks decide when to play it.")]
+    private MonoBehaviour attackFX;
+
     private IReadOnlyList<ProjectileModifierBehaviour> activeHitModifiers;
     private IReadOnlyList<ProjectileModifierBehaviour> projectileModifiers;
     private TowerEntity ownerTower;
@@ -66,6 +69,8 @@ public abstract class AttackBehaviour : MonoBehaviour
     }
 
     public bool UsesFiniteAmmo => consumesTowerAmmo && !infiniteAmmo;
+    public virtual bool RequiresCooldownWhenTargetsFirstAvailable => false;
+    public AttackFXComponent AttackFX => attackFX as AttackFXComponent;
 
     protected TowerEntity OwnerTower => ownerTower;
     protected Transform OwnerRoot => ownerRoot != null ? ownerRoot : transform;

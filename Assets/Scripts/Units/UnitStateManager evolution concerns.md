@@ -3,9 +3,9 @@
 ## Current Role
 `UnitStateManager` represents the player's full owned-unit roster. It is a roster state manager, not a replacement for tower runtime behavior.
 
-Each owned unit lives inside a nested serializable `OwnedUnitState` record keyed by a stable `unitId`. The record stores identity, progression config, XP, applied upgrades, pending upgrade state, cached deployment cost, and transient references to that unit's deployed runtime tower/root.
+Each owned unit lives inside a nested serializable `OwnedUnitState` record keyed by a stable `unitId`. The record stores identity, progression config, XP, applied multi-upgrade levels, pending upgrade state, cached deployment cost, and transient references to that unit's deployed runtime tower/root.
 
-The manager applies persistent per-unit state to `TowerEntity` through `ApplyStateTo` and `TowerEntity.AddUpgrade`. Stat compilation, weapon override/augment composition, projectile modifier composition, targeting, and attack execution stay inside the tower/combat system. Cached deployment cost is calculated through a side-effect-free `TowerEntity` stat helper rather than by duplicating stat math here.
+The manager applies persistent per-unit state to `TowerEntity` through `ApplyStateTo` by resolving active `MultiUpgradeSO` levels into normal `UpgradeSO` leaves and passing those leaves to `TowerEntity.AddUpgrade`. Stat compilation, weapon override/augment composition, projectile modifier composition, targeting, and attack execution stay inside the tower/combat system. Cached deployment cost is calculated through a side-effect-free `TowerEntity` stat helper rather than by duplicating stat math here.
 
 ## Design Smells To Watch
 - God object / manager bloat: avoid letting this class become responsible for every unit-related feature.
@@ -16,7 +16,7 @@ The manager applies persistent per-unit state to `TowerEntity` through `ApplySta
 - Deployment coupling: do not move raycasts, placement validity, preview materials, or mouse input into this class.
 - Upgrade-offer bloat: `UpgradesManager` currently owns simple random offers. Complex rarity/prerequisite/synergy rules should be extracted later.
 - Index-only unit lookup: use stable `unitId` values instead of list indexes for UI and deployment calls.
-- Index-only upgrade selection: `UpgradesManager` supports both UI-friendly choice indexes and direct `UpgradeSO` selection.
+- Index-only upgrade selection: `UpgradesManager` supports both UI-friendly choice indexes and direct `MultiUpgradeSO` selection.
 - Hidden event chains: events should notify listeners; they should not hide major state transitions behind implicit cascades.
 
 ## Hard Boundaries

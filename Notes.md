@@ -6,4 +6,10 @@
 - `CurrencyManager` tracks current player currency for deployment only. Enemy gold rewards, recall refunds, and currency persistence are not implemented yet.
 - `UnitUIDeployment` separates input gating from display state with `DeploymentUIState.CannotDeploy`, `CanDeploy`, and `InDeployPreview`.
 - `UnitUICost` displays cached cost for undeployed roster units; `UICurrencyDisplayer` displays current currency.
-- Future visual work: deployment preview pooling, unit vision circle/range synchronization, tube-like vision volume for map height differences, and showing unit vision only while hovered.
+- Upgrade offers are stored by `UpgradesManager` and shown through `UpgradeSelectionUI`; closing the menu does not clear the pending roster upgrade.
+- Upgrade rerolls use shared `UpgradesManager` reroll cost, spend currency only on successful replacement, and keep selection authoritative in `UpgradesManager`.
+- `UpgradeInfoDetailsUI` handles focused-choice details: title, stat lines/comparisons, and `EvoHintUI` evolution-prerequisite hints.
+- `EvoHintUI` uses `UpgradesManager.EvolutionPool` for related evolution hints and must not maintain a separate evolution source.
+- Tower selection is centralized in `PlayerStateController` through direct physics raycasts. Configure selectable tower colliders on `TowerUnit`, vision triggers on `TowerVision`, and assign each `TowerSelectionTarget.SelectionCollider` exactly.
+- `TowerEntity` owns selected state and range visualization. `UnitVision` range is visible while a tower is selected or in deployment preview.
+- Future visual work: deployment preview pooling, richer selected-tower visuals through `TowerSelectionTarget` UnityEvents, and tube-like vision volume support for map height differences.

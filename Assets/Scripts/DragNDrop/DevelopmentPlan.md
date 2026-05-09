@@ -8,9 +8,16 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
 ## Public API / Interfaces
 - `TowerEntity`
   - Serialized `deployed = true` with public `bool Deployed`.
+  - Public selected state: `bool IsSelected`, selection events `Selected` / `Deselected`, and `SetSelected(bool)`.
   - `PrepareForDeploymentPreview()` prepares controller-created previews.
   - `Deploy()` activates combat, clears stale targeting, reapplies final vision range, and starts `SetupTime` from the deployment moment.
   - `Update()` exits early while undeployed.
+- `PlayerStateController`
+  - Public selected tower state: `TowerEntity SelectedTower`, `TowerSelectionTarget SelectedSelectionTarget`, and `string SelectedUnitId`.
+  - Uses click actions from `PlayerInput` and direct physics raycasts for tower selection.
+- `TowerSelectionTarget`
+  - Stores the exact assigned selection collider and resolves the selectable `TowerEntity`.
+  - Relays tower selection/deselection through optional UnityEvents; it does not own input or vision visibility.
 - `UnitVision`
   - `ClearTargets()` clears stale vision targets.
 - `UnitDeploymentController`
@@ -36,9 +43,19 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
 - `TowerEntity`
   - `Awake()` remains responsible for reference discovery and stat compilation.
   - `Start()` initializes attack timers only when `deployed == true`.
-  - `PrepareForDeploymentPreview()` sets `deployed = false`, clears `currentTarget`, clears `UnitVision`, and prevents attacks while dragging.
-  - `Deploy()` sets `deployed = true`, clears targeting, applies `VisualRange`, then sets `activeAfterTime = Time.time + SetupTime` and `nextAttackTime = activeAfterTime`.
+  - `PrepareForDeploymentPreview()` sets `deployed = false`, clears `currentTarget`, clears `UnitVision`, clears selected state, enables preview range visibility, and prevents attacks while dragging.
+  - `Deploy()` sets `deployed = true`, disables preview range visibility, clears targeting, applies `VisualRange`, then sets `activeAfterTime = Time.time + SetupTime` and `nextAttackTime = activeAfterTime`.
+  - Runtime range visualization is visible when the tower is selected or in deployment preview; `TowerEntity` is the only owner that calls `UnitVision.SetVisualizationVisible(...)`.
   - Upgrade/stat formulas, attack behavior APIs, weapon override/augment behavior, and projectile modifiers remain owned by the tower/combat system.
+
+- `PlayerStateController` / `TowerSelectionTarget`
+  - Selection input is centralized in `PlayerStateController`; there is no `IPointerDownHandler` tower-selection path.
+  - UI clicks are detected through `EventSystem.RaycastAll` only to block gameplay selection.
+  - World selection uses `Physics.RaycastAll`, sorted by hit distance.
+  - `selectionLayers` should include tower body colliders such as `TowerUnit`.
+  - `selectionPassThroughLayers` should include non-blocking trigger layers such as `TowerVision`.
+  - `selectionBlockingLayers` should include world geometry that should stop click-through selection.
+  - A tower is selectable only when the hit collider exactly matches `TowerSelectionTarget.SelectionCollider`.
 
 - `UnitDeploymentChecker`
   - Uses inspector-assigned masks for `Ground` raycast surfaces and blocking layers such as `Units`.
@@ -90,16 +107,22 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - Invalid placement shows invalid material and cancels on primary release.
   - Right click cancels deployment and destroys the preview.
   - Preview does not attack while dragged.
+  - Preview shows tower range while dragged and hides preview range after successful deployment.
   - `SetupTime` begins after successful deployment, not when the preview is instantiated.
   - Blocking layers reject placement, while trigger colliders such as `UnitVision` do not.
   - Roster unit cost blocks preview before instantiation when cached cost is available and unaffordable.
   - Roster currency is deducted only after valid placement succeeds.
   - Deployable indicator remains visible while that unit is in deployment preview and hides after successful deployment.
   - Cost display hides while a roster unit is deployed.
+  - Clicking UI does not change tower selection.
+  - Clicking `TowerVision` passes through to an underlying `TowerUnit` selection collider.
+  - Blocking geometry in front of a tower prevents click-through selection.
+  - Selecting a deployed tower shows range through `TowerEntity.IsSelected`; selecting another tower hides the previous range.
 
 ## Assumptions
-- Uses Unity's Input System via `UnityEngine.InputSystem.Mouse.current`; `InputSystem_Actions.inputactions` is unchanged.
+- Deployment dragging still uses Unity's Input System via `UnityEngine.InputSystem.Mouse.current`; tower selection uses `PlayerInput` click actions resolved by `PlayerStateController`.
 - Placement is freeform on ground surfaces, not grid-snapped.
 - Footprint is inspector-configured serialized radius/height, not inferred from prefab colliders.
 - Upgrade selection UI is handled by the separate event-bus upgrade UI flow; drag/drop UI only starts deployment.
+- Upgrade offer display, focused-choice details, reroll controls, stat comparison text, and evolution hints belong to `UpgradeSelectionUI` and related visual scripts, not to deployment UI.
 - Deployment economy is limited to roster-managed unit cost. Direct prefab deployment remains free.

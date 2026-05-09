@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
+  m_Name: MachineGun_EVO_Upgrade
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
+  upgradeName: Machine Gun EVO
+  description: Evolves the pistol into a wind-up bullet stream.
+  icon: {fileID: 21300000, guid: bbe499a4802652248ad97b6fe7cb8e3f, type: 3}
+  weaponUpgradeType: 1
+  weaponBehaviourPrefab: {fileID: 4616823010010001003, guid: e689482232f7442fa1c46c1732798199, type: 3}
+  projectileModifierPrefabs: []
+  statEffects:
+  - stat: 1
+    type: 0
+    value: 0.3
+  - stat: 5
+    type: 0
+    value: 1.8
+  - stat: 0
+    type: 0
+    value: 0.55
+  - stat: 3
+    type: 1
+    value: 1
