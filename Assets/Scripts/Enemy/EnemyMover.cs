@@ -7,9 +7,12 @@ public class EnemyMover : MonoBehaviour
 {
     private SplineAnimate splineAnimate;
     private float baseSpeed;
-    private float speedMultiplier = 1f;
+    private float auraBuffMultiplier = 1f;
     private float buffTimer = 0f;
     private bool hasReachedEnd;
+    private System.Collections.Generic.List<float> speedFactors = new System.Collections.Generic.List<float>();
+
+    public float BaseSpeed => baseSpeed;
 
     [HideInInspector] public UnityEvent OnReachEnd;
 
@@ -36,16 +39,35 @@ public class EnemyMover : MonoBehaviour
             buffTimer = duration;
         }
         
-        speedMultiplier = multiplier;
+        auraBuffMultiplier = multiplier;
+        UpdateSpeed();
+    }
+
+    public void AddSpeedFactor(float factor)
+    {
+        speedFactors.Add(factor);
+        UpdateSpeed();
+    }
+
+    public void RemoveSpeedFactor(float factor)
+    {
+        speedFactors.Remove(factor);
         UpdateSpeed();
     }
 
     private void UpdateSpeed()
     {
         if (splineAnimate != null)
-        {
+        { 
             float currentProgress = splineAnimate.NormalizedTime;
-            splineAnimate.MaxSpeed = baseSpeed * speedMultiplier;            
+            float totalMultiplier=auraBuffMultiplier;
+
+            for (int i = 0; i < speedFactors.Count; i++)
+            {
+                totalMultiplier *= speedFactors[i];
+            }
+            
+            splineAnimate.MaxSpeed = baseSpeed * totalMultiplier;            
             splineAnimate.NormalizedTime = currentProgress;
         }
     }
@@ -58,7 +80,7 @@ public class EnemyMover : MonoBehaviour
             buffTimer -= Time.deltaTime;
             if (buffTimer <= 0)
             {
-                speedMultiplier = 1f;
+                auraBuffMultiplier = 1f;
                 UpdateSpeed();
             }
         }
