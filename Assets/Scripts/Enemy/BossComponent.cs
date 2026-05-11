@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class BossSetupComponent : MonoBehaviour
@@ -6,10 +7,9 @@ public class BossSetupComponent : MonoBehaviour
     [SerializeField] private float difficultyMultiplier = 8f;
     [SerializeField] private float sizeMultiplier = 2f;
     [SerializeField, Range(0.1f, 0.9f)] private float permanentSlowPercentage = 0.3f;
-    [SerializeField] private Sprite bossSlowEmblem;
-
-    private void Start()
+    private IEnumerator Start()
     {
+        yield return null;
         MakeItBoss();
     }
 
@@ -30,11 +30,10 @@ public class BossSetupComponent : MonoBehaviour
         var statusManager = GetComponent<StatusEffectManager>();
         if (statusManager != null)
         {
-            SlowEffect permanentSlow = new SlowEffect(permanentSlowPercentage, Mathf.Infinity, bossSlowEmblem);
+            SlowEffect permanentSlow = new SlowEffect(permanentSlowPercentage, Mathf.Infinity);
             statusManager.AddEffect(permanentSlow);
         }
 
-        gameObject.name = "BOSS_" + gameObject.name;
         Debug.Log($"{gameObject.name} has been transformed into a BOSS!");        
     }
 }

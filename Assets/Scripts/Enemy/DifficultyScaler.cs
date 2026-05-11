@@ -5,7 +5,7 @@ public class DifficultyScaler : MonoBehaviour
     [SerializeField] private HealthComponent health;
     [SerializeField] private EnemyMover mover;
 
-    private void Start()
+    private void Awake()
     {
         if (health == null)
         {
