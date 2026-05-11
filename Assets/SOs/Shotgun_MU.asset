@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
   m_Name: Shotgun_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Shortstack
+  description: Trades range and ammo comfort for harder short-range hits and shotgun evolution.
   levelUpgrades:
   - {fileID: 11400000, guid: 1d09326969d6b6944b9e1469477e0c6e, type: 2}
   - {fileID: 11400000, guid: 977029ebd8c67ac47beaf6215025e174, type: 2}

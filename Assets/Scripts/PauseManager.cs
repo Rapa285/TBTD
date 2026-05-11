@@ -4,11 +4,20 @@ public class PauseManager : MonoBehaviour
 {
     public bool isPaused { get; private set; }
 
+    private void OnDisable()
+    {
+        if (isPaused)
+        {
+            TimeService.Instance.ReleasePause(this);
+            isPaused = false;
+        }
+    }
+
     public void PauseGame()
     {
         if (!isPaused)
         {
-            Time.timeScale = 0f;
+            TimeService.Instance.RequestPause(this, true);
             isPaused = true;
         }
     }
@@ -17,7 +26,7 @@ public class PauseManager : MonoBehaviour
     {
         if (isPaused)
         {
-            Time.timeScale = 1f;
+            TimeService.Instance.ReleasePause(this);
             isPaused = false;
         }
     }

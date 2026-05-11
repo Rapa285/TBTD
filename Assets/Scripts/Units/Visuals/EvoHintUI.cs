@@ -15,7 +15,7 @@ public class EvoHintUI : MonoBehaviour
         private GameObject root;
 
         [SerializeField, Tooltip("Icon presenter for the evolution's resolved upgrade.")]
-        private GenericIconDisplay evolutionIcon;
+        private UpgradeIconLevelUI evolutionIcon;
 
         [SerializeField, Tooltip("Level presenter for the other prerequisite multi-upgrade.")]
         private UpgradeIconLevelUI relatedUpgrade;
@@ -24,7 +24,7 @@ public class EvoHintUI : MonoBehaviour
         {
             if (evolutionIcon != null)
             {
-                evolutionIcon.Bind(evolution != null ? evolution.ResolvedUpgrade : null);
+                evolutionIcon.BindEvolution(evolution);
             }
 
             if (relatedUpgrade != null)
@@ -127,7 +127,7 @@ public class EvoHintUI : MonoBehaviour
     private UpgradeIconLevelUI focusedUpgrade;
 
     [SerializeField, Tooltip("Target evolution icon shown when the focused choice is an evolution.")]
-    private GenericIconDisplay targetEvo;
+    private UpgradeIconLevelUI targetEvo;
 
     [SerializeField, Tooltip("First displayed related evolution slot.")]
     private EvolutionHintSlot firstSlot = new EvolutionHintSlot();
@@ -212,7 +212,7 @@ public class EvoHintUI : MonoBehaviour
 
         if (targetEvo != null)
         {
-            targetEvo.Bind(evolution.ResolvedUpgrade);
+            targetEvo.BindEvolution(evolution);
         }
 
         IReadOnlyList<EvolutionSO.Prerequisite> prerequisites = evolution.Prerequisites;

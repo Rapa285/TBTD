@@ -88,6 +88,10 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - Hides for direct prefab items, missing cost, or deployed roster units.
   - Colors text by affordability when a `CurrencyManager` exists.
 
+- `UnitUIIconDisplay`
+  - Displays `OwnedUnitState.Icon` for managed roster items.
+  - Hides for direct prefab items, unconfigured roster items, or managed units without an icon.
+
 - `UICurrencyDisplayer`
   - Displays current player currency and refreshes on `CurrencyChanged`.
 

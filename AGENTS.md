@@ -107,6 +107,7 @@ Deployment UI state is separate from deployment input eligibility.
 - `UnitUIDeployment.CanBeginDeployment()` still blocks input while any preview is active.
 - `UnitUIDeployment.CurrentState` can be `CannotDeploy`, `CanDeploy`, or `InDeployPreview`.
 - The deployable indicator is visible for `CanDeploy` and `InDeployPreview`.
+- `UnitUIIconDisplay` displays `OwnedUnitState.Icon` for managed roster UI items and hides when the item is direct/unconfigured or has no icon.
 - `UnitUICost` displays cached cost for undeployed roster units and hides it while deployed or when no cached cost exists.
 - `UICurrencyDisplayer` displays the current currency balance and refreshes from `CurrencyChanged`.
 
@@ -213,7 +214,10 @@ Upgrade selection presentation is UI-only and does not own upgrade state.
 - `UpgradeInfoDetailsUI` shows the focused upgrade title, forwards stat display to `UpgradeStatInfoUI`, and forwards evolution/multi-upgrade context to `EvoHintUI`.
 - `UpgradeStatInfoUI` displays stat effects line by line. For non-first-level multi-upgrade choices, it compares the current level leaf to the offered next level as `current >>> next` where a comparable stat effect exists.
 - `GenericIconDisplay` shows one `UpgradeSO` icon or `Sprite` and toggles its configured `root` when no icon is available.
-- `UpgradeIconLevelUI` shows one `MultiUpgradeSO` icon plus current level text. Normal display uses `LVL X`; requirement display uses `LVL X/Y`.
+- `UpgradeIconLevelUI` shows one `MultiUpgradeSO` icon plus current level text. Normal display uses `LVL X`; requirement display uses `LVL X/Y`. It can also show placeholder label content for selected-unit empty states such as no selected evolution.
+- `UnitDetailsUI` displays the currently selected deployed unit's name, icon, XP, ammo, active multi-upgrades, and selected evolution. It reads selected tower identity from `PlayerStateController` and roster metadata from `UnitStateManager`.
+- `UnitUpgradeListUI` is only for active multi-upgrade lines. Do not bind or clear the selected evolution slot from this list.
+- `ConvertibleUpgradeHoverable` is the hover source for slots that need default generic tooltip text until a real upgrade or evolution is bound.
 - `EvoHintUI` has two modes. For a focused `MultiUpgradeSO`, it shows the focused upgrade in the middle, hides `targetEvo`, and shows up to two closest related evolutions ranked from `UpgradesManager.EvolutionPool`. For a focused `EvolutionSO`, it clears the focused upgrade, shows `targetEvo`, and uses the two related-upgrade slots for that evolution's prerequisites.
 - `EvoHintUI` hides all hint slots for null input or when the active unit already has a selected evolution.
 
@@ -337,7 +341,14 @@ Upgrade selection UI additionally expects:
 - `UpgradeInfoDetailsUI` should be assigned under the selection UI when focused-choice details are desired.
 - `UpgradeInfoDetailsUI` can reference a TMP title, `UpgradeStatInfoUI`, and `EvoHintUI`.
 - `EvoHintUI` should wire `focusedUpgrade`, `targetEvo`, and both related evolution slots. Each side slot can use a `GenericIconDisplay` for the related evolution icon and an `UpgradeIconLevelUI` for the related prerequisite upgrade.
+- `UnitDetailsUI` should wire `nameText`, `iconImage`, `xpText`, `xpSlider`, `ammoText`, `UnitUpgradeListUI`, a dedicated evolution `UpgradeIconLevelUI`, and a `ConvertibleUpgradeHoverable` for the no-evolution placeholder/selected-evolution tooltip.
 - `GenericIconDisplay.root` and `UpgradeIconLevelUI.root` should point at the UI object that should hide when the display has no data.
+
+Roster item UI additionally expects:
+
+- `UIUnitItem` should hold either a direct prefab reference or a managed roster `unitId`.
+- `UnitUIIconDisplay` should wire an `Image` for the roster unit icon when managed unit cards need visual identity.
+- `UnitUICost`, `UnitUICooldownTimer`, `UnitUIRecall`, and `UnitUIUpgrade` should live beside the `UIUnitItem` when those roster item affordances are needed.
 
 ## Coding Guidelines For Future Agents
 

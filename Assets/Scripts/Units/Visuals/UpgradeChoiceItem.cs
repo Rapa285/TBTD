@@ -20,6 +20,9 @@ public class UpgradeChoiceItem : MonoBehaviour, IPointerEnterHandler, ISelectHan
     [SerializeField, Tooltip("TMP text element used to display the upgrade description.")]
     private TMP_Text descriptionText;
 
+    [SerializeField, Tooltip("Optional hover data source populated from the bound upgrade choice.")]
+    private UpgradeHoverableItem hoverableItem;
+
     private UpgradeSelectionUI owner;
     private UnitUpgradeOfferChoice choice;
     private int choiceIndex = -1;
@@ -63,6 +66,11 @@ public class UpgradeChoiceItem : MonoBehaviour, IPointerEnterHandler, ISelectHan
         this.owner = owner;
 
         RefreshDisplay();
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.Bind(choice);
+        }
 
         if (button != null)
         {
@@ -142,6 +150,11 @@ public class UpgradeChoiceItem : MonoBehaviour, IPointerEnterHandler, ISelectHan
         if (button == null)
         {
             button = GetComponent<Button>();
+        }
+
+        if (hoverableItem == null)
+        {
+            hoverableItem = GetComponent<UpgradeHoverableItem>();
         }
     }
 }

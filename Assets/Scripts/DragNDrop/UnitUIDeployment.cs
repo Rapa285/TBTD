@@ -42,6 +42,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     private CurrencyManager currencyManager;
     private bool subscribedToEventBus;
     private bool isInDeployPreview;
+    private bool previewStartedFromThisItem;
     private DeploymentUIState currentState = DeploymentUIState.CannotDeploy;
 
     public bool IsHovered => isHovered;
@@ -121,17 +122,34 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
             return false;
         }
 
+        bool didBeginDeployment;
         if (uiUnitItem.IsManagedUnitConfigured)
         {
-            return deploymentController.BeginDeployment(uiUnitItem.UnitStateManager, uiUnitItem.UnitId);
+            didBeginDeployment = deploymentController.BeginDeployment(uiUnitItem.UnitStateManager, uiUnitItem.UnitId);
+        }
+        else
+        {
+            didBeginDeployment = deploymentController.BeginDeployment(uiUnitItem.UnitToDeploy);
         }
 
-        return deploymentController.BeginDeployment(uiUnitItem.UnitToDeploy);
+        if (didBeginDeployment)
+        {
+            previewStartedFromThisItem = true;
+        }
+
+        return didBeginDeployment;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         isHovered = true;
+
+        if (ShouldCancelDeploymentOnPointerReturn())
+        {
+            deploymentController.CancelDeployment();
+            ResetPointerState();
+            RefreshDeployableIndicator();
+        }
     }
 
     public void OnPointerUp(PointerEventData eventData)
@@ -332,6 +350,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         }
 
         isInDeployPreview = false;
+        previewStartedFromThisItem = false;
         RefreshDeployableIndicator();
     }
 
@@ -406,6 +425,16 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
             && (selectable == null || selectable.IsInteractable())
             && uiUnitItem.HasDeployableUnit()
             && HasAffordableDeploymentCost();
+    }
+
+    private bool ShouldCancelDeploymentOnPointerReturn()
+    {
+        ResolveReferences();
+
+        return previewStartedFromThisItem
+            && isInDeployPreview
+            && deploymentController != null
+            && deploymentController.IsDragging;
     }
 
     private void SetDeployableIndicatorVisible(bool isVisible)

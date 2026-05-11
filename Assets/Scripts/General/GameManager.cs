@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -12,16 +11,12 @@ public class GameManager : MonoBehaviour
     {
         // Mulai mendengarkan event BaseDamagedEvent
         GeneralEventBus<BaseDamagedEvent>.Subscribe(DamageBase);
-        GeneralEventBus<GamePausedEvent>.Subscribe(PauseGame);
-        GeneralEventBus<GameUnPausedEvent>.Subscribe(UnPauseGame);
     }
 
     private void OnDisable()
     {
         // Mulai mendengarkan event BaseDamagedEvent
         GeneralEventBus<BaseDamagedEvent>.Unsubscribe(DamageBase);
-        GeneralEventBus<GamePausedEvent>.Unsubscribe(PauseGame);
-        GeneralEventBus<GameUnPausedEvent>.Unsubscribe(UnPauseGame);
 
     }
 
@@ -40,16 +35,4 @@ public class GameManager : MonoBehaviour
         GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent{});
         GeneralEventBus<GamePausedEvent>.Publish(new GamePausedEvent{});
     }
-
-    private void PauseGame(GamePausedEvent eventData)
-    {
-        Time.timeScale = 0f;
-    }
-
-    private void UnPauseGame(GameUnPausedEvent eventData)
-    {
-        Time.timeScale = 1f;
-    }
-
-
 }

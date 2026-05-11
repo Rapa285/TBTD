@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
   m_Name: Laser_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Light Bullets
+  description: Extends bullet reach, then pushes the weapon toward piercing laser attacks.
   levelUpgrades:
   - {fileID: 11400000, guid: ec1affc1612029a4889b86b9910b2682, type: 2}
   - {fileID: 11400000, guid: d730afa30b107ec428fbf6a491a06f82, type: 2}

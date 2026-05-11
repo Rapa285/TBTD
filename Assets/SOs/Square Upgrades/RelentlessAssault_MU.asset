@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
   m_Name: RelentlessAssault_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Relentless Assault
+  description: Sustained fire and pressure at the cost of ammo and setup. Supports Machine Gun and Laser evolutions.
   levelUpgrades:
   - {fileID: 11400000, guid: af1468a53cb746a09737cea56ce602ff, type: 2}
   - {fileID: 11400000, guid: 10b0df6001be41f9af9b1a8b6e7d65d4, type: 2}

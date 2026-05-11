@@ -148,6 +148,9 @@ Focused details:
 - `UpgradeStatInfoUI` lists the focused upgrade's stat effects. For multi-upgrade offers above level 1, it compares the currently active leaf to the offered next leaf with `current >>> next` for matching stats.
 - `GenericIconDisplay` binds either an `UpgradeSO` or raw `Sprite`, updates its image, and toggles its configured root when no icon exists.
 - `UpgradeIconLevelUI` binds a `MultiUpgradeSO` against a roster unit. Normal display shows `LVL X`; requirement display shows `LVL X/Y`. Icons resolve from the required level for requirement display, otherwise from the current level with level 1 fallback.
+- `UnitDetailsUI` shows the selected deployed unit's roster identity, XP, ammo, active multi-upgrades, and selected evolution. It owns the dedicated evolution slot separately from the multi-upgrade list.
+- `UnitUpgradeListUI` displays active multi-upgrade lines only; it must not bind or clear the selected evolution slot.
+- `ConvertibleUpgradeHoverable` extends upgrade hover behavior with default generic tooltip content for empty slots, such as the no-evolution placeholder.
 
 Evolution hint behavior:
 - For a focused `MultiUpgradeSO`, `EvoHintUI` shows the focused upgrade in the middle, hides the target evolution icon, and searches `UpgradesManager.EvolutionPool` for evolutions whose prerequisites include the focused line.
@@ -161,7 +164,7 @@ Evolution hint behavior:
 UI boundaries:
 - UI scripts may read `UnitUpgradeOfferChoice`, `UpgradesManager.EvolutionPool`, and `OwnedUnitState` levels for display.
 - UI scripts must not change roster upgrade state directly, generate offers independently, validate selections as authoritative, inspect runtime tower composition, or instantiate runtime weapons/modifiers.
-- Prefab wiring is expected for `UpgradeSelectionUI`, `UpgradeChoiceItem`, `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, `EvoHintUI`, `GenericIconDisplay`, and `UpgradeIconLevelUI`.
+- Prefab wiring is expected for `UpgradeSelectionUI`, `UpgradeChoiceItem`, `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, `EvoHintUI`, `GenericIconDisplay`, `UpgradeIconLevelUI`, `UnitDetailsUI`, and `UnitUpgradeListUI`.
 
 ## Runtime Composition
 `TowerEntity.CompileFinalStats()` is the single runtime compilation point for tower upgrades.

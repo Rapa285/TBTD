@@ -63,11 +63,14 @@ Roster deployment cost is exposed through `UnitEventBus`.
 - `UnitDeploymentCostCompiled` is raised when cached deployment cost is compiled or cleared.
 - `CurrencyChanged` is raised by `CurrencyManager` whenever balance changes.
 - `UnitDeploymentPreviewStarted` and `UnitDeploymentPreviewEnded` allow UI to distinguish `CanDeploy` from `InDeployPreview`.
+- `UnitUIIconDisplay` shows `OwnedUnitState.Icon` on managed roster item UI and hides for direct prefab items, unconfigured roster items, or units with no icon.
 - `UnitUICost` shows cached cost only while the roster unit is undeployed.
 - `UnitUIDeployment.CurrentState` is display state; input gating still blocks deployment while any preview is active.
 - `UnitUpgradeChoicesOffered` carries the generated `UnitUpgradeOfferChoice` array used by `UpgradeSelectionUI`.
 - `UnitUpgradeChoiceRequested`, `UnitUpgradeOfferRequested`, `UnitUpgradeRerollRequested`, and `UnitUpgradeMenuClosed` are UI request events handled by `UpgradesManager`.
 - `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, and `EvoHintUI` read offer and roster state for display only; they do not write roster progression or upgrade state.
+- `UnitDetailsUI` reads `PlayerStateController.SelectedTower` and roster state for the currently selected deployed unit. Its `UnitUpgradeListUI` child shows only active multi-upgrade lines; the dedicated evolution slot is owned by `UnitDetailsUI`.
+- `ConvertibleUpgradeHoverable` is used for UI slots that need default generic hover text until a real upgrade or evolution is bound, such as the selected-unit evolution placeholder.
 
 Current limitation:
 - Multi-threshold catch-up is not implemented. After an upgrade is selected, refreshed progression may evaluate the next threshold, but the system still resolves one pending upgrade selection at a time.
