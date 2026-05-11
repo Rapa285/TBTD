@@ -29,5 +29,6 @@ public abstract class StatusEffect
         {
             Debug.LogWarning("No icon found for effect: " + EffectName);
         }
+        Debug.Log($"Loaded icon for {EffectName}: {(EffectIcon != null ? EffectIcon.name : "None")}");
     }
 }
