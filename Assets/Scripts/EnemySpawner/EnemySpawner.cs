@@ -10,9 +10,11 @@ public class EnemySpawner : MonoBehaviour
     public float gracePeriod = 60;
 
     // Add enemy types here
-    public List<EnemySpawnObject> enemyList = new List<EnemySpawnObject>();
+    public List<NormalEnemyObject> normalEnemyList = new List<NormalEnemyObject>();
+    public List<SpecialEnemyObject> specialEnemyList = new List<SpecialEnemyObject>();
 
-    public int budgetMultiplier;
+    public float budgetMultiplier = 1;
+    public int baseBudget = 10;
     private int budget;
 
     private int currWave = 1;
@@ -23,6 +25,7 @@ public class EnemySpawner : MonoBehaviour
 
     private bool isPaused = false;
 
+    [SerializeField]
     private float waveTimer;
     private float spawnInterval;
     private float spawnTimer;
@@ -86,7 +89,7 @@ public class EnemySpawner : MonoBehaviour
 
     public void GenerateWave()
     {
-        budget = currWave * budgetMultiplier; // NOTE: Change Total Cost of each wave here
+        budget = Mathf.RoundToInt(currWave * budgetMultiplier) + baseBudget; // NOTE: Change Total Cost of each wave here
         GenerateEnemies();
 
         if (enemyToSpawn.Count > 0)
@@ -112,28 +115,27 @@ public class EnemySpawner : MonoBehaviour
 
         List<GameObject> generatedEnemies = new List<GameObject>();
 
+        // Generate Normal Enemies based on budget
         int attempts = 0;
         while(budget > 0 && attempts < 100)
         {
-            int randEnemyId = Random.Range(0, enemyList.Count);
-            int randEnemyCost = enemyList[randEnemyId].cost;
+            int randEnemyId = Random.Range(0, normalEnemyList.Count);
+            int randEnemyCost = normalEnemyList[randEnemyId].cost;
+            int randEnemyMinWave = normalEnemyList[randEnemyId].attribute.minWave;
+            int randEnemyMaxWave = normalEnemyList[randEnemyId].attribute.maxWave;
+
+            if (currWave < randEnemyMinWave || currWave > randEnemyMaxWave)
+            {
+                attempts++;
+                continue;
+            }
 
             if (budget - randEnemyCost >= 0)
             {
-                GameObject randEnemyObject = enemyList[randEnemyId].enemyPrefab;
-                SplineAnimate animator = randEnemyObject.GetComponent<SplineAnimate>();
+                GameObject randEnemyObject = normalEnemyList[randEnemyId].enemyPrefab;
+                GameObject enemyObject = SetupEnemy(randEnemyObject);
 
-                if (mapSpline != null && animator != null)
-                {
-                    // 3. Link them
-                    animator.Container = mapSpline;
-                }
-                else
-                {
-                    Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
-                }
-
-                generatedEnemies.Add(enemyList[randEnemyId].enemyPrefab);
+                generatedEnemies.Add(enemyObject);
                 budget -= randEnemyCost;
             }
             else if (budget <= 0)
@@ -145,6 +147,19 @@ public class EnemySpawner : MonoBehaviour
                 // TODO: Get cheapest one
                 // or break if near zero
                 attempts++;
+            }
+        }
+
+        // Check for Special Enemies 
+        // NOTE: Special enemies are spawned last
+        foreach (SpecialEnemyObject specialEnemy in specialEnemyList)
+        {
+            if (currWave == specialEnemy.waveToSpawn)
+            {
+                GameObject specialEnemyObject = specialEnemy.enemyPrefab;
+                GameObject enemyObject = SetupEnemy(specialEnemyObject);
+
+                generatedEnemies.Add(enemyObject);
             }
         }
 
@@ -178,11 +193,47 @@ public class EnemySpawner : MonoBehaviour
             eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyToSpawn));
         }
     }
+
+    private GameObject SetupEnemy(GameObject enemyPrefab)
+    {
+        SplineAnimate animator = enemyPrefab.GetComponent<SplineAnimate>();
+
+        if (mapSpline != null && animator != null)
+        {
+            // 3. Link them
+            animator.Container = mapSpline;
+        }
+        else
+        {
+            Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
+        }
+
+        return enemyPrefab;
+    }
 }
 
 [System.Serializable]
-public class EnemySpawnObject
+public class NormalEnemyObject
 {
     public GameObject enemyPrefab;
     public int cost;
+    public ExtraAttr attribute = new ExtraAttr();
+}
+
+[System.Serializable]
+public class ExtraAttr
+{
+    public int minWave = 0; 
+    public int maxWave = 999;
+}
+
+[System.Serializable]
+public class SpecialEnemyObject
+{
+    // Object for Elites/Bosses
+    // Special Enemies MUST spawn at certain waves and aren't affected by budget
+
+    public int waveToSpawn = 50;
+    public GameObject enemyPrefab;
+    // public int cost; #NOTE: Special enemies are not affected by budget
 }
