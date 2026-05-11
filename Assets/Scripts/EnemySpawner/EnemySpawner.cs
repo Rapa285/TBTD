@@ -174,6 +174,7 @@ public class EnemySpawner : MonoBehaviour
         ResolveEventBus();
         if (eventBus != null)
         {
+            Debug.Log($"Raising NewWaveEvent: Wave {currWave} with {enemyToSpawn.Count} enemies.");
             eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyToSpawn));
         }
     }

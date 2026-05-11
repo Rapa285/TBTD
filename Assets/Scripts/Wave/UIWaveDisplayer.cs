@@ -7,25 +7,9 @@ public class UIWaveDisplayer : MonoBehaviour
     private TMP_Text waveCountText;
     [SerializeField]
     private TMP_Text enemyCountText;
+    [SerializeField]
     private WaveEventBus eventBus;
     private bool eventBusSubscribed;
-
-    private void Awake()
-    {
-        ResolveReferences();
-        RefreshDisplay();
-    }
-
-    private void Start()
-    {
-        if (!Application.isPlaying)
-        {
-            return;
-        }
-
-        SubscribeToEventBus();
-        RefreshDisplay();
-    }
 
     private void OnEnable()
     {
@@ -38,6 +22,7 @@ public class UIWaveDisplayer : MonoBehaviour
 
         SubscribeToEventBus();
         RefreshDisplay();
+        Debug.Log("UIWaveDisplayer enabled and subscribed to WaveEventBus.");
     }
 
     private void OnDisable()
@@ -57,6 +42,7 @@ public class UIWaveDisplayer : MonoBehaviour
 
     private void HandleNewWave(NewWaveEvent eventData)
     {
+        Debug.Log($"Received NewWaveEvent: Wave {eventData.waveNumber} with {eventData.enemyCount} enemies.");
         RefreshDisplay(eventData.waveNumber, eventData.enemyCount);
     }
 
@@ -118,6 +104,7 @@ public class UIWaveDisplayer : MonoBehaviour
 
     private void RefreshDisplay(int waveCount, int enemyCount)
     {
+        Debug.Log($"Refreshing UIWaveDisplayer: Wave {waveCount}, Enemies {enemyCount}");
         if (waveCountText != null)
         {
             waveCountText.text = $"{waveCount}";

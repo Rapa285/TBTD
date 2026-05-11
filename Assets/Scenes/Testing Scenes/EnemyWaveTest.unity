@@ -989,6 +989,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIWaveDisplayer
   waveCountText: {fileID: 1152612960}
   enemyCountText: {fileID: 1292774753}
+  eventBus: {fileID: 1820636298}
 --- !u!1 &949532520
 GameObject:
   m_ObjectHideFlags: 0
@@ -1149,6 +1150,11 @@ MonoBehaviour:
   canvasGroup: {fileID: 1138896534}
   choicesRoot: {fileID: 1267880557}
   choiceItemPrefab: {fileID: 3801129491335490184, guid: bfb4396b44d0fba4481da9a036178216, type: 3}
+  upgradeInfoDetailsUI: {fileID: 0}
+  closeButton: {fileID: 0}
+  rerollButton: {fileID: 0}
+  rerollButtonRoot: {fileID: 0}
+  rerollCostText: {fileID: 0}
 --- !u!1 &1152612958
 GameObject:
   m_ObjectHideFlags: 0
@@ -1887,11 +1893,14 @@ MonoBehaviour:
   eventBus: {fileID: 1820636296}
   unitStateManager: {fileID: 1950526625}
   upgradePool:
-  - {fileID: 11400000, guid: e1215ca3a5519be4aacb6c67d0121c26, type: 2}
-  - {fileID: 11400000, guid: 7cd2e8093f95d77468e0b8b506fecb58, type: 2}
-  - {fileID: 11400000, guid: 16b756b9d3ed61a4c9a10e1896638963, type: 2}
-  - {fileID: 11400000, guid: ed5be96ed66a9084dbc9de92bc6bc713, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  evolutionPool: []
   upgradeChoiceCount: 2
+  baseRerollCost: 10
+  rerollCostIncrement: 5
 --- !u!1001 &1643293713
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3450,20 +3459,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitStateManager
   eventBus: {fileID: 1820636296}
+  xpThresholds:
+  - 5
+  - 10
+  - 15
+  - 20
   ownedUnits:
   - unitId: 1
     displayName: Unit A
     icon: {fileID: 0}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
-    xpThresholds:
-    - 5
-    - 10
-    - 15
-    - 20
     level: 0
     experience: 0
     upgradePending: 0
-    appliedUpgrades: []
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
 --- !u!4 &1950526626
 Transform:
   m_ObjectHideFlags: 0
