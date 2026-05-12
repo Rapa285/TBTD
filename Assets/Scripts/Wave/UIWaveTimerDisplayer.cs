@@ -4,9 +4,7 @@ using TMPro;
 public class UIWaveDisplayer : MonoBehaviour
 {
     [SerializeField]
-    private TMP_Text waveCountText;
-    [SerializeField]
-    private TMP_Text enemyCountText;
+    private TMP_Text waveTimerText;
     [SerializeField]
     private WaveEventBus eventBus;
     private bool eventBusSubscribed;
@@ -21,8 +19,6 @@ public class UIWaveDisplayer : MonoBehaviour
         }
 
         SubscribeToEventBus();
-        RefreshDisplay();
-        Debug.Log("UIWaveDisplayer enabled and subscribed to WaveEventBus.");
     }
 
     private void OnDisable()
@@ -40,22 +36,20 @@ public class UIWaveDisplayer : MonoBehaviour
         ResolveReferences();
     }
 
-    private void HandleNewWave(NewWaveEvent eventData)
+    private void HandleWaveTimerTick(WaveTimerTickEvent eventData)
     {
-        Debug.Log($"Received NewWaveEvent: Wave {eventData.waveNumber} with {eventData.enemyCount} enemies.");
-        RefreshDisplay(eventData.waveNumber, eventData.enemyCount);
+        if (waveTimerText != null)
+        {
+            int seconds = Mathf.CeilToInt(eventData.timeRemaining);
+            waveTimerText.text = $"{seconds}";
+        }
     }
 
     private void ResolveReferences()
     {
-        if (waveCountText == null)
+        if (waveTimerText == null)
         {
-            waveCountText = GetComponent<TMP_Text>();
-        }
-
-        if (enemyCountText == null)
-        {
-            enemyCountText = GetComponent<TMP_Text>();
+            waveTimerText = GetComponent<TMP_Text>();
         }
 
         if (eventBus == null)
@@ -81,7 +75,7 @@ public class UIWaveDisplayer : MonoBehaviour
             return;
         }
 
-        eventBus.NewWave += HandleNewWave;
+        eventBus.WaveTimerTick += HandleWaveTimerTick;
         eventBusSubscribed = true;
     }
 
@@ -92,27 +86,7 @@ public class UIWaveDisplayer : MonoBehaviour
             return;
         }
 
-        eventBus.NewWave -= HandleNewWave;
+        eventBus.WaveTimerTick -= HandleWaveTimerTick;
         eventBusSubscribed = false;
-    }
-
-    private void RefreshDisplay()
-    {
-        ResolveReferences();
-        RefreshDisplay(0, 0);
-    }
-
-    private void RefreshDisplay(int waveCount, int enemyCount)
-    {
-        Debug.Log($"Refreshing UIWaveDisplayer: Wave {waveCount}, Enemies {enemyCount}");
-        if (waveCountText != null)
-        {
-            waveCountText.text = $"{waveCount}";
-        }
-
-        if (enemyCountText != null)
-        {
-            enemyCountText.text = $"{enemyCount}";
-        }
     }
 }

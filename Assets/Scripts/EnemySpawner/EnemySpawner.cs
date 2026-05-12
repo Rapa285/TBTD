@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -8,6 +9,14 @@ public class EnemySpawner : MonoBehaviour
     public SplineContainer mapSpline;
 
     public float gracePeriod = 60;
+    private int currWave = 1;
+    public int waveCount = 3;
+    public int waveDuration = 30;
+
+    [SerializeField]
+    private float waveTimer;
+    private float spawnInterval;
+    private float spawnTimer;
 
     // Add enemy types here
     public List<NormalEnemyObject> normalEnemyList = new List<NormalEnemyObject>();
@@ -17,24 +26,20 @@ public class EnemySpawner : MonoBehaviour
     public int baseBudget = 10;
     private int budget;
 
-    private int currWave = 1;
-    public int waveCount = 3;
-    public int waveDuration = 30;
-
-    public List<GameObject> enemyToSpawn = new List<GameObject>();
+    [SerializeField]
+    private List<GameObject> enemyToSpawn = new List<GameObject>();
 
     private bool isPaused = false;
+    private int lastTickSecond = -1;
 
-    [SerializeField]
-    private float waveTimer;
-    private float spawnInterval;
-    private float spawnTimer;
+    private bool hasGracePeriodEnded = false;
+    private int lastGraceTickSecond = -1;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        currWave = 1;
-        GenerateWave();
+        currWave = 0;
+        // GenerateWave();
     }
 
     private void Awake()
@@ -58,17 +63,42 @@ public class EnemySpawner : MonoBehaviour
         if (gracePeriod > 0)
         {
             gracePeriod -= Time.fixedDeltaTime;
+            int currentSecond = Mathf.CeilToInt(gracePeriod);
+            if (currentSecond != lastGraceTickSecond && currentSecond >= 0)
+            {
+                lastGraceTickSecond = currentSecond;
+                RaiseGraceTimerTickEvent();
+            }
             return;
         }
 
-        if (waveTimer <= 0 && currWave < waveCount)
+        if (!hasGracePeriodEnded)
         {
-            currWave++;
-            GenerateWave();
-        }      
-        else if (currWave < waveCount)
+            hasGracePeriodEnded = true;
+            RaiseGraceTimerEndedEvent();
+        }
+
+        if (currWave <= waveCount)
         {
-            waveTimer -= Time.fixedDeltaTime;
+            if (waveTimer <= 0)
+            {
+                currWave++;
+                if (currWave <= waveCount)
+                {
+                    GenerateWave();   
+                }
+            }
+            else
+            {
+                waveTimer -= Time.fixedDeltaTime;   
+            }
+
+            int currentSecond = Mathf.CeilToInt(waveTimer);
+            if (currentSecond != lastTickSecond && currentSecond >= 0)
+            {
+                lastTickSecond = currentSecond;
+                RaiseWaveTimerTickEvent();
+            }
         }
 
         if (spawnTimer <= 0)
@@ -77,8 +107,11 @@ public class EnemySpawner : MonoBehaviour
             {
                 spawnTimer = spawnInterval;
 
+                // TODO change this
                 Instantiate(enemyToSpawn[0], transform.position, transform.rotation).SetActive(true);
                 enemyToSpawn.RemoveAt(0);   
+                
+                // Get pool
             }
         }
         else
@@ -113,7 +146,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }        
 
-        List<GameObject> generatedEnemies = new List<GameObject>();
+        enemyToSpawn.Clear();
 
         // Generate Normal Enemies based on budget
         int attempts = 0;
@@ -133,9 +166,9 @@ public class EnemySpawner : MonoBehaviour
             if (budget - randEnemyCost >= 0)
             {
                 GameObject randEnemyObject = normalEnemyList[randEnemyId].enemyPrefab;
-                GameObject enemyObject = SetupEnemy(randEnemyObject);
+                SetupEnemy(randEnemyObject);
 
-                generatedEnemies.Add(enemyObject);
+                enemyToSpawn.Add(randEnemyObject);
                 budget -= randEnemyCost;
             }
             else if (budget <= 0)
@@ -152,19 +185,31 @@ public class EnemySpawner : MonoBehaviour
 
         // Check for Special Enemies 
         // NOTE: Special enemies are spawned last
-        foreach (SpecialEnemyObject specialEnemy in specialEnemyList)
+        for (int i = 0; i < specialEnemyList.Count; i++)
         {
-            if (currWave == specialEnemy.waveToSpawn)
+            if (currWave == specialEnemyList[i].waveToSpawn)
             {
-                GameObject specialEnemyObject = specialEnemy.enemyPrefab;
-                GameObject enemyObject = SetupEnemy(specialEnemyObject);
+                GameObject specialEnemyObject = specialEnemyList[i].enemyPrefab;
+                SetupEnemy(specialEnemyObject);
 
-                generatedEnemies.Add(enemyObject);
+                enemyToSpawn.Add(specialEnemyObject);
             }
         }
 
-        enemyToSpawn.Clear();
-        enemyToSpawn = generatedEnemies;
+        void SetupEnemy(GameObject enemyPrefab)
+        {
+            SplineAnimate animator = enemyPrefab.GetComponent<SplineAnimate>();
+
+            if (mapSpline != null && animator != null)
+            {
+                // 3. Link them
+                animator.Container = mapSpline;
+            }
+            else
+            {
+                Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
+            }
+        }
     }
 
     public void SetPauseSpawner(bool isPause)
@@ -194,21 +239,34 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    private GameObject SetupEnemy(GameObject enemyPrefab)
+    private void RaiseWaveTimerTickEvent()
     {
-        SplineAnimate animator = enemyPrefab.GetComponent<SplineAnimate>();
-
-        if (mapSpline != null && animator != null)
+        ResolveEventBus();
+        if (eventBus != null)
         {
-            // 3. Link them
-            animator.Container = mapSpline;
+            Debug.Log($"Raising WaveTimerTickEvent: Time remaining: {waveTimer:F1} seconds.");
+            eventBus.RaiseWaveTimerTick(new WaveTimerTickEvent(waveTimer));
         }
-        else
-        {
-            Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
-        }
+    }
 
-        return enemyPrefab;
+    private void RaiseGraceTimerTickEvent()
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            Debug.Log($"Raising GraceTimerTickEvent: Time remaining: {gracePeriod:F1} seconds.");
+            eventBus.RaiseGraceTimerTick(new GraceTimerTickEvent(gracePeriod));
+        }
+    }
+
+    private void RaiseGraceTimerEndedEvent()
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            Debug.Log("Raising GraceTimerEndedEvent");
+            eventBus.RaiseGraceTimerEnded();
+        }
     }
 }
 
