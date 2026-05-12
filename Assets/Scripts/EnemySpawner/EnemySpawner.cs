@@ -39,7 +39,6 @@ public class EnemySpawner : MonoBehaviour
     private bool hasGracePeriodEnded = false;
     private int lastGraceTickSecond = -1;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         currWave = 0;
