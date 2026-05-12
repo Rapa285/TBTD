@@ -45,6 +45,19 @@ public class UIWaveInfoDisplayer : MonoBehaviour
         RefreshDisplay(eventData.waveNumber, eventData.enemyCount);
     }
 
+    private void HandleInfiniteRoundTriggered()
+    {
+        if (waveCountText != null)
+        {
+            waveCountText.text = "Infinite Round";
+        }
+
+        if (enemyCountText != null)
+        {
+            enemyCountText.text = "∞";
+        }
+     }
+
     private void ResolveReferences()
     {
         if (waveCountText == null)
@@ -81,6 +94,7 @@ public class UIWaveInfoDisplayer : MonoBehaviour
         }
 
         eventBus.NewWave += HandleNewWave;
+        eventBus.InfiniteRoundTriggered += HandleInfiniteRoundTriggered;
         eventBusSubscribed = true;
     }
 
@@ -92,6 +106,7 @@ public class UIWaveInfoDisplayer : MonoBehaviour
         }
 
         eventBus.NewWave -= HandleNewWave;
+        eventBus.InfiniteRoundTriggered -= HandleInfiniteRoundTriggered;
         eventBusSubscribed = false;
     }
 

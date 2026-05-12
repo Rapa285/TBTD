@@ -43,6 +43,7 @@ public class WaveEventBus : MonoBehaviour
   public event Action<WaveTimerTickEvent> WaveTimerTick;
   public event Action<GraceTimerTickEvent> GraceTimerTick;
   public event Action GraceTimerEnded;
+  public event Action InfiniteRoundTriggered;
 
   private void Awake()
     {
@@ -72,6 +73,11 @@ public class WaveEventBus : MonoBehaviour
     public void RaiseGraceTimerEnded()
     {
         GraceTimerEnded?.Invoke();
+    }
+
+    public void RaiseInfiniteRoundTriggered()
+    {
+        InfiniteRoundTriggered?.Invoke();
     }
 
     private void RegisterWithServiceLocator()

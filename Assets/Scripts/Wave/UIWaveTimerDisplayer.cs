@@ -45,6 +45,14 @@ public class UIWaveDisplayer : MonoBehaviour
         }
     }
 
+    private void HandleInfiniteRoundTriggered()
+    {
+        if (waveTimerText != null)
+        {
+            waveTimerText.text = "∞";
+        }
+     }
+
     private void ResolveReferences()
     {
         if (waveTimerText == null)
@@ -76,6 +84,7 @@ public class UIWaveDisplayer : MonoBehaviour
         }
 
         eventBus.WaveTimerTick += HandleWaveTimerTick;
+        eventBus.InfiniteRoundTriggered += HandleInfiniteRoundTriggered;
         eventBusSubscribed = true;
     }
 
@@ -87,6 +96,7 @@ public class UIWaveDisplayer : MonoBehaviour
         }
 
         eventBus.WaveTimerTick -= HandleWaveTimerTick;
+        eventBus.InfiniteRoundTriggered -= HandleInfiniteRoundTriggered;
         eventBusSubscribed = false;
     }
 }

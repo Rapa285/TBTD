@@ -15,19 +15,23 @@ public class EnemySpawner : MonoBehaviour
 
     [SerializeField]
     private float waveTimer;
+    [SerializeField]
     private float spawnInterval;
+    [SerializeField]
     private float spawnTimer;
 
     // Add enemy types here
     public List<NormalEnemyObject> normalEnemyList = new List<NormalEnemyObject>();
     public List<SpecialEnemyObject> specialEnemyList = new List<SpecialEnemyObject>();
 
-    public float budgetMultiplier = 1;
     public int baseBudget = 10;
+    public float budgetMultiplier = 1;
     private int budget;
 
     [SerializeField]
     private List<GameObject> enemyToSpawn = new List<GameObject>();
+
+    private bool isInfiniteRound = false;
 
     private bool isPaused = false;
     private int lastTickSecond = -1;
@@ -78,6 +82,7 @@ public class EnemySpawner : MonoBehaviour
             RaiseGraceTimerEndedEvent();
         }
 
+        // Pre Infinite Round Handling
         if (currWave <= waveCount)
         {
             if (waveTimer <= 0)
@@ -86,6 +91,11 @@ public class EnemySpawner : MonoBehaviour
                 if (currWave <= waveCount)
                 {
                     GenerateWave();   
+                }
+                // Currently, infinite round starts after all wave has passed
+                else
+                {
+                    TriggerInfiniteRound();
                 }
             }
             else
@@ -98,6 +108,22 @@ public class EnemySpawner : MonoBehaviour
             {
                 lastTickSecond = currentSecond;
                 RaiseWaveTimerTickEvent();
+            }
+        }
+
+        // Infinite Round Handling
+        if (isInfiniteRound)
+        {
+            if (waveTimer <= 0)
+            {
+                // currWave++; // NOTE: Don't add wave count, because enemy has wave constraint
+                GenerateWave();   
+
+                InfiniteRoundAddDifficulty();
+            }
+            else
+            {
+                waveTimer -= Time.fixedDeltaTime;   
             }
         }
 
@@ -127,7 +153,7 @@ public class EnemySpawner : MonoBehaviour
 
         if (enemyToSpawn.Count > 0)
         {
-            spawnInterval = waveDuration / enemyToSpawn.Count;    
+            spawnInterval = (float) waveDuration / enemyToSpawn.Count;    
         }
         else
         {
@@ -136,7 +162,11 @@ public class EnemySpawner : MonoBehaviour
         
         waveTimer = waveDuration;
         spawnTimer = 0;
-        RaiseNewWaveEvent();
+
+        if (!isInfiniteRound)
+        {
+            RaiseNewWaveEvent();
+        }
     }
 
     public void GenerateEnemies()
@@ -212,6 +242,21 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    public void TriggerInfiniteRound()
+    {
+        baseBudget *= 2;
+
+        isInfiniteRound = true;
+        RaiseInfiniteRoundTriggeredEvent();
+
+        GenerateWave();
+    }
+
+    public void InfiniteRoundAddDifficulty()
+    {
+        baseBudget *= 2;
+    }
+
     public void SetPauseSpawner(bool isPause)
     {
         isPaused = isPause;
@@ -244,7 +289,6 @@ public class EnemySpawner : MonoBehaviour
         ResolveEventBus();
         if (eventBus != null)
         {
-            Debug.Log($"Raising WaveTimerTickEvent: Time remaining: {waveTimer:F1} seconds.");
             eventBus.RaiseWaveTimerTick(new WaveTimerTickEvent(waveTimer));
         }
     }
@@ -254,7 +298,6 @@ public class EnemySpawner : MonoBehaviour
         ResolveEventBus();
         if (eventBus != null)
         {
-            Debug.Log($"Raising GraceTimerTickEvent: Time remaining: {gracePeriod:F1} seconds.");
             eventBus.RaiseGraceTimerTick(new GraceTimerTickEvent(gracePeriod));
         }
     }
@@ -266,6 +309,16 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.Log("Raising GraceTimerEndedEvent");
             eventBus.RaiseGraceTimerEnded();
+        }
+    }
+
+    private void RaiseInfiniteRoundTriggeredEvent()
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            Debug.Log("Raising InfiniteRoundTriggeredEvent");
+            eventBus.RaiseInfiniteRoundTriggered();
         }
     }
 }
