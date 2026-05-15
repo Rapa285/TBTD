@@ -69,7 +69,7 @@ Roster deployment cost is exposed through `UnitEventBus`.
 - `UnitUpgradeChoicesOffered` carries the generated `UnitUpgradeOfferChoice` array used by `UpgradeSelectionUI`.
 - `UnitUpgradeChoiceRequested`, `UnitUpgradeOfferRequested`, `UnitUpgradeRerollRequested`, and `UnitUpgradeMenuClosed` are UI request events handled by `UpgradesManager`.
 - `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, and `EvoHintUI` read offer and roster state for display only; they do not write roster progression or upgrade state.
-- `UnitDetailsUI` reads `PlayerStateController.SelectedTower` and roster state for the currently selected deployed unit. Its `UnitUpgradeListUI` child shows only active multi-upgrade lines; the dedicated evolution slot is owned by `UnitDetailsUI`.
+- `UnitDetailsUI` reads `PlayerStateController.SelectedTower` and roster state for the currently selected deployed unit. Its `UnitUpgradeListUI` child shows only active multi-upgrade lines; the dedicated evolution slot is owned by `UnitDetailsUI`. Optional `UnitDetailUIFX` may animate the panel open/closed, but does not own selected-unit state.
 - `ConvertibleUpgradeHoverable` is used for UI slots that need default generic hover text until a real upgrade or evolution is bound, such as the selected-unit evolution placeholder.
 
 Current limitation:

@@ -20,6 +20,9 @@ public class UnitDetailsUI : MonoBehaviour
     [SerializeField, Tooltip("Event bus used to refresh XP, ammo, upgrade, and recall state for the selected unit.")]
     private UnitEventBus eventBus;
 
+    [SerializeField, Tooltip("Optional visual effect used to animate this panel opening and closing.")]
+    private UnitDetailUIFX detailFx;
+
     [SerializeField, Tooltip("TMP text used to display the selected unit name.")]
     private TMP_Text nameText;
 
@@ -421,6 +424,16 @@ public class UnitDetailsUI : MonoBehaviour
             ServiceLocator.TryResolve(out eventBus);
         }
 
+        if (detailFx == null && root != null)
+        {
+            detailFx = root.GetComponent<UnitDetailUIFX>();
+        }
+
+        if (detailFx == null)
+        {
+            detailFx = GetComponent<UnitDetailUIFX>();
+        }
+
         if (upgradeList == null)
         {
             upgradeList = GetComponentInChildren<UnitUpgradeListUI>(true);
@@ -563,7 +576,29 @@ public class UnitDetailsUI : MonoBehaviour
     private void SetRootVisible(bool isVisible)
     {
         GameObject target = root != null ? root : gameObject;
-        if (target == null || target.activeSelf == isVisible)
+        if (target == null)
+        {
+            return;
+        }
+
+        if (detailFx != null)
+        {
+            if (isVisible)
+            {
+                changingRootVisibility = false;
+                detailFx.Show();
+            }
+            else if (target.activeSelf)
+            {
+                bool isFxSelfHide = target == gameObject;
+                changingRootVisibility = isFxSelfHide;
+                detailFx.Hide(() => changingRootVisibility = false);
+            }
+
+            return;
+        }
+
+        if (target.activeSelf == isVisible)
         {
             return;
         }

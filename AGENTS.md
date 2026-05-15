@@ -217,6 +217,7 @@ Upgrade selection presentation is UI-only and does not own upgrade state.
 - `GenericIconDisplay` shows one `UpgradeSO` icon or `Sprite` and toggles its configured `root` when no icon is available.
 - `UpgradeIconLevelUI` shows one `MultiUpgradeSO` icon plus current level text. Normal display uses `LVL X`; requirement display uses `LVL X/Y`. It can also show placeholder label content for selected-unit empty states such as no selected evolution.
 - `UnitDetailsUI` displays the currently selected deployed unit's name, icon, XP, ammo, active multi-upgrades, and selected evolution. It reads selected tower identity from `PlayerStateController` and roster metadata from `UnitStateManager`.
+- `UnitDetailUIFX` is an optional visual-only companion for `UnitDetailsUI`. It animates the detail panel `RectTransform.anchoredPosition.x` from hidden `width` to shown `0` on selection and back to `width` on deselection, then deactivates the root after closing.
 - `UnitUpgradeListUI` is only for active multi-upgrade lines. Do not bind or clear the selected evolution slot from this list.
 - `ConvertibleUpgradeHoverable` is the hover source for slots that need default generic tooltip text until a real upgrade or evolution is bound.
 - `EvoHintUI` has two modes. For a focused `MultiUpgradeSO`, it shows the focused upgrade in the middle, hides `targetEvo`, and shows up to two closest related evolutions ranked from `UpgradesManager.EvolutionPool`. For a focused `EvolutionSO`, it clears the focused upgrade, shows `targetEvo`, and uses the two related-upgrade slots for that evolution's prerequisites.
@@ -344,6 +345,7 @@ Upgrade selection UI additionally expects:
 - `UpgradeInfoDetailsUI` can reference a TMP title, `UpgradeStatInfoUI`, and `EvoHintUI`.
 - `EvoHintUI` should wire `focusedUpgrade`, `targetEvo`, and both related evolution slots. Each side slot can use a `GenericIconDisplay` for the related evolution icon and an `UpgradeIconLevelUI` for the related prerequisite upgrade.
 - `UnitDetailsUI` should wire `nameText`, `iconImage`, `xpText`, `xpSlider`, `ammoText`, `UnitUpgradeListUI`, a dedicated evolution `UpgradeIconLevelUI`, and a `ConvertibleUpgradeHoverable` for the no-evolution placeholder/selected-evolution tooltip.
+- Optional `UnitDetailUIFX` should wire the detail panel root `RectTransform`, root object, open/close times, and curves; `UnitDetailsUI` remains the data and selection owner.
 - `GenericIconDisplay.root` and `UpgradeIconLevelUI.root` should point at the UI object that should hide when the display has no data.
 
 Roster item UI additionally expects:

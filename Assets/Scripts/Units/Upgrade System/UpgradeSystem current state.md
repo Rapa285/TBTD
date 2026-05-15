@@ -151,6 +151,7 @@ Focused details:
 - `GenericIconDisplay` binds either an `UpgradeSO` or raw `Sprite`, updates its image, and toggles its configured root when no icon exists.
 - `UpgradeIconLevelUI` binds a `MultiUpgradeSO` against a roster unit. Normal display shows `LVL X`; requirement display shows `LVL X/Y`. Icons resolve from the required level for requirement display, otherwise from the current level with level 1 fallback.
 - `UnitDetailsUI` shows the selected deployed unit's roster identity, XP, ammo, active multi-upgrades, and selected evolution. It owns the dedicated evolution slot separately from the multi-upgrade list.
+- Optional `UnitDetailUIFX` animates the selected-unit detail panel open and closed by moving the panel `RectTransform` on X. It is presentation-only; selection identity, roster reads, XP/ammo refreshes, and evolution binding stay in `UnitDetailsUI`.
 - `UnitUpgradeListUI` displays active multi-upgrade lines only; it must not bind or clear the selected evolution slot.
 - `ConvertibleUpgradeHoverable` extends upgrade hover behavior with default generic tooltip content for empty slots, such as the no-evolution placeholder.
 
@@ -168,6 +169,7 @@ UI boundaries:
 - UI scripts must not change roster upgrade state directly, generate offers independently, validate selections as authoritative, inspect runtime tower composition, or instantiate runtime weapons/modifiers.
 - Prefab wiring is expected for `UpgradeSelectionUI`, `UpgradeChoiceItem`, optional `UpgradeItemFX`, `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, `EvoHintUI`, `GenericIconDisplay`, `UpgradeIconLevelUI`, `UnitDetailsUI`, and `UnitUpgradeListUI`.
 - `UpgradeItemFX` should reference the choice target transform, the mask `RectTransform`, and the sheen color `Graphic`; the mask material is not animated directly because masking materials do not reliably support this UI reveal.
+- `UnitDetailUIFX` should reference the detail panel `RectTransform` and root object when used. Shown X is `0`; hidden X is computed from the panel width.
 
 ## Runtime Composition
 `TowerEntity.CompileFinalStats()` is the single runtime compilation point for tower upgrades.
