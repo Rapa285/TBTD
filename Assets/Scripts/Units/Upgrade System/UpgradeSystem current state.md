@@ -135,11 +135,13 @@ On successful selection, `UpgradesManager` removes the pending offer, calls `Uni
 Upgrade selection UI is event-bus driven and presentation-only.
 
 Main components:
-- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries under `choicesRoot`, and sends `UnitUpgradeChoiceRequestedEvent` for clicks.
+- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, binds pooled `UpgradeChoiceItem` entries under `choicesRoot`, and sends `UnitUpgradeChoiceRequestedEvent` for accepted clicks.
 - `UpgradeSelectionUI` owns optional close and reroll buttons. Close raises `UnitUpgradeMenuClosed`; reroll raises `UnitUpgradeRerollRequested`.
 - `UpgradeSelectionUI` refreshes reroll visibility, affordability, and cost text from `UpgradesManager` plus `CurrencyManager`.
 - `UpgradeSelectionUI` initializes focused details from the first valid choice in a new offer and updates details when a child choice is hovered or UI-focused.
-- `UpgradeChoiceItem` displays the resolved `UpgradeSO` name, description, and icon, then notifies its owner on click, pointer enter, or UI selection.
+- `UpgradeSelectionUI` coordinates chained reveal playback for active valid choices in display order using `choiceRevealDelay`.
+- `UpgradeChoiceItem` displays the resolved `UpgradeSO` name, description, and icon, then notifies its owner on pointer enter or UI selection. Clicks are ignored while the attached `UpgradeItemFX` reveal is unfinished.
+- `UpgradeItemFX` handles one choice item's hover scale and reveal visuals. Its reveal grows the mask `RectTransform` from left to right by animating the right offset, and updates the sheen color material's `_AnimProgress`.
 - `UnitUIUpgrade` is the roster-item upgrade button that requests a stored pending offer for its unit through `UnitUpgradeOfferRequestedEvent`.
 
 Focused details:
@@ -164,7 +166,8 @@ Evolution hint behavior:
 UI boundaries:
 - UI scripts may read `UnitUpgradeOfferChoice`, `UpgradesManager.EvolutionPool`, and `OwnedUnitState` levels for display.
 - UI scripts must not change roster upgrade state directly, generate offers independently, validate selections as authoritative, inspect runtime tower composition, or instantiate runtime weapons/modifiers.
-- Prefab wiring is expected for `UpgradeSelectionUI`, `UpgradeChoiceItem`, `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, `EvoHintUI`, `GenericIconDisplay`, `UpgradeIconLevelUI`, `UnitDetailsUI`, and `UnitUpgradeListUI`.
+- Prefab wiring is expected for `UpgradeSelectionUI`, `UpgradeChoiceItem`, optional `UpgradeItemFX`, `UpgradeInfoDetailsUI`, `UpgradeStatInfoUI`, `EvoHintUI`, `GenericIconDisplay`, `UpgradeIconLevelUI`, `UnitDetailsUI`, and `UnitUpgradeListUI`.
+- `UpgradeItemFX` should reference the choice target transform, the mask `RectTransform`, and the sheen color `Graphic`; the mask material is not animated directly because masking materials do not reliably support this UI reveal.
 
 ## Runtime Composition
 `TowerEntity.CompileFinalStats()` is the single runtime compilation point for tower upgrades.

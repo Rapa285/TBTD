@@ -128,5 +128,5 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
 - Placement is freeform on ground surfaces, not grid-snapped.
 - Footprint is inspector-configured serialized radius/height, not inferred from prefab colliders.
 - Upgrade selection UI is handled by the separate event-bus upgrade UI flow; drag/drop UI only starts deployment.
-- Upgrade offer display, focused-choice details, reroll controls, stat comparison text, and evolution hints belong to `UpgradeSelectionUI` and related visual scripts, not to deployment UI.
+- Upgrade offer display, chained choice reveal animation, focused-choice details, reroll controls, stat comparison text, and evolution hints belong to `UpgradeSelectionUI` and related visual scripts, not to deployment UI.
 - Deployment economy is limited to roster-managed unit cost. Direct prefab deployment remains free.

@@ -183,7 +183,7 @@ Upgrade selection is event-bus driven.
 
 - `UnitProgression` raises `UnitUpgradeThresholdReached` when runtime XP reaches the current threshold.
 - `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds a stored pending offer from its shared `MultiUpgradeSO` `upgradePool` plus eligible entries in its `EvolutionSO` `evolutionPool`.
-- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
+- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, binds pooled `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
 - `UpgradesManager` validates the pending offer, calls `UnitStateManager.RecordSelectedUpgrade`, and raises `UnitUpgradeSelected`.
 - `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances unit level, advances the selected multi-upgrade line or records the selected evolution, applies the resolved `UpgradeSO` leaf immediately to the deployed tower if present, and refreshes runtime progression.
 - `UnitUIUpgrade` can request a stored pending offer later through `UnitUpgradeOfferRequested`.
@@ -209,8 +209,9 @@ Current offer rules:
 Upgrade selection presentation is UI-only and does not own upgrade state.
 
 - `UpgradeChoiceItem` displays the resolved `UpgradeSO` name, description, and icon for one `UnitUpgradeOfferChoice`.
-- `UpgradeChoiceItem` notifies `UpgradeSelectionUI` on click for selection and on pointer hover/UI focus for details.
-- `UpgradeSelectionUI` owns the active displayed offer, optional close/reroll controls, reroll affordability state, and the optional `UpgradeInfoDetailsUI` details panel.
+- `UpgradeChoiceItem` notifies `UpgradeSelectionUI` on click for selection and on pointer hover/UI focus for details. If it has an `UpgradeItemFX`, clicks are ignored until that item's reveal animation has completed.
+- `UpgradeSelectionUI` owns the active displayed offer, pooled choice items, optional close/reroll controls, reroll affordability state, chained choice reveal timing, and the optional `UpgradeInfoDetailsUI` details panel.
+- `UpgradeItemFX` owns per-choice hover scaling and reveal visuals. The reveal animates the mask `RectTransform` right edge from hidden to full width and updates the sheen color material's `_AnimProgress`; reveal playback is coordinated by `UpgradeSelectionUI` in display order, not by each item independently.
 - `UpgradeInfoDetailsUI` shows the focused upgrade title, forwards stat display to `UpgradeStatInfoUI`, and forwards evolution/multi-upgrade context to `EvoHintUI`.
 - `UpgradeStatInfoUI` displays stat effects line by line. For non-first-level multi-upgrade choices, it compares the current level leaf to the offered next level as `current >>> next` where a comparable stat effect exists.
 - `GenericIconDisplay` shows one `UpgradeSO` icon or `Sprite` and toggles its configured `root` when no icon is available.
@@ -336,8 +337,9 @@ Targets that should take damage should have:
 
 Upgrade selection UI additionally expects:
 
-- One `UpgradeSelectionUI` with `canvasGroup`, `choicesRoot`, `choiceItemPrefab`, and optional close/reroll controls assigned.
-- `UpgradeChoiceItem` prefabs should assign their `Button`, icon `Image`, name TMP text, and description TMP text.
+- One `UpgradeSelectionUI` with `canvasGroup`, `choicesRoot`, `choiceItemPrefab`, `choiceRevealDelay`, and optional close/reroll controls assigned.
+- `UpgradeChoiceItem` prefabs should assign their `Button`, icon `Image`, name TMP text, description TMP text, and optional `UpgradeItemFX`.
+- `UpgradeItemFX` should wire its scaled target, mask `RectTransform`, and sheen color `Graphic`; it clones the sheen material at runtime and must not animate the mask material directly.
 - `UpgradeInfoDetailsUI` should be assigned under the selection UI when focused-choice details are desired.
 - `UpgradeInfoDetailsUI` can reference a TMP title, `UpgradeStatInfoUI`, and `EvoHintUI`.
 - `EvoHintUI` should wire `focusedUpgrade`, `targetEvo`, and both related evolution slots. Each side slot can use a `GenericIconDisplay` for the related evolution icon and an `UpgradeIconLevelUI` for the related prerequisite upgrade.
