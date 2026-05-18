@@ -7,15 +7,18 @@ public class GameOverPanel : MonoBehaviour
     public Button gameOverPanelExitButton;
     public Button gameOverPanelRetryButton;
 
+
     private bool showingPanel = false;
 
     private void Awake()
     {
         gameOverPanelExitButton.onClick.RemoveAllListeners();
-        gameOverPanelExitButton.onClick.AddListener(closeGameOverPanel);
+        gameOverPanelExitButton.onClick.AddListener(exit);
 
         gameOverPanelRetryButton.onClick.RemoveAllListeners();
-        gameOverPanelRetryButton.onClick.AddListener(closeGameOverPanel);
+        gameOverPanelRetryButton.onClick.AddListener(retry);
+
+        
     }
 
     private void OnEnable()
@@ -40,5 +43,15 @@ public class GameOverPanel : MonoBehaviour
         showingPanel = false;
 
         // call event to change scene to main menu or sumthn
+    }
+
+    private void retry()
+    {
+        GeneralEventBus<RetryGameEvent>.Publish(new RetryGameEvent{});
+    }
+
+    private void exit()
+    {
+        GeneralEventBus<ExitToMainMenuEvent>.Publish(new ExitToMainMenuEvent{});
     }
 }
