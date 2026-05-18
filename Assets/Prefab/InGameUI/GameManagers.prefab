@@ -283,12 +283,8 @@ MonoBehaviour:
     level: 0
     experience: 0
     upgradePending: 0
-    appliedMultiUpgrades:
-    - multiUpgrade: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
-      level: 3
-    - multiUpgrade: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
-      level: 3
-    selectedEvolution: {fileID: 11400000, guid: ec4d2aafbb534266bb35283612373493, type: 2}
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
   - unitId: 4
     displayName: Unit D
     icon: {fileID: 0}
@@ -296,12 +292,8 @@ MonoBehaviour:
     level: 0
     experience: 0
     upgradePending: 0
-    appliedMultiUpgrades:
-    - multiUpgrade: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
-      level: 3
-    - multiUpgrade: {fileID: 11400000, guid: 6ce6731e33c34edf914b03c6d50ca254, type: 2}
-      level: 3
-    selectedEvolution: {fileID: 11400000, guid: e9f543ba36f54da785c1b8cc7aba90b2, type: 2}
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
   - unitId: 5
     displayName: Unit E
     icon: {fileID: 0}
@@ -309,12 +301,26 @@ MonoBehaviour:
     level: 100
     experience: 100
     upgradePending: 0
-    appliedMultiUpgrades:
-    - multiUpgrade: {fileID: 11400000, guid: f3232636c921451c9d7fe5354279f0bb, type: 2}
-      level: 3
-    - multiUpgrade: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
-      level: 3
-    selectedEvolution: {fileID: 11400000, guid: 0ea66aef64244669908fa8ae29e10339, type: 2}
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
+  - unitId: 6
+    displayName: Unit E
+    icon: {fileID: 0}
+    unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
+    level: 100
+    experience: 100
+    upgradePending: 0
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
+  - unitId: 7
+    displayName: Unit E
+    icon: {fileID: 0}
+    unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
+    level: 100
+    experience: 100
+    upgradePending: 0
+    appliedMultiUpgrades: []
+    selectedEvolution: {fileID: 0}
 --- !u!1 &5125289146615075792
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,6 +463,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   baseHealth: 100
+  sceneLoader: {fileID: 0}
 --- !u!114 &4593251990343511160
 MonoBehaviour:
   m_ObjectHideFlags: 0
