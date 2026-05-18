@@ -68,6 +68,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4843373451112337369, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: skillSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 967ee56c54d9603469969db9b09a3e41, type: 3}
     - target: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: m_Name
       value: ShieldEnemy
@@ -97,6 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 168ddae56d07ec049af959e7b74cfe9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AuraShieldBuffComponent
+  enemyAudio: {fileID: 2683208663403984224}
   auraRadius: 3
   enemyLayer:
     serializedVersion: 2
@@ -104,3 +109,14 @@ MonoBehaviour:
   shieldAmount: 50
   buffDuration: 2
   buffCooldown: 4
+--- !u!114 &2683208663403984224 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4843373451112337369, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+  m_PrefabInstance: {fileID: 7353167003142208185}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307991034786993628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60b800142b5b63c4ab906700ed42e417, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAudio

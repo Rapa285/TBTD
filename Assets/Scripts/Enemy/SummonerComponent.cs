@@ -10,6 +10,7 @@ public class SummonerComponent : MonoBehaviour
     [SerializeField] private float summonCooldown=6f;
     [SerializeField] private float castTime=1f;
     [SerializeField] private float pathSpacing=0.02f;
+    [SerializeField] private EnemyAudio enemyAudio;
 
     private EnemyMover mover;
     private EnemyEntity entity;
@@ -44,6 +45,10 @@ public class SummonerComponent : MonoBehaviour
         isSummoning=true;
         mover.PauseMovement();
         Debug.Log("Summoning minions...");
+        if (enemyAudio != null)
+        {
+            enemyAudio.PlaySkill();
+        }
 
         try{
             await Awaitable.WaitForSecondsAsync(castTime, destroyCancellationToken);
