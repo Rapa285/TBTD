@@ -5008,6 +5008,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   baseHealth: 100
+  sceneLoader: {fileID: 0}
 --- !u!114 &1033910994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12051,7 +12052,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 0
-  m_FillAmount: 0.43
+  m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
