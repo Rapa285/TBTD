@@ -20,7 +20,7 @@ This Unity project is a roster-managed tower combat prototype. Keep future agent
 - Owns the active primary `AttackBehaviour`, runtime override weapon instance, augment weapon instances, and active tower-level projectile modifier instances.
 - Owns attack timing, setup delay, target retention, and primary attack ammo state.
 - Owns selected state for deployed towers and is the only runtime owner that changes `UnitVision` range visualization visibility.
-- Keeps range visualization visible when selected or while in deployment preview; deployment preview state and selected state are separate reasons.
+- Keeps range visualization visible when selected, while in deployment preview, or while requested by roster-card hover; each reason is tracked separately.
 - Pushes compiled `VisualRange` into `UnitVision.Range`.
 - Resolves a stable runtime `unitId` from `UnitProgression` when roster-managed, otherwise generates a unique runtime ID.
 - Raises `OnDeploy` only after activation has completed and a resolved unit ID exists.
@@ -107,6 +107,7 @@ Deployment UI state is separate from deployment input eligibility.
 - `UnitUIDeployment.CanBeginDeployment()` still blocks input while any preview is active.
 - `UnitUIDeployment.CurrentState` can be `CannotDeploy`, `CanDeploy`, or `InDeployPreview`.
 - The deployable indicator is visible for `CanDeploy` and `InDeployPreview`.
+- `UnitUIIconDisplay` displays `OwnedUnitState.Icon` for managed roster UI items and hides when the item is direct/unconfigured or has no icon.
 - `UnitUICost` displays cached cost for undeployed roster units and hides it while deployed or when no cached cost exists.
 - `UICurrencyDisplayer` displays the current currency balance and refreshes from `CurrencyChanged`.
 
@@ -182,7 +183,7 @@ Upgrade selection is event-bus driven.
 
 - `UnitProgression` raises `UnitUpgradeThresholdReached` when runtime XP reaches the current threshold.
 - `UpgradesManager` listens, marks the roster unit pending through `UnitStateManager.TryBeginUpgradeSelection(unitId)`, and builds a stored pending offer from its shared `MultiUpgradeSO` `upgradePool` plus eligible entries in its `EvolutionSO` `evolutionPool`.
-- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, instantiates `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
+- `UpgradeSelectionUI` listens for `UnitUpgradeChoicesOffered`, binds pooled `UpgradeChoiceItem` entries, and raises `UnitUpgradeChoiceRequested` when the player selects one.
 - `UpgradesManager` validates the pending offer, calls `UnitStateManager.RecordSelectedUpgrade`, and raises `UnitUpgradeSelected`.
 - `UnitStateManager.RecordSelectedUpgrade` clears pending state, advances unit level, advances the selected multi-upgrade line or records the selected evolution, applies the resolved `UpgradeSO` leaf immediately to the deployed tower if present, and refreshes runtime progression.
 - `UnitUIUpgrade` can request a stored pending offer later through `UnitUpgradeOfferRequested`.
@@ -208,12 +209,17 @@ Current offer rules:
 Upgrade selection presentation is UI-only and does not own upgrade state.
 
 - `UpgradeChoiceItem` displays the resolved `UpgradeSO` name, description, and icon for one `UnitUpgradeOfferChoice`.
-- `UpgradeChoiceItem` notifies `UpgradeSelectionUI` on click for selection and on pointer hover/UI focus for details.
-- `UpgradeSelectionUI` owns the active displayed offer, optional close/reroll controls, reroll affordability state, and the optional `UpgradeInfoDetailsUI` details panel.
+- `UpgradeChoiceItem` notifies `UpgradeSelectionUI` on click for selection and on pointer hover/UI focus for details. If it has an `UpgradeItemFX`, clicks are ignored until that item's reveal animation has completed.
+- `UpgradeSelectionUI` owns the active displayed offer, pooled choice items, optional close/reroll controls, reroll affordability state, chained choice reveal timing, and the optional `UpgradeInfoDetailsUI` details panel.
+- `UpgradeItemFX` owns per-choice hover scaling and reveal visuals. The reveal animates the mask `RectTransform` right edge from hidden to full width and updates the sheen color material's `_AnimProgress`; reveal playback is coordinated by `UpgradeSelectionUI` in display order, not by each item independently.
 - `UpgradeInfoDetailsUI` shows the focused upgrade title, forwards stat display to `UpgradeStatInfoUI`, and forwards evolution/multi-upgrade context to `EvoHintUI`.
 - `UpgradeStatInfoUI` displays stat effects line by line. For non-first-level multi-upgrade choices, it compares the current level leaf to the offered next level as `current >>> next` where a comparable stat effect exists.
 - `GenericIconDisplay` shows one `UpgradeSO` icon or `Sprite` and toggles its configured `root` when no icon is available.
-- `UpgradeIconLevelUI` shows one `MultiUpgradeSO` icon plus current level text. Normal display uses `LVL X`; requirement display uses `LVL X/Y`.
+- `UpgradeIconLevelUI` shows one `MultiUpgradeSO` icon plus current level text. Normal display uses `LVL X`; requirement display uses `LVL X/Y`. It can also show placeholder label content for selected-unit empty states such as no selected evolution.
+- `UnitDetailsUI` displays the currently selected deployed unit's name, icon, XP, ammo, active multi-upgrades, and selected evolution. It reads selected tower identity from `PlayerStateController` and roster metadata from `UnitStateManager`.
+- `UnitDetailUIFX` is an optional visual-only companion for `UnitDetailsUI`. It animates the detail panel `RectTransform.anchoredPosition.x` from hidden `width` to shown `0` on selection and back to `width` on deselection, then deactivates the root after closing.
+- `UnitUpgradeListUI` is only for active multi-upgrade lines. Do not bind or clear the selected evolution slot from this list.
+- `ConvertibleUpgradeHoverable` is the hover source for slots that need default generic tooltip text until a real upgrade or evolution is bound.
 - `EvoHintUI` has two modes. For a focused `MultiUpgradeSO`, it shows the focused upgrade in the middle, hides `targetEvo`, and shows up to two closest related evolutions ranked from `UpgradesManager.EvolutionPool`. For a focused `EvolutionSO`, it clears the focused upgrade, shows `targetEvo`, and uses the two related-upgrade slots for that evolution's prerequisites.
 - `EvoHintUI` hides all hint slots for null input or when the active unit already has a selected evolution.
 
@@ -243,6 +249,7 @@ Current behavior is one pending upgrade choice at a time. Do not assume multi-th
 - Uses `ColliderTargetUtility.GetTargetTransform(...)` so rigidbody-rooted targets resolve consistently.
 - Invalid targets are pruned when null or inactive.
 - Range visualization is exposed through `SetVisualizationVisible(...)`, but runtime callers should go through `TowerEntity` selected/preview state instead of manipulating it directly.
+- `effectiveInfiniteRange` and `infiniteRangeVisualizationRadius` only affect visualization scale for very large ranges; `Range` still drives the actual collider radius and overlap scan radius.
 
 There is still no faction/team system or targeting priority beyond first valid target. Do not assume targetability implies hostility beyond layer configuration.
 
@@ -332,12 +339,24 @@ Targets that should take damage should have:
 
 Upgrade selection UI additionally expects:
 
-- One `UpgradeSelectionUI` with `canvasGroup`, `choicesRoot`, `choiceItemPrefab`, and optional close/reroll controls assigned.
-- `UpgradeChoiceItem` prefabs should assign their `Button`, icon `Image`, name TMP text, and description TMP text.
+- One `UpgradeSelectionUI` with `canvasGroup`, `choicesRoot`, `choiceItemPrefab`, `choiceRevealDelay`, and optional close/reroll controls assigned.
+- `UpgradeChoiceItem` prefabs should assign their `Button`, icon `Image`, name TMP text, description TMP text, and optional `UpgradeItemFX`.
+- `UpgradeItemFX` should wire its scaled target, mask `RectTransform`, and sheen color `Graphic`; it clones the sheen material at runtime and must not animate the mask material directly.
 - `UpgradeInfoDetailsUI` should be assigned under the selection UI when focused-choice details are desired.
 - `UpgradeInfoDetailsUI` can reference a TMP title, `UpgradeStatInfoUI`, and `EvoHintUI`.
 - `EvoHintUI` should wire `focusedUpgrade`, `targetEvo`, and both related evolution slots. Each side slot can use a `GenericIconDisplay` for the related evolution icon and an `UpgradeIconLevelUI` for the related prerequisite upgrade.
+- `UnitDetailsUI` should wire `nameText`, `iconImage`, `xpText`, `xpSlider`, `ammoText`, `UnitUpgradeListUI`, a dedicated evolution `UpgradeIconLevelUI`, and a `ConvertibleUpgradeHoverable` for the no-evolution placeholder/selected-evolution tooltip.
+- Optional `UnitDetailUIFX` should wire the detail panel root `RectTransform`, root object, open/close times, and curves; `UnitDetailsUI` remains the data and selection owner.
 - `GenericIconDisplay.root` and `UpgradeIconLevelUI.root` should point at the UI object that should hide when the display has no data.
+
+Roster item UI additionally expects:
+
+- `UIUnitItem` should hold either a direct prefab reference or a managed roster `unitId`.
+- `UnitUIIconDisplay` should wire an `Image` for the roster unit icon when managed unit cards need visual identity.
+- `UnitUILevelDisplay` should wire a TMP text for the managed roster unit's current level.
+- `UnitUIAmmoDisplay` should wire a TMP text, ammo bar root, and child fill. It prefers an `Image` fill amount for the bar and falls back to `RectTransform` width when no fill image is available.
+- `UnitUIShowRangeOnHover` can live beside `UIUnitItem` to show the deployed managed unit's tower range while the roster card is hovered without changing selection or deployment input flow.
+- `UnitUICost`, `UnitUICooldownTimer`, `UnitUIRecall`, and `UnitUIUpgrade` should live beside the `UIUnitItem` when those roster item affordances are needed.
 
 ## Coding Guidelines For Future Agents
 

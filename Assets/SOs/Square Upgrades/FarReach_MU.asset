@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
   m_Name: FarReach_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Far-Reach
+  description: Precision at distance with stronger long-range setup. Supports Laser and Sniper evolutions.
   levelUpgrades:
   - {fileID: 11400000, guid: a3e3614af9d74b8f8deaa6658aa3f02c, type: 2}
   - {fileID: 11400000, guid: bb63f55813ec472dadebc9e8347cf6fd, type: 2}

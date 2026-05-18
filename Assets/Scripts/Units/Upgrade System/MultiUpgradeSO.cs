@@ -7,9 +7,17 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "MultiUpgrade", menuName = "TBTD/Multi Upgrade")]
 public sealed class MultiUpgradeSO : ScriptableObject
 {
+    [SerializeField, Tooltip("Generic display name for this upgrade line, used by non-level-specific UI such as hover hints.")]
+    private string upgradeName;
+
+    [SerializeField, TextArea, Tooltip("Generic description for this upgrade line, used by non-level-specific UI such as hover hints.")]
+    private string description;
+
     [SerializeField, Tooltip("Ordered upgrade levels. Level numbers are 1-based by list order.")]
     private List<UpgradeSO> levelUpgrades = new List<UpgradeSO>();
 
+    public string UpgradeName => upgradeName;
+    public string Description => description;
     public IReadOnlyList<UpgradeSO> LevelUpgrades => levelUpgrades;
     public int MaxLevel => levelUpgrades != null ? levelUpgrades.Count : 0;
     public bool HasValidLevels => TryGetLevelUpgrade(1, out _);

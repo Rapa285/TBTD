@@ -14,10 +14,10 @@ public class UpgradeSelectionUI : MonoBehaviour
     [SerializeField, Tooltip("Canvas group controlled when showing or hiding upgrade choices.")]
     private CanvasGroup canvasGroup;
 
-    [SerializeField, Tooltip("Parent transform that receives instantiated upgrade choice items.")]
+    [SerializeField, Tooltip("Parent transform that holds pooled upgrade choice items.")]
     private Transform choicesRoot;
 
-    [SerializeField, Tooltip("Prefab used for each offered upgrade choice.")]
+    [SerializeField, Tooltip("Prefab used only when the choices root pool needs to grow.")]
     private UpgradeChoiceItem choiceItemPrefab;
 
     [SerializeField, Tooltip("Optional details panel updated when an upgrade choice is hovered or focused.")]
@@ -35,7 +35,10 @@ public class UpgradeSelectionUI : MonoBehaviour
     [SerializeField, Tooltip("Optional TMP text used to display the current reroll cost.")]
     private TMP_Text rerollCostText;
 
-    private readonly List<UpgradeChoiceItem> spawnedItems = new List<UpgradeChoiceItem>();
+    [SerializeField, Min(0f), Tooltip("Delay in seconds between each active upgrade choice reveal animation.")]
+    private float choiceRevealDelay = 0.08f;
+
+    private readonly List<UpgradeChoiceItem> pooledItems = new List<UpgradeChoiceItem>();
     private UpgradesManager upgradesManager;
     private CurrencyManager currencyManager;
     private string activeUnitId;
@@ -46,12 +49,15 @@ public class UpgradeSelectionUI : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+        CollectChoicePool();
+        ClearChoices();
         Hide();
     }
 
     private void Start()
     {
         ResolveReferences();
+        CollectChoicePool();
         SubscribeToButtons();
         SubscribeToEventBus();
     }
@@ -59,6 +65,7 @@ public class UpgradeSelectionUI : MonoBehaviour
     private void OnEnable()
     {
         ResolveReferences();
+        CollectChoicePool();
         SubscribeToButtons();
         SubscribeToEventBus();
         RefreshRerollState();
@@ -73,6 +80,7 @@ public class UpgradeSelectionUI : MonoBehaviour
     private void OnValidate()
     {
         ResolveReferences();
+        choiceRevealDelay = Mathf.Max(0f, choiceRevealDelay);
     }
 
     /// <summary>
@@ -105,13 +113,13 @@ public class UpgradeSelectionUI : MonoBehaviour
     /// </summary>
     public void HandleChoiceFocused(int choiceIndex)
     {
-        if (choiceIndex < 0 || choiceIndex >= spawnedItems.Count)
+        if (choiceIndex < 0 || choiceIndex >= pooledItems.Count)
         {
             ClearDetails();
             return;
         }
 
-        UpgradeChoiceItem item = spawnedItems[choiceIndex];
+        UpgradeChoiceItem item = pooledItems[choiceIndex];
         if (item == null)
         {
             ClearDetails();
@@ -176,15 +184,14 @@ public class UpgradeSelectionUI : MonoBehaviour
             return;
         }
 
-        if (choiceItemPrefab == null)
-        {
-            Debug.LogWarning($"{nameof(UpgradeSelectionUI)} cannot show upgrade offer for unit '{eventData.UnitId}' because no choice item prefab is assigned.", this);
-            return;
-        }
-
         if (choicesRoot == null)
         {
             Debug.LogWarning($"{nameof(UpgradeSelectionUI)} cannot show upgrade offer for unit '{eventData.UnitId}' because no choices root is assigned.", this);
+            return;
+        }
+
+        if (!EnsureChoiceCapacity(eventData.Choices.Length, eventData.UnitId))
+        {
             return;
         }
 
@@ -193,11 +200,12 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         for (int i = 0; i < eventData.Choices.Length; i++)
         {
-            UpgradeChoiceItem item = Instantiate(choiceItemPrefab, choicesRoot);
+            UpgradeChoiceItem item = pooledItems[i];
+            item.gameObject.SetActive(true);
             item.Bind(eventData.Choices[i], i, this);
-            spawnedItems.Add(item);
         }
 
+        PlayChainedChoiceReveal();
         BindFirstChoiceDetails();
         Show();
         RefreshRerollState();
@@ -270,24 +278,26 @@ public class UpgradeSelectionUI : MonoBehaviour
     {
         ClearDetails();
 
-        for (int i = spawnedItems.Count - 1; i >= 0; i--)
+        for (int i = 0; i < pooledItems.Count; i++)
         {
-            if (spawnedItems[i] != null)
+            UpgradeChoiceItem item = pooledItems[i];
+            if (item == null)
             {
-                Destroy(spawnedItems[i].gameObject);
+                continue;
             }
-        }
 
-        spawnedItems.Clear();
+            item.ClearBinding();
+            item.gameObject.SetActive(false);
+        }
     }
 
     private void BindFirstChoiceDetails()
     {
-        for (int i = 0; i < spawnedItems.Count; i++)
+        for (int i = 0; i < pooledItems.Count; i++)
         {
-            if (spawnedItems[i] != null && spawnedItems[i].Choice.IsValid)
+            if (pooledItems[i] != null && pooledItems[i].gameObject.activeSelf && pooledItems[i].Choice.IsValid)
             {
-                BindDetails(spawnedItems[i].Choice);
+                BindDetails(pooledItems[i].Choice);
                 return;
             }
         }
@@ -314,6 +324,41 @@ public class UpgradeSelectionUI : MonoBehaviour
         {
             upgradeInfoDetailsUI.Clear();
         }
+    }
+
+    private void PlayChainedChoiceReveal()
+    {
+        int revealIndex = 0;
+
+        for (int i = 0; i < pooledItems.Count; i++)
+        {
+            UpgradeChoiceItem item = pooledItems[i];
+            if (!ShouldRevealChoice(item) || !item.TryGetComponent(out UpgradeItemFX itemFx))
+            {
+                continue;
+            }
+
+            itemFx.PrepareRevealAnimation();
+        }
+
+        for (int i = 0; i < pooledItems.Count; i++)
+        {
+            UpgradeChoiceItem item = pooledItems[i];
+            if (!ShouldRevealChoice(item) || !item.TryGetComponent(out UpgradeItemFX itemFx))
+            {
+                continue;
+            }
+
+            itemFx.PlayRevealAnimation(revealIndex * choiceRevealDelay);
+            revealIndex++;
+        }
+    }
+
+    private bool ShouldRevealChoice(UpgradeChoiceItem item)
+    {
+        return item != null
+            && item.gameObject.activeSelf
+            && item.Choice.IsValid;
     }
 
     private void ResolveReferences()
@@ -352,6 +397,51 @@ public class UpgradeSelectionUI : MonoBehaviour
         {
             rerollButtonRoot = rerollButton.gameObject;
         }
+    }
+
+    private void CollectChoicePool()
+    {
+        if (choicesRoot == null)
+        {
+            return;
+        }
+
+        UpgradeChoiceItem[] childItems = choicesRoot.GetComponentsInChildren<UpgradeChoiceItem>(true);
+        for (int i = 0; i < childItems.Length; i++)
+        {
+            UpgradeChoiceItem item = childItems[i];
+            if (item != null && !pooledItems.Contains(item))
+            {
+                pooledItems.Add(item);
+            }
+        }
+    }
+
+    private bool EnsureChoiceCapacity(int requiredCount, string unitId)
+    {
+        CollectChoicePool();
+
+        if (pooledItems.Count >= requiredCount)
+        {
+            return true;
+        }
+
+        if (choiceItemPrefab == null)
+        {
+            Debug.LogWarning(
+                $"{nameof(UpgradeSelectionUI)} cannot show upgrade offer for unit '{unitId}' because the choice pool has {pooledItems.Count} item(s), needs {requiredCount}, and no growth prefab is assigned.",
+                this);
+            return false;
+        }
+
+        while (pooledItems.Count < requiredCount)
+        {
+            UpgradeChoiceItem item = Instantiate(choiceItemPrefab, choicesRoot);
+            item.gameObject.SetActive(false);
+            pooledItems.Add(item);
+        }
+
+        return true;
     }
 
     private void SubscribeToButtons()

@@ -1,25 +1,22 @@
-using UnityEditor;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     [SerializeField]
     private float baseHealth = 100f;
+
+    [SerializeField]
+    private SceneLoader sceneLoader;
+
     private GameObject SelectedTower;
-    [SerializeField] SceneLoader sceneLoader;
 
     private void Awake()
     {
-        if (sceneLoader == null)
-        {
-            // sceneLoader = FindFirstObjectByType<SceneLoader>(FindObjectsInactive.Include);
-            sceneLoader = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoader) ? resolvedSceneLoader : sceneLoader;
-        }
+        ResolveSceneLoader();
     }
 
     private void OnEnable()
     {
-        // Mulai mendengarkan event BaseDamagedEvent
         GeneralEventBus<BaseDamagedEvent>.Subscribe(DamageBase);
         GeneralEventBus<GamePausedEvent>.Subscribe(PauseGame);
         GeneralEventBus<GameUnPausedEvent>.Subscribe(UnPauseGame);
@@ -29,7 +26,6 @@ public class GameManager : MonoBehaviour
 
     private void OnDisable()
     {
-        // Mulai mendengarkan event BaseDamagedEvent
         GeneralEventBus<BaseDamagedEvent>.Unsubscribe(DamageBase);
         GeneralEventBus<GamePausedEvent>.Unsubscribe(PauseGame);
         GeneralEventBus<GameUnPausedEvent>.Unsubscribe(UnPauseGame);
@@ -46,11 +42,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Menyiarkan Event Game Over
     private void GameOver()
     {
-        GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent{});
-        // GeneralEventBus<GamePausedEvent>.Publish(new GamePausedEvent{});
+        GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent { });
     }
 
     private void PauseGame(GamePausedEvent eventData)
@@ -63,15 +57,35 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
     }
 
-
     private void RetryGame(RetryGameEvent eventData)
     {
-        sceneLoader.LoadScene("InGame");
-        // UnPauseGame(new GameUnPausedEvent{});
+        Time.timeScale = 1f;
+        LoadScene("InGame");
     }
 
     private void ExitToMainMenu(ExitToMainMenuEvent eventData)
     {
-        sceneLoader.LoadScene("Title Screen");
+        Time.timeScale = 1f;
+        LoadScene("Title Screen");
+    }
+
+    private void ResolveSceneLoader()
+    {
+        if (sceneLoader == null)
+        {
+            ServiceLocator.TryResolve(out sceneLoader);
+        }
+    }
+
+    private void LoadScene(string sceneName)
+    {
+        ResolveSceneLoader();
+        if (sceneLoader == null)
+        {
+            Debug.LogWarning($"{nameof(GameManager)} cannot load scene '{sceneName}' because no {nameof(SceneLoader)} was found.", this);
+            return;
+        }
+
+        sceneLoader.LoadScene(sceneName);
     }
 }

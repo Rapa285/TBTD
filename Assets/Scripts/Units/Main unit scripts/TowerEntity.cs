@@ -84,6 +84,7 @@ public partial class TowerEntity : MonoBehaviour
     private bool isSelected;
     private bool isDeploymentPreviewRangeVisible;
     private UnitVision subscribedVision;
+    private readonly HashSet<UnityEngine.Object> rangeHoverRequesters = new HashSet<UnityEngine.Object>();
 
     public bool Deployed => deployed;
     public bool IsSelected => isSelected;
@@ -147,6 +148,26 @@ public partial class TowerEntity : MonoBehaviour
         else
         {
             Deselected?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Shows this tower's range while at least one requester is hovering a linked UI element.
+    /// </summary>
+    public void SetRangeHoverVisible(UnityEngine.Object requester, bool visible)
+    {
+        if (requester == null)
+        {
+            return;
+        }
+
+        bool changed = visible
+            ? rangeHoverRequesters.Add(requester)
+            : rangeHoverRequesters.Remove(requester);
+
+        if (changed)
+        {
+            RefreshRangeVisualization();
         }
     }
 
@@ -397,8 +418,19 @@ public partial class TowerEntity : MonoBehaviour
 
         if (vision != null)
         {
-            vision.SetVisualizationVisible(isSelected || isDeploymentPreviewRangeVisible);
+            vision.SetVisualizationVisible(isSelected || isDeploymentPreviewRangeVisible || HasRangeHoverRequesters());
         }
+    }
+
+    private bool HasRangeHoverRequesters()
+    {
+        if (rangeHoverRequesters.Count == 0)
+        {
+            return false;
+        }
+
+        rangeHoverRequesters.RemoveWhere(requester => requester == null);
+        return rangeHoverRequesters.Count > 0;
     }
 
     private void ResolvePrimaryRuntimeFeatures(bool isInitialActivation)

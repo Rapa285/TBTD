@@ -46,6 +46,7 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - `PrepareForDeploymentPreview()` sets `deployed = false`, clears `currentTarget`, clears `UnitVision`, clears selected state, enables preview range visibility, and prevents attacks while dragging.
   - `Deploy()` sets `deployed = true`, disables preview range visibility, clears targeting, applies `VisualRange`, then sets `activeAfterTime = Time.time + SetupTime` and `nextAttackTime = activeAfterTime`.
   - Runtime range visualization is visible when the tower is selected or in deployment preview; `TowerEntity` is the only owner that calls `UnitVision.SetVisualizationVisible(...)`.
+  - Very large `UnitVision.Range` values can use compact visualization through `effectiveInfiniteRange` without changing targeting range.
   - Upgrade/stat formulas, attack behavior APIs, weapon override/augment behavior, and projectile modifiers remain owned by the tower/combat system.
 
 - `PlayerStateController` / `TowerSelectionTarget`
@@ -88,6 +89,23 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - Hides for direct prefab items, missing cost, or deployed roster units.
   - Colors text by affordability when a `CurrencyManager` exists.
 
+- `UnitUIIconDisplay`
+  - Displays `OwnedUnitState.Icon` for managed roster items.
+  - Hides for direct prefab items, unconfigured roster items, or managed units without an icon.
+
+- `UnitUILevelDisplay`
+  - Displays `OwnedUnitState.Level` for managed roster items.
+  - Refreshes after upgrade selections and hides for direct or unconfigured items.
+
+- `UnitUIAmmoDisplay`
+  - Displays deployed finite primary-weapon ammo as text plus a root/fill bar.
+  - Uses the fill child's `Image.fillAmount` when available and falls back to `RectTransform` width.
+  - Colors the fill by remaining ammo and shows a full red flashing bar at zero ammo.
+
+- `UnitUIShowRangeOnHover`
+  - Requests tower range visibility from `TowerEntity` while a deployed managed unit card is hovered.
+  - Clears only its own hover request, leaving selected and deployment-preview range visibility intact.
+
 - `UICurrencyDisplayer`
   - Displays current player currency and refreshes on `CurrencyChanged`.
 
@@ -114,6 +132,9 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - Roster currency is deducted only after valid placement succeeds.
   - Deployable indicator remains visible while that unit is in deployment preview and hides after successful deployment.
   - Cost display hides while a roster unit is deployed.
+  - Level display shows the managed roster unit level and updates after upgrade selection.
+  - Ammo display hides when unavailable, shrinks the fill as finite ammo is spent, and flashes full red at zero ammo.
+  - Hovering a deployed managed unit card shows that tower's range without selecting it.
   - Clicking UI does not change tower selection.
   - Clicking `TowerVision` passes through to an underlying `TowerUnit` selection collider.
   - Blocking geometry in front of a tower prevents click-through selection.
@@ -124,5 +145,5 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
 - Placement is freeform on ground surfaces, not grid-snapped.
 - Footprint is inspector-configured serialized radius/height, not inferred from prefab colliders.
 - Upgrade selection UI is handled by the separate event-bus upgrade UI flow; drag/drop UI only starts deployment.
-- Upgrade offer display, focused-choice details, reroll controls, stat comparison text, and evolution hints belong to `UpgradeSelectionUI` and related visual scripts, not to deployment UI.
+- Upgrade offer display, chained choice reveal animation, focused-choice details, reroll controls, stat comparison text, and evolution hints belong to `UpgradeSelectionUI` and related visual scripts, not to deployment UI.
 - Deployment economy is limited to roster-managed unit cost. Direct prefab deployment remains free.

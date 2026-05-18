@@ -76,6 +76,101 @@ MonoBehaviour:
   onEnterInvalid:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &1797716272171388779
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1670982056683812411}
+  - component: {fileID: 4929141021693071380}
+  m_Layer: 0
+  m_Name: HoverManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1670982056683812411
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797716272171388779}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4658590519654865812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4929141021693071380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797716272171388779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a771e51ecb95c154faa3d5bae2962d90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoverController
+  toolTip: {fileID: 0}
+  rightSideOffset: {x: 24, y: -24}
+  leftSideOffset: {x: -24, y: -24}
+  screenPadding: 12
+--- !u!1 &3340334881070983806
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1951517740852878989}
+  - component: {fileID: 4665892631158325276}
+  m_Layer: 0
+  m_Name: TimeManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1951517740852878989
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3340334881070983806}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4658590519654865812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4665892631158325276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3340334881070983806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300950838b03f73488f14a14b82478ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeService
+  normalTimeScale: 1
+  deploymentPreviewTimeScale: 0.2
+  scaleFixedDeltaTime: 1
 --- !u!1 &3490748802431150497
 GameObject:
   m_ObjectHideFlags: 0
@@ -260,7 +355,7 @@ MonoBehaviour:
   ownedUnits:
   - unitId: 1
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 05d9eddb2675dcf468ea7dca5847ecd6, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
@@ -269,7 +364,7 @@ MonoBehaviour:
     selectedEvolution: {fileID: 0}
   - unitId: 2
     displayName: Unit B
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: d85b7cb9b95d3f74d8984bdeaa33f320, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
@@ -278,7 +373,7 @@ MonoBehaviour:
     selectedEvolution: {fileID: 0}
   - unitId: 3
     displayName: Unit C
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 00d99b148d58d5644935454f2a09ef3a, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
@@ -287,7 +382,7 @@ MonoBehaviour:
     selectedEvolution: {fileID: 0}
   - unitId: 4
     displayName: Unit D
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 51ad420db37d24148a035f892980ecd5, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
@@ -296,7 +391,7 @@ MonoBehaviour:
     selectedEvolution: {fileID: 0}
   - unitId: 5
     displayName: Unit E
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ec2a0d2e43ec7b043b2928321a8fafa6, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 100
     experience: 100
@@ -403,6 +498,8 @@ Transform:
   - {fileID: 646395135148070483}
   - {fileID: 5288108152175745210}
   - {fileID: 6564508759490660469}
+  - {fileID: 1670982056683812411}
+  - {fileID: 1951517740852878989}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5627124984122599137

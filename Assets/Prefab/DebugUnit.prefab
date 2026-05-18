@@ -810,6 +810,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitVision
   range: 5
+  effectiveInfiniteRange: 30
+  infiniteRangeVisualizationRadius: 1
   targetLayers:
     serializedVersion: 2
     m_Bits: 192

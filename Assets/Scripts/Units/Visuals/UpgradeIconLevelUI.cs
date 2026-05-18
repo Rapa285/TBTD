@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// </summary>
 public class UpgradeIconLevelUI : MonoBehaviour
 {
-    [SerializeField, Tooltip("Optional root toggled when the display has valid data. Defaults to this object.")]
+    [SerializeField, Tooltip("Optional root toggled when the display has valid data or placeholder content. Defaults to this object.")]
     private GameObject root;
 
     [SerializeField, Tooltip("Image used to display the resolved level upgrade icon.")]
@@ -15,6 +15,9 @@ public class UpgradeIconLevelUI : MonoBehaviour
 
     [SerializeField, Tooltip("Text used for the upgrade level label.")]
     private TMP_Text levelText;
+
+    [SerializeField, Tooltip("Optional hover data source populated when this slot binds an upgrade or evolution.")]
+    private UpgradeHoverableItem hoverableItem;
 
     private UnitStateManager unitStateManager;
 
@@ -51,6 +54,63 @@ public class UpgradeIconLevelUI : MonoBehaviour
         BindInternal(multiUpgrade, unit, requiredLevel, true);
     }
 
+    public void BindEvolution(EvolutionSO evolution)
+    {
+        ResolveReferences();
+
+        if (evolution == null || !evolution.HasResolvedUpgrade)
+        {
+            Clear();
+            return;
+        }
+
+        UpgradeSO resolvedUpgrade = evolution.ResolvedUpgrade;
+        if (iconImage != null)
+        {
+            Sprite icon = resolvedUpgrade != null ? resolvedUpgrade.Icon : null;
+            iconImage.sprite = icon;
+            iconImage.enabled = icon != null;
+        }
+
+        if (levelText != null)
+        {
+            levelText.text = "EVO";
+        }
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.Bind(evolution);
+        }
+
+        SetRootVisible(true);
+    }
+
+    /// <summary>
+    /// Shows this slot without an upgrade icon, for empty states such as an unevolved unit.
+    /// </summary>
+    public void BindPlaceholder(string label)
+    {
+        ResolveReferences();
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = null;
+            iconImage.enabled = false;
+        }
+
+        if (levelText != null)
+        {
+            levelText.text = label ?? string.Empty;
+        }
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.Clear();
+        }
+
+        SetRootVisible(true);
+    }
+
     public void Clear()
     {
         if (iconImage != null)
@@ -62,6 +122,11 @@ public class UpgradeIconLevelUI : MonoBehaviour
         if (levelText != null)
         {
             levelText.text = string.Empty;
+        }
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.Clear();
         }
 
         SetRootVisible(false);
@@ -106,6 +171,11 @@ public class UpgradeIconLevelUI : MonoBehaviour
                 : $"LVL {currentLevel}";
         }
 
+        if (hoverableItem != null)
+        {
+            hoverableItem.Bind(multiUpgrade, targetIconLevel, currentLevel);
+        }
+
         SetRootVisible(true);
     }
 
@@ -142,6 +212,11 @@ public class UpgradeIconLevelUI : MonoBehaviour
         if (levelText == null)
         {
             levelText = GetComponentInChildren<TMP_Text>(true);
+        }
+
+        if (hoverableItem == null)
+        {
+            hoverableItem = GetComponent<UpgradeHoverableItem>();
         }
     }
 

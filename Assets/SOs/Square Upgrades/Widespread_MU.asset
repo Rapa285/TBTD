@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
   m_Name: Widespread_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Widespread
+  description: More coverage and ammo with less precision. Supports Aura and Shotgun evolutions.
   levelUpgrades:
   - {fileID: 11400000, guid: 30264b883cfc47b3980cf05065c2944c, type: 2}
   - {fileID: 11400000, guid: c5cd8c808e454ee98b0d659f8a462072, type: 2}

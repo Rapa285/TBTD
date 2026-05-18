@@ -1,6 +1,6 @@
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class SettingsPanel : MonoBehaviour
 {
     public GameObject settingsPanel;
@@ -24,9 +24,18 @@ public class SettingsPanel : MonoBehaviour
         // GeneralEventBus<>
     }
 
+    private void OnDisable()
+    {
+        if (showingPanel)
+        {
+            TimeService.Instance.ReleasePause(this);
+            showingPanel = false;
+        }
+    }
+
     private void showPanel()
     {
-        GeneralEventBus<GamePausedEvent>.Publish(new GamePausedEvent{});
+        TimeService.Instance.RequestPause(this, true);
 
         settingsPanel.SetActive(true);
         settingsButton.interactable = false;
@@ -35,7 +44,7 @@ public class SettingsPanel : MonoBehaviour
 
     private void closePanel()
     {
-        GeneralEventBus<GameUnPausedEvent>.Publish(new GameUnPausedEvent{});
+        TimeService.Instance.ReleasePause(this);
 
         settingsPanel.SetActive(false);
         settingsButton.interactable = true;

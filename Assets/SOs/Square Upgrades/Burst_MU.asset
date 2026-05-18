@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
   m_Name: Burst_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Burst
+  description: Large damage windows with poor cadence. Supports Sniper and Grenade Launcher evolutions.
   levelUpgrades:
   - {fileID: 11400000, guid: 988fe8fd9a064f31a536dd4552a3923b, type: 2}
   - {fileID: 11400000, guid: 4b29e639946e4e4691830b928f28fba3, type: 2}
