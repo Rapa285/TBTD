@@ -532,7 +532,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerSelectionTarget
   tower: {fileID: 5929984254154990258}
   selectionCollider: {fileID: 7401127552645490998}
-  playerStateController: {fileID: 0}
+  onSelected:
+    m_PersistentCalls:
+      m_Calls: []
+  onDeselected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &6969237254070908502
 GameObject:
   m_ObjectHideFlags: 0
@@ -805,6 +810,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitVision
   range: 5
+  effectiveInfiniteRange: 30
+  infiniteRangeVisualizationRadius: 1
   targetLayers:
     serializedVersion: 2
     m_Bits: 192

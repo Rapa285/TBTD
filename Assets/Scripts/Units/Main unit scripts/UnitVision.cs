@@ -12,6 +12,12 @@ public sealed class UnitVision : MonoBehaviour
     [SerializeField, Min(0f), Tooltip("Vision radius used to size the trigger sphere and overlap scans.")]
     private float range = 5f;
 
+    [SerializeField, Min(0f), Tooltip("Ranges greater than this value keep gameplay range but use the compact visualization radius.")]
+    private float effectiveInfiniteRange = 50f;
+
+    [SerializeField, Min(0f), Tooltip("Visualization radius used when the gameplay range is treated as effectively infinite.")]
+    private float infiniteRangeVisualizationRadius = 1f;
+
     [SerializeField, Tooltip("Layers this vision volume is allowed to track as valid targets.")]
     private LayerMask targetLayers = ~0;
 
@@ -64,6 +70,8 @@ public sealed class UnitVision : MonoBehaviour
     private void OnValidate()
     {
         range = Mathf.Max(0f, range);
+        effectiveInfiniteRange = Mathf.Max(0f, effectiveInfiniteRange);
+        infiniteRangeVisualizationRadius = Mathf.Max(0f, infiniteRangeVisualizationRadius);
         visionCollider = GetComponent<SphereCollider>();
         SyncCollider();
         SyncVisualization();
@@ -389,7 +397,8 @@ public sealed class UnitVision : MonoBehaviour
             return;
         }
 
-        visualization.transform.localScale = Vector3.one * (range * 2f);
+        float visualizationRadius = range > effectiveInfiniteRange ? infiniteRangeVisualizationRadius : range;
+        visualization.transform.localScale = Vector3.one * (visualizationRadius * 2f);
         if (!Application.isPlaying)
         {
             return;

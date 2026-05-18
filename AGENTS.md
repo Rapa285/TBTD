@@ -249,6 +249,7 @@ Current behavior is one pending upgrade choice at a time. Do not assume multi-th
 - Uses `ColliderTargetUtility.GetTargetTransform(...)` so rigidbody-rooted targets resolve consistently.
 - Invalid targets are pruned when null or inactive.
 - Range visualization is exposed through `SetVisualizationVisible(...)`, but runtime callers should go through `TowerEntity` selected/preview state instead of manipulating it directly.
+- `effectiveInfiniteRange` and `infiniteRangeVisualizationRadius` only affect visualization scale for very large ranges; `Range` still drives the actual collider radius and overlap scan radius.
 
 There is still no faction/team system or targeting priority beyond first valid target. Do not assume targetability implies hostility beyond layer configuration.
 

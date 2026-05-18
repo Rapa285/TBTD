@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,35 @@ using UnityEngine.UI;
 [DefaultExecutionOrder(-900)]
 public class HoverController : MonoBehaviour
 {
+    [Serializable]
+    private sealed class HoverDeadzone
+    {
+        [SerializeField, Min(0f), Tooltip("Pixels reserved from the top screen edge before hover tooltips clamp or flip.")]
+        private float up;
+
+        [SerializeField, Min(0f), Tooltip("Pixels reserved from the bottom screen edge before hover tooltips clamp or flip.")]
+        private float down;
+
+        [SerializeField, Min(0f), Tooltip("Pixels reserved from the left screen edge before hover tooltips clamp or flip.")]
+        private float left;
+
+        [SerializeField, Min(0f), Tooltip("Pixels reserved from the right screen edge before hover tooltips clamp or flip.")]
+        private float right;
+
+        public float Up => up;
+        public float Down => down;
+        public float Left => left;
+        public float Right => right;
+
+        public void Clamp()
+        {
+            up = Mathf.Max(0f, up);
+            down = Mathf.Max(0f, down);
+            left = Mathf.Max(0f, left);
+            right = Mathf.Max(0f, right);
+        }
+    }
+
     [SerializeField, Tooltip("Tooltip presenter controlled by this controller. Can be assigned or registered by the tooltip.")]
     private HoverToolTip toolTip;
 
@@ -18,6 +48,9 @@ public class HoverController : MonoBehaviour
 
     [SerializeField, Min(0f), Tooltip("Minimum screen padding kept around the tooltip.")]
     private float screenPadding = 12f;
+
+    [SerializeField, Tooltip("Screen-space edge insets that make hover tooltips flip or clamp before overlapping static UI.")]
+    private HoverDeadzone hoverDeadzone = new HoverDeadzone();
 
     private GenericHoverableItem currentItem;
     private Vector2 currentPointerPosition;
@@ -40,6 +73,12 @@ public class HoverController : MonoBehaviour
     private void OnValidate()
     {
         screenPadding = Mathf.Max(0f, screenPadding);
+        if (hoverDeadzone == null)
+        {
+            hoverDeadzone = new HoverDeadzone();
+        }
+
+        hoverDeadzone.Clamp();
     }
 
     public void RegisterToolTip(HoverToolTip toolTip)
@@ -131,21 +170,38 @@ public class HoverController : MonoBehaviour
 
         Vector2 size = rectTransform.rect.size;
         Vector2 pivot = rectTransform.pivot;
+        HoverDeadzone safeDeadzone = hoverDeadzone ?? new HoverDeadzone();
+
+        float minScreenX = screenPadding + safeDeadzone.Left;
+        float maxScreenX = Mathf.Max(minScreenX, Screen.width - screenPadding - safeDeadzone.Right);
+        float minScreenY = screenPadding + safeDeadzone.Down;
+        float maxScreenY = Mathf.Max(minScreenY, Screen.height - screenPadding - safeDeadzone.Up);
+
         float rightSidePivotX = pointerPosition.x + rightSideOffset.x + (size.x * pivot.x);
         float rightSideEdgeX = rightSidePivotX + (size.x * (1f - pivot.x));
-        bool shouldFlipLeft = rightSideEdgeX + screenPadding > Screen.width;
+        float rightSideLeftEdgeX = rightSidePivotX - (size.x * pivot.x);
 
-        float pivotX = shouldFlipLeft
-            ? pointerPosition.x + leftSideOffset.x - (size.x * (1f - pivot.x))
-            : rightSidePivotX;
+        float leftSidePivotX = pointerPosition.x + leftSideOffset.x - (size.x * (1f - pivot.x));
+        float leftSideLeftEdgeX = leftSidePivotX - (size.x * pivot.x);
+        float leftSideRightEdgeX = leftSidePivotX + (size.x * (1f - pivot.x));
+
+        float rightSideOverflow = CalculateOverflow(rightSideLeftEdgeX, rightSideEdgeX, minScreenX, maxScreenX);
+        float leftSideOverflow = CalculateOverflow(leftSideLeftEdgeX, leftSideRightEdgeX, minScreenX, maxScreenX);
+        bool shouldFlipLeft = rightSideEdgeX > maxScreenX && leftSideOverflow < rightSideOverflow;
+
+        float pivotX = shouldFlipLeft ? leftSidePivotX : rightSidePivotX;
 
         float verticalOffset = shouldFlipLeft ? leftSideOffset.y : rightSideOffset.y;
-        float pivotY = pointerPosition.y + verticalOffset - (size.y * (1f - pivot.y));
+        float bottomSidePivotY = pointerPosition.y + verticalOffset - (size.y * (1f - pivot.y));
+        float bottomSideBottomEdgeY = bottomSidePivotY - (size.y * pivot.y);
+        float topSidePivotY = pointerPosition.y - verticalOffset + (size.y * pivot.y);
+        bool shouldFlipUp = bottomSideBottomEdgeY < minScreenY;
+        float pivotY = shouldFlipUp ? topSidePivotY : bottomSidePivotY;
 
-        float minPivotX = screenPadding + (size.x * pivot.x);
-        float maxPivotX = Screen.width - screenPadding - (size.x * (1f - pivot.x));
-        float minPivotY = screenPadding + (size.y * pivot.y);
-        float maxPivotY = Screen.height - screenPadding - (size.y * (1f - pivot.y));
+        float minPivotX = minScreenX + (size.x * pivot.x);
+        float maxPivotX = maxScreenX - (size.x * (1f - pivot.x));
+        float minPivotY = minScreenY + (size.y * pivot.y);
+        float maxPivotY = maxScreenY - (size.y * (1f - pivot.y));
 
         Vector2 screenPosition = new Vector2(
             Mathf.Clamp(pivotX, minPivotX, Mathf.Max(minPivotX, maxPivotX)),
@@ -167,6 +223,11 @@ public class HoverController : MonoBehaviour
         {
             rectTransform.anchoredPosition = localPoint;
         }
+    }
+
+    private static float CalculateOverflow(float minEdge, float maxEdge, float minAllowed, float maxAllowed)
+    {
+        return Mathf.Max(0f, minAllowed - minEdge) + Mathf.Max(0f, maxEdge - maxAllowed);
     }
 
     private void ResolveToolTip()

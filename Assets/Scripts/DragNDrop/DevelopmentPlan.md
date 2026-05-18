@@ -46,6 +46,7 @@ Existing scene-placed towers stay active by default. Drag previews are explicitl
   - `PrepareForDeploymentPreview()` sets `deployed = false`, clears `currentTarget`, clears `UnitVision`, clears selected state, enables preview range visibility, and prevents attacks while dragging.
   - `Deploy()` sets `deployed = true`, disables preview range visibility, clears targeting, applies `VisualRange`, then sets `activeAfterTime = Time.time + SetupTime` and `nextAttackTime = activeAfterTime`.
   - Runtime range visualization is visible when the tower is selected or in deployment preview; `TowerEntity` is the only owner that calls `UnitVision.SetVisualizationVisible(...)`.
+  - Very large `UnitVision.Range` values can use compact visualization through `effectiveInfiniteRange` without changing targeting range.
   - Upgrade/stat formulas, attack behavior APIs, weapon override/augment behavior, and projectile modifiers remain owned by the tower/combat system.
 
 - `PlayerStateController` / `TowerSelectionTarget`
