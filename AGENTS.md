@@ -20,7 +20,7 @@ This Unity project is a roster-managed tower combat prototype. Keep future agent
 - Owns the active primary `AttackBehaviour`, runtime override weapon instance, augment weapon instances, and active tower-level projectile modifier instances.
 - Owns attack timing, setup delay, target retention, and primary attack ammo state.
 - Owns selected state for deployed towers and is the only runtime owner that changes `UnitVision` range visualization visibility.
-- Keeps range visualization visible when selected or while in deployment preview; deployment preview state and selected state are separate reasons.
+- Keeps range visualization visible when selected, while in deployment preview, or while requested by roster-card hover; each reason is tracked separately.
 - Pushes compiled `VisualRange` into `UnitVision.Range`.
 - Resolves a stable runtime `unitId` from `UnitProgression` when roster-managed, otherwise generates a unique runtime ID.
 - Raises `OnDeploy` only after activation has completed and a resolved unit ID exists.
@@ -352,6 +352,9 @@ Roster item UI additionally expects:
 
 - `UIUnitItem` should hold either a direct prefab reference or a managed roster `unitId`.
 - `UnitUIIconDisplay` should wire an `Image` for the roster unit icon when managed unit cards need visual identity.
+- `UnitUILevelDisplay` should wire a TMP text for the managed roster unit's current level.
+- `UnitUIAmmoDisplay` should wire a TMP text, ammo bar root, and child fill. It prefers an `Image` fill amount for the bar and falls back to `RectTransform` width when no fill image is available.
+- `UnitUIShowRangeOnHover` can live beside `UIUnitItem` to show the deployed managed unit's tower range while the roster card is hovered without changing selection or deployment input flow.
 - `UnitUICost`, `UnitUICooldownTimer`, `UnitUIRecall`, and `UnitUIUpgrade` should live beside the `UIUnitItem` when those roster item affordances are needed.
 
 ## Coding Guidelines For Future Agents
