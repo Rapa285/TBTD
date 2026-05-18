@@ -428,6 +428,7 @@ GameObject:
   - component: {fileID: 1506452212532473650}
   - component: {fileID: 1627325428167897236}
   - component: {fileID: 5558165790164757295}
+  - component: {fileID: 4843373451112337369}
   m_Layer: 6
   m_Name: BaseEnemy
   m_TagString: Untagged
@@ -465,6 +466,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2209e3dd742b3d74caaa6276caa23dc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
+  enemyAudio: {fileID: 4843373451112337369}
   initializeOnStart: 0
   startingHealth: 100
   startingShield: 0
@@ -508,6 +510,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 659d5034a94ee0648b541bea89540ac5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMover
+  enemyAudio: {fileID: 4843373451112337369}
   OnReachEnd:
     m_PersistentCalls:
       m_Calls: []
@@ -623,6 +626,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyScaler
   health: {fileID: 0}
   mover: {fileID: 0}
+--- !u!114 &4843373451112337369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8371444609426255717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60b800142b5b63c4ab906700ed42e417, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAudio
+  hitSound: {fileID: 8300000, guid: 7218edad0566fb4448261d064691d609, type: 3}
+  deathSound: {fileID: 8300000, guid: 3e522d63431083940b3e0710b2768a56, type: 3}
+  attackBaseSound: {fileID: 8300000, guid: e87722ab74b5c3c4383eace213cc0af9, type: 3}
 --- !u!1 &9045070914709005361
 GameObject:
   m_ObjectHideFlags: 0

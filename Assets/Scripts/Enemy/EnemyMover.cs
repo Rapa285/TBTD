@@ -5,6 +5,7 @@ using UnityEngine.Events;
 [RequireComponent(typeof(SplineAnimate))]
 public class EnemyMover : MonoBehaviour
 {
+    [SerializeField] private EnemyAudio enemyAudio;
     private SplineAnimate splineAnimate;
     private float baseSpeed;
     private float auraBuffMultiplier = 1f;
@@ -88,6 +89,11 @@ public class EnemyMover : MonoBehaviour
         if (!hasReachedEnd && splineAnimate != null && splineAnimate.NormalizedTime >= 1f)
         {
             hasReachedEnd = true;
+            if (enemyAudio != null)
+            {
+                enemyAudio.PlayAttackBase();
+            }
+            
             OnReachEnd?.Invoke();
         }
     }

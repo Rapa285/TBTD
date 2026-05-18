@@ -15,6 +15,9 @@ public enum HealthDeathMode
 /// </summary>
 public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamageable
 {
+    [Header("References")]
+    [SerializeField] private EnemyAudio enemyAudio;
+
     [Header("Auto Initialization")]
     [SerializeField, Tooltip("Initialize health automatically from the serialized starting values on Start.")]
     private bool initializeOnStart = false;
@@ -151,6 +154,13 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             }
             Die();
         }
+        else
+        {
+            if (enemyAudio != null)
+            {
+                enemyAudio.PlayHit();
+            }
+        }
     }
 
     private void Die()
@@ -166,6 +176,10 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         EnsureDeathEvent();
         OnDeath?.Invoke();
 
+        if (enemyAudio != null)
+        {
+            enemyAudio.PlayDeath();
+        }
         switch (deathMode)
         {
             case HealthDeathMode.DisableGameObject:
