@@ -15,6 +15,9 @@ public enum HealthDeathMode
 /// </summary>
 public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamageable
 {
+    [Header("References")]
+    [SerializeField] private EnemyAudio enemyAudio;
+
     [Header("Auto Initialization")]
     [SerializeField, Tooltip("Initialize health automatically from the serialized starting values on Start.")]
     private bool initializeOnStart = false;
@@ -35,6 +38,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 
     private float maxHealth;
     private float currentHealth;
+    private float maxShield;
     private float currentShield;
     private bool isDead;
     private bool hasLastHitContext;
@@ -46,6 +50,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 
     public float MaxHealth => maxHealth;
     public float CurrentHealth => currentHealth;
+    public float MaxShield => maxShield;
     public float CurrentShield => currentShield;
     public bool IsDead => isDead;
     public bool HasLastHitContext => hasLastHitContext;
@@ -88,6 +93,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         maxHealth = Mathf.Max(1f, health);
         currentHealth = maxHealth;
         currentShield = Mathf.Max(0f, shield);
+        maxShield = Mathf.Max(1f, currentShield);
         isDead = false;
         hasLastHitContext = false;
         lastHitContext = default;
@@ -148,6 +154,13 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             }
             Die();
         }
+        else
+        {
+            if (enemyAudio != null)
+            {
+                enemyAudio.PlayHit();
+            }
+        }
     }
 
     private void Die()
@@ -163,6 +176,10 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         EnsureDeathEvent();
         OnDeath?.Invoke();
 
+        if (enemyAudio != null)
+        {
+            enemyAudio.PlayDeath();
+        }
         switch (deathMode)
         {
             case HealthDeathMode.DisableGameObject:
@@ -189,6 +206,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     {
         if (isDead) return;
         currentShield+= amount;
+        maxShield = Mathf.Max(maxShield, currentShield);
         Debug.Log($"{gameObject.name} received a temporary shield buff of {amount}. Current Shield: {currentShield}");
         _ = RemoveShieldBuffAfterDuration(amount, duration);
     }

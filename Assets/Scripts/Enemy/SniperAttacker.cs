@@ -9,6 +9,11 @@ public class SniperAttacker : MonoBehaviour
     
     [Header("Targeting")]
     [SerializeField] private UnitVision vision;
+    [SerializeField] private EnemyAudio enemyAudio;
+
+    [Header("VFX Settings")]
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private SniperTracerVFX tracerPrefab;
 
     private EnemyMover mover;
     private float lastAttackTime;
@@ -56,5 +61,16 @@ public class SniperAttacker : MonoBehaviour
     {
         Debug.Log($"{gameObject.name} is attacking {target.name} for {attackDamage} damage.");
         CombatDamageUtility.TryApplyDamage(target, attackDamage);
+        if (enemyAudio != null)
+        {
+            enemyAudio.PlayAttackBase();
+        }
+        if (tracerPrefab != null && firePoint != null)
+        {
+            // ganti instantiate ketika ada pool manager utk vfx
+            SniperTracerVFX laser = Instantiate(tracerPrefab, Vector3.zero, Quaternion.identity);
+            
+            laser.SetupTracer(firePoint.position, target.position);
+        }
     }
 }

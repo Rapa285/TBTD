@@ -52,6 +52,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4843373451112337369, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: skillSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 7880f0cc19e8aeb449f5c48d15f31365, type: 3}
     - target: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: m_Name
       value: SplitEnemy
@@ -64,6 +68,17 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 8035093033416740011}
   m_SourcePrefab: {fileID: 100100000, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+--- !u!114 &6902411014663130870 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4843373451112337369, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+  m_PrefabInstance: {fileID: 2088918441840247087}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7552550619158113866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60b800142b5b63c4ab906700ed42e417, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAudio
 --- !u!1 &7552550619158113866 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
@@ -81,6 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7079c13b9787ca84e817b9e5a157288f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnOnDeathComponent
+  enemyAudio: {fileID: 6902411014663130870}
   prefabsToSpawn:
   - {fileID: 6615277949804604673, guid: 625b7c72d6bda2d498e06fb29feca740, type: 3}
   - {fileID: 6615277949804604673, guid: 625b7c72d6bda2d498e06fb29feca740, type: 3}

@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class AuraShieldBuffComponent : MonoBehaviour
 {
+    [SerializeField] private EnemyAudio enemyAudio;
     [Header("Aura Area")]
     [SerializeField] private float auraRadius = 3f;
     [SerializeField] private LayerMask enemyLayer;
@@ -40,6 +41,10 @@ public class AuraShieldBuffComponent : MonoBehaviour
         if (buffedSomeone)
         {
             Debug.Log($"{gameObject.name} casted a shield buff pulse!");
+            if (enemyAudio != null)
+            {
+                enemyAudio.PlaySkill();
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using UnityEngine.Splines;
 [RequireComponent(typeof(HealthComponent), typeof(EnemyEntity))]
 public class SpawnOnDeathComponent : MonoBehaviour
 {
+    [SerializeField] private EnemyAudio enemyAudio;
     [SerializeField] private GameObject[] prefabsToSpawn;
     
     [Header("Spawn Settings")]
@@ -32,6 +33,10 @@ public class SpawnOnDeathComponent : MonoBehaviour
             if (prefab != null)
             {
                 GameObject spawnedUnit = Instantiate(prefab, transform.position, transform.rotation);
+                if (enemyAudio != null)
+                {
+                    enemyAudio.PlaySkill();
+                }
                 
                 // get from parent
                 EnemyEntity childEntity = spawnedUnit.GetComponent<EnemyEntity>();

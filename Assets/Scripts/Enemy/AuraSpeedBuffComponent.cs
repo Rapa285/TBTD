@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class AuraSpeedBuffComponent : MonoBehaviour
 {
+    [SerializeField] private EnemyAudio enemyAudio;
     [Header("Aura Area")]
     [SerializeField] private float auraRadius = 3f;
     [SerializeField] private LayerMask enemyLayer;
@@ -39,6 +40,10 @@ public class AuraSpeedBuffComponent : MonoBehaviour
 
         if (buffedSomeone)
         {
+            if (enemyAudio != null)
+            {
+                enemyAudio.PlaySkill();
+            }
             Debug.Log($"{gameObject.name} casted a speed buff pulse!");
         }
     }

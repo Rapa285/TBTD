@@ -4,16 +4,51 @@ using UnityEngine;
 public class StatusEffectManager : MonoBehaviour
 {
     private List<StatusEffect> activeEffects = new List<StatusEffect>();
+    public List<StatusEffect> ActiveEffects => activeEffects;
 
     // call by tower when applying effect to enemy
     public void AddEffect(StatusEffect newEffect)
     {
         if (newEffect == null) return;
 
+        if (newEffect.IsUnique)
+        {
+            StatusEffect existing=null;
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                if (activeEffects[i] != null && activeEffects[i].EffectName == newEffect.EffectName)
+                {
+                    existing = activeEffects[i];
+                    break;
+                }
+            }
+
+            if (existing != null)
+            {
+                if (newEffect.EffectStrength > existing.EffectStrength)
+                {
+                    existing.OnRemove(gameObject);
+                    activeEffects.Remove(existing);
+
+                    newEffect.OnApply(gameObject);
+                    activeEffects.Add(newEffect);
+                    Debug.Log($"Reapplying effect --> {gameObject.name}");
+                }
+                else
+                {
+                    float remainingDuration=existing.Duration - existing.ElapsedTime;
+                    existing.Duration=Mathf.Max(remainingDuration, newEffect.Duration);
+                    existing.ElapsedTime=0f;
+                    Debug.Log($"Refreshing effect --> {gameObject.name}");
+                }
+                return;
+            }
+        }
+
         newEffect.OnApply(gameObject);
         activeEffects.Add(newEffect);
 
-        Debug.Log($"{gameObject.name} terkena efek {newEffect.EffectName}!");
+        Debug.Log($"{gameObject.name} got {newEffect.EffectName}!");
     }
 
     // for callers that cannot reference StatusEffect types directly
@@ -41,7 +76,7 @@ public class StatusEffectManager : MonoBehaviour
                 effect.OnRemove(gameObject);
                 activeEffects.RemoveAt(i);
 
-                Debug.Log($"{gameObject.name} kehilangan efek {effect.EffectName}.");
+                Debug.Log($"{gameObject.name} lost effect {effect.EffectName}.");
             }
         }
     }

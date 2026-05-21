@@ -9,12 +9,13 @@ public class DotEffect : StatusEffect
 
     public DotEffect(float damagePerTick, int totalTicks, float tickInterval)
     {
-        this.EffectName = "DOT";
+        this.EffectName = "Poison";
         this.damagePerTick = damagePerTick;
         this.tickInterval = Mathf.Max(0.0001f, tickInterval);
         this.Duration = totalTicks * this.tickInterval;
         this.ElapsedTime = 0f;
         this.tickAccumulator = 0f;
+        AutoLoadIcon();
     }
 
     public override void OnApply(GameObject target)
