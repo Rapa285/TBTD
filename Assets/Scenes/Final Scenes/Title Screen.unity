@@ -588,6 +588,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   startButton: {fileID: 1746136827}
+  exitButton: {fileID: 1570168388}
   ingameScene: {fileID: 11400000, guid: cd0b4074a38b72742a4b2b6ca4721a2c, type: 2}
   sceneLoader: {fileID: 0}
 --- !u!1 &1137326635

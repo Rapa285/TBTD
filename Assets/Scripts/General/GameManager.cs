@@ -45,27 +45,28 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent { });
+        TimeService.Instance.RequestPause(this, true);
     }
 
     private void PauseGame(GamePausedEvent eventData)
     {
-        Time.timeScale = 0f;
+        TimeService.Instance.RequestPause(this, true);
     }
 
     private void UnPauseGame(GameUnPausedEvent eventData)
     {
-        Time.timeScale = 1f;
+        TimeService.Instance.ReleasePause(this);
     }
 
     private void RetryGame(RetryGameEvent eventData)
     {
-        Time.timeScale = 1f;
+        TimeService.Instance.ReleasePause(this);
         LoadScene("InGame");
     }
 
     private void ExitToMainMenu(ExitToMainMenuEvent eventData)
     {
-        Time.timeScale = 1f;
+        TimeService.Instance.ReleasePause(this);
         LoadScene("Title Screen");
     }
 
@@ -77,7 +78,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void LoadScene(string sceneName)
+    async private void LoadScene(string sceneName)
     {
         ResolveSceneLoader();
         if (sceneLoader == null)
