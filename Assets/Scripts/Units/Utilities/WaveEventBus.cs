@@ -16,10 +16,34 @@ public struct NewWaveEvent
     }
 }
 
+public struct WaveTimerTickEvent
+{
+    public float timeRemaining;
+
+    public WaveTimerTickEvent(float timeRemaining)
+    {
+        this.timeRemaining = timeRemaining;
+    }
+}
+
+public struct GraceTimerTickEvent
+{
+    public float timeRemaining;
+
+    public GraceTimerTickEvent(float timeRemaining)
+    {
+        this.timeRemaining = timeRemaining;
+    }
+}
+
 [DefaultExecutionOrder(-1000)]
 public class WaveEventBus : MonoBehaviour
 {
   public event Action<NewWaveEvent> NewWave;
+  public event Action<WaveTimerTickEvent> WaveTimerTick;
+  public event Action<GraceTimerTickEvent> GraceTimerTick;
+  public event Action GraceTimerEnded;
+  public event Action InfiniteRoundTriggered;
 
   private void Awake()
     {
@@ -34,6 +58,26 @@ public class WaveEventBus : MonoBehaviour
     public void RaiseNewWave(NewWaveEvent eventData)
     {
         NewWave?.Invoke(eventData);
+    }
+
+    public void RaiseWaveTimerTick(WaveTimerTickEvent eventData)
+    {
+        WaveTimerTick?.Invoke(eventData);
+    }
+
+    public void RaiseGraceTimerTick(GraceTimerTickEvent eventData)
+    {
+        GraceTimerTick?.Invoke(eventData);
+    }
+
+    public void RaiseGraceTimerEnded()
+    {
+        GraceTimerEnded?.Invoke();
+    }
+
+    public void RaiseInfiniteRoundTriggered()
+    {
+        InfiniteRoundTriggered?.Invoke();
     }
 
     private void RegisterWithServiceLocator()

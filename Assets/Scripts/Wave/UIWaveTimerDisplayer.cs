@@ -4,28 +4,10 @@ using TMPro;
 public class UIWaveDisplayer : MonoBehaviour
 {
     [SerializeField]
-    private TMP_Text waveCountText;
+    private TMP_Text waveTimerText;
     [SerializeField]
-    private TMP_Text enemyCountText;
     private WaveEventBus eventBus;
     private bool eventBusSubscribed;
-
-    private void Awake()
-    {
-        ResolveReferences();
-        RefreshDisplay();
-    }
-
-    private void Start()
-    {
-        if (!Application.isPlaying)
-        {
-            return;
-        }
-
-        SubscribeToEventBus();
-        RefreshDisplay();
-    }
 
     private void OnEnable()
     {
@@ -37,7 +19,6 @@ public class UIWaveDisplayer : MonoBehaviour
         }
 
         SubscribeToEventBus();
-        RefreshDisplay();
     }
 
     private void OnDisable()
@@ -55,21 +36,28 @@ public class UIWaveDisplayer : MonoBehaviour
         ResolveReferences();
     }
 
-    private void HandleNewWave(NewWaveEvent eventData)
+    private void HandleWaveTimerTick(WaveTimerTickEvent eventData)
     {
-        RefreshDisplay(eventData.waveNumber, eventData.enemyCount);
+        if (waveTimerText != null)
+        {
+            int seconds = Mathf.CeilToInt(eventData.timeRemaining);
+            waveTimerText.text = $"{seconds}";
+        }
     }
+
+    private void HandleInfiniteRoundTriggered()
+    {
+        if (waveTimerText != null)
+        {
+            waveTimerText.text = "∞";
+        }
+     }
 
     private void ResolveReferences()
     {
-        if (waveCountText == null)
+        if (waveTimerText == null)
         {
-            waveCountText = GetComponent<TMP_Text>();
-        }
-
-        if (enemyCountText == null)
-        {
-            enemyCountText = GetComponent<TMP_Text>();
+            waveTimerText = GetComponent<TMP_Text>();
         }
 
         if (eventBus == null)
@@ -95,7 +83,8 @@ public class UIWaveDisplayer : MonoBehaviour
             return;
         }
 
-        eventBus.NewWave += HandleNewWave;
+        eventBus.WaveTimerTick += HandleWaveTimerTick;
+        eventBus.InfiniteRoundTriggered += HandleInfiniteRoundTriggered;
         eventBusSubscribed = true;
     }
 
@@ -106,26 +95,8 @@ public class UIWaveDisplayer : MonoBehaviour
             return;
         }
 
-        eventBus.NewWave -= HandleNewWave;
+        eventBus.WaveTimerTick -= HandleWaveTimerTick;
+        eventBus.InfiniteRoundTriggered -= HandleInfiniteRoundTriggered;
         eventBusSubscribed = false;
-    }
-
-    private void RefreshDisplay()
-    {
-        ResolveReferences();
-        RefreshDisplay(0, 0);
-    }
-
-    private void RefreshDisplay(int waveCount, int enemyCount)
-    {
-        if (waveCountText != null)
-        {
-            waveCountText.text = $"{waveCount}";
-        }
-
-        if (enemyCountText != null)
-        {
-            enemyCountText.text = $"{enemyCount}";
-        }
     }
 }
