@@ -491,7 +491,7 @@ MonoBehaviour:
   m_PlayOnAwake: 1
   m_LoopMode: 0
   m_Method: 1
-  m_Duration: 1
+  m_Duration: 6.256265
   m_MaxSpeed: 7
   m_EasingMode: 0
   m_AlignmentMode: 1
@@ -529,7 +529,7 @@ MonoBehaviour:
   stats:
     health: 100
     damage: 10
-    movementSpeed: 3
+    movementSpeed: 1.5
     initialShield: 0
   enemyData: {fileID: 11400000, guid: 8e6a0b3c8aec5464e9efe9ef52defd2e, type: 2}
   experienceReward: 1
