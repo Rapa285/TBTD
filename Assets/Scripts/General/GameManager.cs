@@ -9,10 +9,12 @@ public class GameManager : MonoBehaviour
     private SceneLoader sceneLoader;
 
     private GameObject SelectedTower;
+    private TimeService timeService;
 
     private void Awake()
     {
         ResolveSceneLoader();
+        ResolveTimeService();
     }
 
     private void OnEnable()
@@ -45,28 +47,48 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent { });
-        TimeService.Instance.RequestPause(this, true);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.RequestPause(this, true);
+        }
     }
 
     private void PauseGame(GamePausedEvent eventData)
     {
-        TimeService.Instance.RequestPause(this, true);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.RequestPause(this, true);
+        }
     }
 
     private void UnPauseGame(GameUnPausedEvent eventData)
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
     }
 
     private void RetryGame(RetryGameEvent eventData)
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
         LoadScene("InGame");
     }
 
     private void ExitToMainMenu(ExitToMainMenuEvent eventData)
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
         LoadScene("Title Screen");
     }
 
@@ -75,6 +97,14 @@ public class GameManager : MonoBehaviour
         if (sceneLoader == null)
         {
             ServiceLocator.TryResolve(out sceneLoader);
+        }
+    }
+
+    private void ResolveTimeService()
+    {
+        if (timeService == null)
+        {
+            ServiceLocator.TryResolve(out timeService);
         }
     }
 

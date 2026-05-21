@@ -14,8 +14,6 @@ public class TimeService : MonoBehaviour
     private const string GameOverKey = "GameOver";
     private const string SlowDownEventKey = "SlowDownGameEvent";
 
-    private static TimeService instance;
-
     [SerializeField, Min(0f), Tooltip("Normal gameplay time scale when no pause or slowdown request is active.")]
     private float normalTimeScale = 1f;
 
@@ -36,44 +34,11 @@ public class TimeService : MonoBehaviour
     private bool unitEventBusSubscribed;
     private bool generalEventBusSubscribed;
 
-    public static TimeService Instance
-    {
-        get
-        {
-            EnsureInstance();
-            return instance;
-        }
-    }
-
     public float CurrentTimeScale => currentTimeScale;
     public bool IsPaused => pauseRequests.Count > 0;
     public bool IsSlowed => pauseRequests.Count == 0 && slowdownRequests.Count > 0;
 
     public event Action<float> TimeScaleChanged;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void EnsureInstanceAfterSceneLoad()
-    {
-        EnsureInstance();
-    }
-
-    public static void EnsureInstance()
-    {
-        if (instance != null)
-        {
-            return;
-        }
-
-        instance = FindAnyObjectByType<TimeService>();
-        if (instance != null)
-        {
-            return;
-        }
-
-        GameObject serviceObject = new GameObject(nameof(TimeService));
-        DontDestroyOnLoad(serviceObject);
-        instance = serviceObject.AddComponent<TimeService>();
-    }
 
     public void RequestPause(object owner, bool controlsPlayerPauseState = false)
     {
@@ -148,18 +113,21 @@ public class TimeService : MonoBehaviour
 
     private void Awake()
     {
-        if (instance != null && instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        instance = this;
-        DontDestroyOnLoad(gameObject);
         baseFixedDeltaTime = Time.fixedDeltaTime;
-        currentTimeScale = Time.timeScale;
+        
+        // Reset time scales to defaults on scene load to avoid timescale 0 issues
+        pauseRequests.Clear();
+        playerPauseRequests.Clear();
+        slowdownRequests.Clear();
+        
+        Time.timeScale = normalTimeScale;
+        if (scaleFixedDeltaTime && baseFixedDeltaTime > 0f)
+        {
+            Time.fixedDeltaTime = baseFixedDeltaTime;
+        }
+        currentTimeScale = normalTimeScale;
+        
         RegisterWithServiceLocator();
-        ApplyResolvedTimeScale();
     }
 
     private void OnEnable()
@@ -198,11 +166,6 @@ public class TimeService : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (instance != this)
-        {
-            return;
-        }
-
         ServiceLocator.Unregister<TimeService>(this);
         ReleaseAutomaticRequests();
         Time.timeScale = normalTimeScale;
@@ -210,8 +173,6 @@ public class TimeService : MonoBehaviour
         {
             Time.fixedDeltaTime = baseFixedDeltaTime;
         }
-
-        instance = null;
     }
 
     private void HandleGamePaused(GamePausedEvent eventData)

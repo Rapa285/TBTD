@@ -492,7 +492,7 @@ MonoBehaviour:
   m_LoopMode: 0
   m_Method: 1
   m_Duration: 1
-  m_MaxSpeed: 10
+  m_MaxSpeed: 7
   m_EasingMode: 0
   m_AlignmentMode: 1
   m_ObjectForwardAxis: 2
@@ -641,6 +641,7 @@ MonoBehaviour:
   hitSound: {fileID: 8300000, guid: 7218edad0566fb4448261d064691d609, type: 3}
   deathSound: {fileID: 8300000, guid: 3e522d63431083940b3e0710b2768a56, type: 3}
   attackBaseSound: {fileID: 8300000, guid: e87722ab74b5c3c4383eace213cc0af9, type: 3}
+  skillSound: {fileID: 0}
 --- !u!1 &9045070914709005361
 GameObject:
   m_ObjectHideFlags: 0

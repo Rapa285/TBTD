@@ -13,6 +13,7 @@ public class SettingsPanel : MonoBehaviour
     public Button settingsPanelContinueButton;
 
     private bool showingPanel = false;
+    private TimeService timeService;
 
     private void Awake()
     {
@@ -39,14 +40,22 @@ public class SettingsPanel : MonoBehaviour
     {
         if (showingPanel)
         {
-            TimeService.Instance.ReleasePause(this);
+            ResolveTimeService();
+            if (timeService != null)
+            {
+                timeService.ReleasePause(this);
+            }
             showingPanel = false;
         }
     }
 
     private void showPanel()
     {
-        TimeService.Instance.RequestPause(this, true);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.RequestPause(this, true);
+        }
 
         settingsPanel.SetActive(true);
         settingsButton.interactable = false;
@@ -55,32 +64,53 @@ public class SettingsPanel : MonoBehaviour
 
     private void closePanel()
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
 
         settingsPanel.SetActive(false);
         settingsButton.interactable = true;
         showingPanel = false;
-
     }
 
     private void HomeButtonClicked()
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
         GeneralEventBus<ExitToMainMenuEvent>.Publish(new ExitToMainMenuEvent { });
     }
 
     private void RetryButtonClicked()
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
         GeneralEventBus<RetryGameEvent>.Publish(new RetryGameEvent { });
     }
 
     private void ContinueButtonClicked()
     {
-        TimeService.Instance.ReleasePause(this);
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.ReleasePause(this);
+        }
         settingsPanel.SetActive(false);
         settingsButton.interactable = true;
         showingPanel = false;
     }
 
-}
+    private void ResolveTimeService()
+    {
+        if (timeService == null)
+        {
+            ServiceLocator.TryResolve(out timeService);
+        }
+    }}

@@ -3,12 +3,17 @@ using UnityEngine;
 public class PauseManager : MonoBehaviour
 {
     public bool isPaused { get; private set; }
+    private TimeService timeService;
 
     private void OnDisable()
     {
         if (isPaused)
         {
-            TimeService.Instance.ReleasePause(this);
+            ResolveTimeService();
+            if (timeService != null)
+            {
+                timeService.ReleasePause(this);
+            }
             isPaused = false;
         }
     }
@@ -17,7 +22,11 @@ public class PauseManager : MonoBehaviour
     {
         if (!isPaused)
         {
-            TimeService.Instance.RequestPause(this, true);
+            ResolveTimeService();
+            if (timeService != null)
+            {
+                timeService.RequestPause(this, true);
+            }
             isPaused = true;
         }
     }
@@ -26,7 +35,11 @@ public class PauseManager : MonoBehaviour
     {
         if (isPaused)
         {
-            TimeService.Instance.ReleasePause(this);
+            ResolveTimeService();
+            if (timeService != null)
+            {
+                timeService.ReleasePause(this);
+            }
             isPaused = false;
         }
     }
@@ -40,6 +53,14 @@ public class PauseManager : MonoBehaviour
         else
         {
             PauseGame();
+        }
+    }
+
+    private void ResolveTimeService()
+    {
+        if (timeService == null)
+        {
+            ServiceLocator.TryResolve(out timeService);
         }
     }
 }

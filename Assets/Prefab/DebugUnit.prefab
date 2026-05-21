@@ -59,7 +59,7 @@ MonoBehaviour:
   targetRefreshPeriod: 0.25
   baseStats:
   - stat: 0
-    value: 150
+    value: 50
   - stat: 1
     value: 1
   - stat: 2
@@ -69,11 +69,11 @@ MonoBehaviour:
   - stat: 4
     value: 1
   - stat: 5
-    value: 30
+    value: 20
   - stat: 6
     value: 10
   - stat: 7
-    value: 50
+    value: 200
   upgrades: []
   onDeploy:
     m_PersistentCalls:
