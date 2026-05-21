@@ -1983,6 +1983,78 @@ PrefabInstance:
       propertyPath: mapSpline
       value: 
       objectReference: {fileID: 1555786160}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[1].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[1].attribute.minWave
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[2].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[2].attribute.minWave
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[3].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[3].attribute.minWave
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[4].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[4].attribute.minWave
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[5].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[5].attribute.minWave
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[6].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[6].attribute.minWave
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[7].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[7].attribute.minWave
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[8].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[8].attribute.minWave
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[9].attribute.maxWave
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3146269435169076616, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
+      propertyPath: normalEnemyList.Array.data[9].attribute.minWave
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 6433560535695700736, guid: aa1184a1f1fe05245b5cc681994a663c, type: 3}
       propertyPath: m_Name
       value: NewGameManagers
