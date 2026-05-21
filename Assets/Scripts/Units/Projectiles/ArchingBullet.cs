@@ -134,6 +134,7 @@ public sealed class ArchingBullet : BaseProjectile
             ApplyProjectileHit(hitCollider, target, Damage);
         }
 
+        RaiseBulletHit(transform);
         Expire();
     }
 }

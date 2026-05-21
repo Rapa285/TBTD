@@ -23,6 +23,7 @@ public sealed class BeamProjectile : BaseProjectile
 
     private readonly List<RaycastHit> rayHits = new List<RaycastHit>();
     private readonly HashSet<Transform> damagedTargetsThisTick = new HashSet<Transform>();
+    private readonly HashSet<Transform> bulletHitEmittedTargets = new HashSet<Transform>();
     private Vector3 beamOrigin;
     private Vector3 beamDirection = Vector3.forward;
     private Vector3 beamWidthAxis = Vector3.right;
@@ -95,6 +96,7 @@ public sealed class BeamProjectile : BaseProjectile
         }
 
         damageTicksApplied = 0;
+        bulletHitEmittedTargets.Clear();
         damagePerTick = Damage / Mathf.Max(1, damageTicks);
         nextDamageTickTime = Time.time;
         PlayBeamFX();
@@ -150,7 +152,11 @@ public sealed class BeamProjectile : BaseProjectile
                 continue;
             }
 
-            ApplyProjectileHit(hitCollider, hitTarget, damagePerTick, hit.point, true);
+            if (ApplyProjectileHit(hitCollider, hitTarget, damagePerTick, hit.point, true)
+                && bulletHitEmittedTargets.Add(hitTarget))
+            {
+                RaiseBulletHit(hitTarget);
+            }
         }
     }
 

@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 2429153952847350036}
   - component: {fileID: 3854019325215764389}
   - component: {fileID: 3849397606051400298}
+  - component: {fileID: 114607977981639539}
   m_Layer: 0
   m_Name: Bullet
   m_TagString: Untagged
@@ -167,3 +168,17 @@ MonoBehaviour:
   destroyOnHit: 1
   projectileCollider: {fileID: 3854019325215764389}
   bulletSpeed: 45
+--- !u!114 &114607977981639539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8499451242163957605}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15943a8dfb5b86d479a0455d007f44ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VFXRequester
+  hitVFXType: 1
+  projectile: {fileID: 3849397606051400298}

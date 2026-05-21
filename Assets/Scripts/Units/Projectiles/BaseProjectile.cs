@@ -1,6 +1,7 @@
 // Base runtime component for non-hitscan projectiles.
 // Owns shared projectile lifetime, trigger-hit filtering, owner ignoring, and damage application;
 // derived projectile classes only need to provide movement by overriding TickProjectile.
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -60,6 +61,7 @@ public abstract class BaseProjectile : MonoBehaviour
 
     public bool Fired => fired;
     public Collider CollisionCollider => projectileCollider;
+    public event Action<Transform> OnBulletHit;
 
     protected Collider ProjectileCollider => projectileCollider;
 
@@ -195,7 +197,10 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected virtual void OnHit(Collider other, Transform target)
     {
-        ApplyProjectileHit(other, target, damage);
+        if (ApplyProjectileHit(other, target, damage))
+        {
+            RaiseBulletHit(transform);
+        }
 
         if (destroyOnHit)
         {
@@ -228,6 +233,16 @@ public abstract class BaseProjectile : MonoBehaviour
         }
 
         return CombatDamageUtility.TryApplyDamage(target, damageAmount, context);
+    }
+
+    protected void RaiseBulletHit(Transform hitTransform)
+    {
+        if (hitTransform == null)
+        {
+            return;
+        }
+
+        OnBulletHit?.Invoke(hitTransform);
     }
 
     protected bool CanHitTarget(Transform target)
