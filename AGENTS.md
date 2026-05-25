@@ -293,6 +293,22 @@ When adding a new weapon, derive from `AttackBehaviour` and keep attack-specific
 
 Do not reintroduce parallel modifier systems such as a separate on-hit-effect base type.
 
+## Projectile Hit VFX
+
+Projectile hit VFX are presentation-only and routed through `BaseProjectile.OnBulletHit`, `VFXRequester`, and the scene-level `VFXService`.
+
+- `BaseProjectile.OnBulletHit` is a C# event that supplies a `Transform` used as the VFX spawn location.
+- Standard trigger bullets emit their own projectile transform after a valid projectile hit.
+- `ArchingBullet` emits its own transform once when the arc completes, including when no target is inside the explosion radius.
+- `BeamProjectile` emits each hit target transform once per spawned beam lifetime.
+- `VFXRequester` lives on projectile prefabs, subscribes to that projectile's `OnBulletHit`, and requests a configured `VFXType`.
+- `VFXDefSO` assets are created through `Create > TBTD > VFX Definition` and map one `VFXType` to one VFX prefab.
+- `VFXService` registers through `ServiceLocator`, reads its `availableVFXs`, resolves requests by `VFXType`, and uses the first valid matching definition.
+- `VFXService` prewarms pools under per-definition child roots, reuses the first inactive child, and dynamically instantiates another child when all pooled instances are active.
+- Pooled VFX return to the pool by disabling themselves. `VFXSelfDisable` disables the VFX object after one scaled second by default; `VFXService` warns and auto-adds it to spawned instances when the prefab lacks it.
+
+Do not use projectile modifiers for visual-only hit VFX. Keep VFX playback out of damage, upgrade-effect, ammo, and tower stat pipelines.
+
 ## Damage And Health
 
 `HealthComponent` is now the basic health implementation.
@@ -330,6 +346,14 @@ Projectile weapons additionally expect:
 
 - A projectile prefab with `BaseProjectile` or a derived projectile component.
 - Correct collider setup for trigger hits.
+- Optional on-hit VFX should add `VFXRequester` to the projectile prefab and select the desired `VFXType`.
+
+Scene-level VFX setup additionally expects:
+
+- One `VFXService` registered in the scene.
+- `VFXService.availableVFXs` populated with `VFXDefSO` assets for every requested `VFXType`.
+- VFX prefabs that can safely be reused after `SetActive(false)` and `SetActive(true)`.
+- `VFXSelfDisable` on VFX prefabs when a custom lifetime is needed; otherwise `VFXService` auto-adds the default one-second scaled-time disabler to spawned instances.
 
 Targets that should take damage should have:
 
