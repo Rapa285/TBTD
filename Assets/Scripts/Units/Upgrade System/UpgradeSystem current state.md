@@ -91,6 +91,9 @@ Visual attack feedback is separate from upgrade-authored projectile modifiers:
 - Concrete attacks decide when to call `AttackFX.PlayAttackFX(AttackFXContext)`.
 - Attack FX components are presentation-only and should not be used for damage, upgrade effects, ammo, or projectile lifecycle behavior.
 - `LineAttackFXComponent` is the shared line-rendered visual component used by Laser and Sniper. It draws the full line immediately, then eases the line width from thick to thin before hiding.
+- Projectile on-hit VFX use `BaseProjectile.OnBulletHit`, `VFXRequester`, `VFXDefSO`, and the scene-level `VFXService`.
+- `VFXService` resolves requests by `VFXType`, pools one inactive-child list per VFX definition, dynamically grows exhausted pools, and relies on `VFXSelfDisable` to return instances to the inactive pool.
+- `VFXRequester` is prefab-side presentation wiring only; it must not own upgrade state, damage, projectile modifiers, ammo, targeting, or tower stat behavior.
 
 ## Offer And Selection Flow
 `UpgradesManager` listens for `UnitUpgradeThresholdReached` events from `UnitEventBus`.
@@ -219,6 +222,7 @@ Damage scaling should normally be authored as `ENTITY_STATS.GlobalDamage` stat e
 - Add new stats in `EntityConstants.cs` and update `TowerEntity.GetDefaultStat()`.
 - Add new attack behaviours by deriving from `AttackBehaviour`; do not put weapon-specific logic in `TowerEntity`.
 - Add visual-only attack feedback by implementing `AttackFXComponent` and wiring it through the attack's `attackFX` reference.
+- Add projectile hit VFX by creating `VFXDefSO` assets, registering them on scene `VFXService`, and assigning `VFXType` on projectile `VFXRequester` components.
 - Add new hit modifiers or projectile modifiers by deriving from `ProjectileModifierBehaviour`; do not hard-code modifier-specific behavior into `TowerEntity`, `AttackBehaviour`, or `BaseProjectile`.
 - Keep offer pools and complex offer rules out of `UnitStateManager`. If rarity, prerequisites, tags, or synergies grow, extract offer generation behind `UpgradesManager`.
 - Evolution prerequisite metadata lives on `EvolutionSO`; tower-facing effects still live on the resolved `UpgradeSO` leaf.

@@ -20,6 +20,16 @@ Class implementations in this folder are template/base behaviours for future att
 - Missing, null, or non-`AttackFXComponent` `attackFX` assignments should be treated as no visual output.
 - `AuraAttackFXComponent` is the current production example: it owns an aura `ParticleSystem` and emits one particle at the context hit position for each successfully damaged target.
 
+## Projectile Hit VFX
+
+- Projectile hit VFX are visual-only and should use `BaseProjectile.OnBulletHit` plus `VFXRequester`, not projectile modifiers.
+- `OnBulletHit` supplies the transform used for VFX placement: straight bullets use the projectile transform, grenades use the projectile transform at completed arc, and beams use each hit target transform once per beam lifetime.
+- `VFXRequester` belongs on projectile prefabs and requests a `VFXType` from the scene `VFXService`.
+- `VFXService` resolves the requested `VFXType` through its `availableVFXs` list of `VFXDefSO` assets.
+- VFX instances are pooled per definition. The service uses the first inactive child in that definition's pool and dynamically creates another instance if the pool is exhausted.
+- Pooled VFX return by disabling themselves. Add `VFXSelfDisable` to VFX prefabs for custom lifetime; otherwise the service warns and adds the default scaled-time one-second disabler to spawned instances.
+- Do not use hit VFX to apply damage, dispatch modifiers, spend ammo, choose targets, or mutate tower runtime stats.
+
 ## Hit And Projectile Modifiers
 
 - Upgrade-authored hit and projectile modifiers derive from `ProjectileModifierBehaviour`.
@@ -62,6 +72,7 @@ Class implementations in this folder are template/base behaviours for future att
 - Attack behaviours should instantiate projectile prefabs, initialize damage and owner, set direction/targeting data, then call `Fire()`.
 - Upgraded projectile attacks should use the `BaseProjectile.Initialize(float, Transform, TowerEntity, AttackBehaviour, IReadOnlyList<ProjectileModifierBehaviour>)` overload.
 - A straight projectile prefab must have a trigger collider and `BaseStraightProjectile`.
+- Optional on-hit VFX should be wired by adding `VFXRequester` to the projectile prefab and selecting the desired `VFXType`; the scene must include a configured `VFXService`.
 
 ## Test Implementations
 
