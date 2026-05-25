@@ -33,11 +33,16 @@ public sealed class BeamProjectile : BaseProjectile
     private float tickInterval = 0.2f;
     private float nextDamageTickTime;
     private int damageTicksApplied;
+    private bool defaultsCached;
+    private int defaultRayResolution;
+    private float defaultBeamWidth;
+    private int defaultDamageTicks;
 
     protected override void Awake()
     {
         base.Awake();
         ResolveBeamFX();
+        CacheDefaults();
     }
 
     protected override void OnValidate()
@@ -47,6 +52,27 @@ public sealed class BeamProjectile : BaseProjectile
         beamWidth = Mathf.Max(0f, beamWidth);
         damageTicks = Mathf.Max(1, damageTicks);
         ResolveBeamFX();
+    }
+
+    protected override void ResetProjectileStateForReuse()
+    {
+        CacheDefaults();
+        rayResolution = defaultRayResolution;
+        beamWidth = defaultBeamWidth;
+        damageTicks = defaultDamageTicks;
+
+        rayHits.Clear();
+        damagedTargetsThisTick.Clear();
+        bulletHitEmittedTargets.Clear();
+        beamOrigin = Vector3.zero;
+        beamDirection = Vector3.forward;
+        beamWidthAxis = Vector3.right;
+        beamRange = 10f;
+        beamDuration = 1f;
+        damagePerTick = 1f;
+        tickInterval = 0.2f;
+        nextDamageTickTime = 0f;
+        damageTicksApplied = 0;
     }
 
     public void ConfigureBeam(
@@ -224,6 +250,19 @@ public sealed class BeamProjectile : BaseProjectile
         {
             beamFX = GetComponent<LineAttackFXComponent>();
         }
+    }
+
+    private void CacheDefaults()
+    {
+        if (defaultsCached)
+        {
+            return;
+        }
+
+        defaultsCached = true;
+        defaultRayResolution = rayResolution;
+        defaultBeamWidth = beamWidth;
+        defaultDamageTicks = damageTicks;
     }
 
     private static Vector3 ResolveWidthAxis(Vector3 referenceAxis, Vector3 direction)

@@ -13,6 +13,8 @@ public class BaseStraightProjectile : BaseProjectile
 
     private Vector3 travelDirection = Vector3.forward;
     private bool hasDirection;
+    private bool defaultSpeedCached;
+    private float defaultBulletSpeed;
 
     public float BulletSpeed
     {
@@ -24,6 +26,20 @@ public class BaseStraightProjectile : BaseProjectile
     {
         base.OnValidate();
         bulletSpeed = Mathf.Max(0f, bulletSpeed);
+    }
+
+    protected override void Awake()
+    {
+        base.Awake();
+        CacheSpeedDefault();
+    }
+
+    protected override void ResetProjectileStateForReuse()
+    {
+        CacheSpeedDefault();
+        bulletSpeed = defaultBulletSpeed;
+        travelDirection = Vector3.forward;
+        hasDirection = false;
     }
 
     public override bool ReadyToFire()
@@ -68,5 +84,16 @@ public class BaseStraightProjectile : BaseProjectile
     protected override void TickProjectile(float deltaTime)
     {
         transform.position += travelDirection * bulletSpeed * deltaTime;
+    }
+
+    private void CacheSpeedDefault()
+    {
+        if (defaultSpeedCached)
+        {
+            return;
+        }
+
+        defaultSpeedCached = true;
+        defaultBulletSpeed = bulletSpeed;
     }
 }

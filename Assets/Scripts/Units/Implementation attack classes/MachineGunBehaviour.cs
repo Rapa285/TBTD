@@ -5,14 +5,11 @@ using UnityEngine;
 /// </summary>
 public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
 {
-    [SerializeField, Tooltip("Projectile prefab expected to contain a BaseStraightProjectile component.")]
-    private GameObject bulletPrefab;
+    [SerializeField, Tooltip("Projectile type expected to resolve to a BaseStraightProjectile.")]
+    private ProjectileType projectileType = ProjectileType.Bullet;
 
     [SerializeField, Tooltip("Optional muzzle transform used as the projectile spawn origin.")]
     private Transform firePoint;
-
-    [SerializeField, Tooltip("Optional parent assigned to spawned projectile instances.")]
-    private Transform projectileParent;
 
     [SerializeField, Tooltip("Number of attack ticks skipped before firing at each wind-up stage. The last stage should normally be zero.")]
     private int[] skippedTicksByStage = { 8, 6, 4, 2, 1, 0 };
@@ -78,20 +75,10 @@ public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
 
     private bool FireProjectile(Transform target, float damage)
     {
-        if (bulletPrefab == null)
-        {
-            return false;
-        }
-
         Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position;
         Quaternion spawnRotation = firePoint != null ? firePoint.rotation : transform.rotation;
-        GameObject bulletObject = Instantiate(bulletPrefab, spawnPosition, spawnRotation, projectileParent);
-
-        BaseStraightProjectile projectile = bulletObject.GetComponent<BaseStraightProjectile>();
-        if (projectile == null)
+        if (!TryRequestProjectile(projectileType, spawnPosition, spawnRotation, out BaseStraightProjectile projectile))
         {
-            Debug.LogWarning($"{nameof(MachineGunBehaviour)} requires a bullet prefab with {nameof(BaseStraightProjectile)}.", this);
-            Destroy(bulletObject);
             return false;
         }
 
@@ -100,7 +87,7 @@ public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
 
         if (!projectile.ReadyToFire())
         {
-            Destroy(bulletObject);
+            projectile.CancelProjectile();
             return false;
         }
 

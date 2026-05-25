@@ -4971,4 +4971,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0f1ccd8a817ce24ca20b543650e2915, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AuraAttackFXComponent
-  auraParticleSystem: {fileID: 0}
+  auraParticleSystem: {fileID: 7932381362659666957}

@@ -5,14 +5,11 @@ using UnityEngine;
 /// </summary>
 public sealed class LaserBehaviour : AttackBehaviour
 {
-    [SerializeField, Tooltip("Beam projectile prefab expected to contain a BeamProjectile component.")]
-    private GameObject beamProjectilePrefab;
+    [SerializeField, Tooltip("Projectile type expected to resolve to a BeamProjectile.")]
+    private ProjectileType projectileType = ProjectileType.LaserBeam;
 
     [SerializeField, Tooltip("Optional muzzle transform used as the beam start. Falls back to this transform.")]
     private Transform firePoint;
-
-    [SerializeField, Tooltip("Optional parent assigned to spawned beam projectile instances.")]
-    private Transform projectileParent;
 
     [SerializeField, Tooltip("Layers this laser ray is allowed to hit.")]
     private LayerMask hitLayers = ~0;
@@ -51,24 +48,9 @@ public sealed class LaserBehaviour : AttackBehaviour
         float range = GetBeamRange();
         float duration = GetBeamDuration();
         Vector3 widthReferenceAxis = firePoint != null ? firePoint.right : transform.right;
-
-        if (beamProjectilePrefab == null)
+        Quaternion rotation = Quaternion.LookRotation(direction, ResolveBeamUpAxis(direction, widthReferenceAxis));
+        if (!TryRequestProjectile(projectileType, start, rotation, out BeamProjectile beamProjectile))
         {
-            Debug.LogWarning($"{nameof(LaserBehaviour)} requires a beam projectile prefab.", this);
-            return false;
-        }
-
-        GameObject beamObject = Instantiate(
-            beamProjectilePrefab,
-            start,
-            Quaternion.LookRotation(direction, ResolveBeamUpAxis(direction, widthReferenceAxis)),
-            projectileParent);
-
-        BeamProjectile beamProjectile = beamObject.GetComponent<BeamProjectile>();
-        if (beamProjectile == null)
-        {
-            Debug.LogWarning($"{nameof(LaserBehaviour)} requires a beam projectile prefab with {nameof(BeamProjectile)}.", this);
-            Destroy(beamObject);
             return false;
         }
 
@@ -87,14 +69,14 @@ public sealed class LaserBehaviour : AttackBehaviour
 
         if (!beamProjectile.ReadyToFire())
         {
-            Destroy(beamObject);
+            beamProjectile.CancelProjectile();
             return false;
         }
 
         beamProjectile.Fire();
         if (!beamProjectile.Fired)
         {
-            Destroy(beamObject);
+            beamProjectile.CancelProjectile();
             return false;
         }
 

@@ -34,6 +34,14 @@ public abstract class BaseProjectile : MonoBehaviour
     private float firedAtTime;
     private bool fired;
     private bool expired;
+    private ProjectilePoolService poolService;
+    private ProjectileType pooledProjectileType = ProjectileType.None;
+    private bool defaultsCached;
+    private float defaultDamage;
+    private float defaultMaxAge;
+    private LayerMask defaultHitLayers;
+    private bool defaultDestroyOnHit;
+    private ColliderDefaults defaultCollider;
 
     public float Damage
     {
@@ -61,6 +69,7 @@ public abstract class BaseProjectile : MonoBehaviour
 
     public bool Fired => fired;
     public Collider CollisionCollider => projectileCollider;
+    internal ProjectileType PooledProjectileType => pooledProjectileType;
     public event Action<Transform> OnBulletHit;
 
     protected Collider ProjectileCollider => projectileCollider;
@@ -71,6 +80,7 @@ public abstract class BaseProjectile : MonoBehaviour
     {
         CacheCollider();
         ConfigureCollider();
+        CacheDefaults();
     }
 
     protected virtual void OnValidate()
@@ -217,7 +227,36 @@ public abstract class BaseProjectile : MonoBehaviour
 
         expired = true;
         DispatchProjectileExpiredModifiers();
-        Destroy(gameObject);
+        RecycleOrDestroy();
+    }
+
+    protected virtual void ResetProjectileStateForReuse()
+    {
+    }
+
+    /// <summary>
+    /// Cancels a projectile that was requested but could not be fired.
+    /// </summary>
+    public void CancelProjectile()
+    {
+        expired = true;
+        RecycleOrDestroy();
+    }
+
+    internal void ConfigurePoolOwnership(ProjectilePoolService service, ProjectileType projectileType)
+    {
+        poolService = service;
+        pooledProjectileType = projectileType;
+    }
+
+    internal void PrepareForPooledUse(ProjectilePoolService service)
+    {
+        if (poolService == null)
+        {
+            poolService = service;
+        }
+
+        ResetForReuse();
     }
 
     protected bool TryApplyDamage(Transform target, float damageAmount)
@@ -350,11 +389,68 @@ public abstract class BaseProjectile : MonoBehaviour
             ProjectileModifierBehaviour modifier = projectileModifiers[i];
             if (modifier != null)
             {
+                modifier.gameObject.SetActive(false);
                 Destroy(modifier.gameObject);
             }
         }
 
         projectileModifiers.Clear();
+    }
+
+    private void ResetForReuse()
+    {
+        CacheCollider();
+        ConfigureCollider();
+        CacheDefaults();
+        RestoreDefaults();
+
+        ignoredRoot = null;
+        ownerRoot = null;
+        ownerTower = null;
+        sourceAttackBehaviour = null;
+        firedAtTime = 0f;
+        fired = false;
+        expired = false;
+        OnBulletHit = null;
+        DestroyProjectileModifiers();
+        ResetProjectileStateForReuse();
+    }
+
+    private void RecycleOrDestroy()
+    {
+        if (poolService != null)
+        {
+            ResetForReuse();
+            poolService.ReturnProjectile(this);
+            return;
+        }
+
+        Destroy(gameObject);
+    }
+
+    private void CacheDefaults()
+    {
+        if (defaultsCached)
+        {
+            return;
+        }
+
+        defaultsCached = true;
+        defaultDamage = damage;
+        defaultMaxAge = maxAge;
+        defaultHitLayers = hitLayers;
+        defaultDestroyOnHit = destroyOnHit;
+        defaultCollider = ColliderDefaults.Capture(projectileCollider);
+    }
+
+    private void RestoreDefaults()
+    {
+        damage = defaultDamage;
+        maxAge = defaultMaxAge;
+        hitLayers = defaultHitLayers;
+        destroyOnHit = defaultDestroyOnHit;
+        defaultCollider.Restore(projectileCollider);
+        ConfigureCollider();
     }
 
     private AttackHitContext CreateHitContext(Collider hitCollider, Transform target, float damageAmount)
@@ -457,5 +553,74 @@ public abstract class BaseProjectile : MonoBehaviour
     protected bool IsInHitLayers(GameObject target)
     {
         return target != null && (hitLayers.value & (1 << target.layer)) != 0;
+    }
+
+    private struct ColliderDefaults
+    {
+        private ColliderKind kind;
+        private Vector3 center;
+        private Vector3 size;
+        private float radius;
+        private float height;
+        private int direction;
+
+        public static ColliderDefaults Capture(Collider collider)
+        {
+            ColliderDefaults defaults = new ColliderDefaults();
+            switch (collider)
+            {
+                case SphereCollider sphere:
+                    defaults.kind = ColliderKind.Sphere;
+                    defaults.center = sphere.center;
+                    defaults.radius = sphere.radius;
+                    break;
+                case CapsuleCollider capsule:
+                    defaults.kind = ColliderKind.Capsule;
+                    defaults.center = capsule.center;
+                    defaults.radius = capsule.radius;
+                    defaults.height = capsule.height;
+                    defaults.direction = capsule.direction;
+                    break;
+                case BoxCollider box:
+                    defaults.kind = ColliderKind.Box;
+                    defaults.center = box.center;
+                    defaults.size = box.size;
+                    break;
+                default:
+                    defaults.kind = ColliderKind.Unsupported;
+                    break;
+            }
+
+            return defaults;
+        }
+
+        public void Restore(Collider collider)
+        {
+            switch (collider)
+            {
+                case SphereCollider sphere when kind == ColliderKind.Sphere:
+                    sphere.center = center;
+                    sphere.radius = radius;
+                    break;
+                case CapsuleCollider capsule when kind == ColliderKind.Capsule:
+                    capsule.center = center;
+                    capsule.radius = radius;
+                    capsule.height = height;
+                    capsule.direction = direction;
+                    break;
+                case BoxCollider box when kind == ColliderKind.Box:
+                    box.center = center;
+                    box.size = size;
+                    break;
+            }
+        }
+    }
+
+    private enum ColliderKind
+    {
+        Unsupported,
+        Sphere,
+        Capsule,
+        Box
     }
 }

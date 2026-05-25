@@ -43,6 +43,7 @@ public abstract class AttackBehaviour : MonoBehaviour
     private Transform ownerRoot;
     private float accumulatedAmmoAttackCount;
     private bool consumesTowerAmmo;
+    private bool warnedMissingProjectilePoolService;
 
     public float BaseDamage
     {
@@ -115,6 +116,24 @@ public abstract class AttackBehaviour : MonoBehaviour
     }
 
     protected abstract bool ExecuteAttack(Transform target, float damage);
+
+    protected bool TryRequestProjectile<T>(
+        ProjectileType projectileType,
+        Vector3 position,
+        Quaternion rotation,
+        out T projectile)
+        where T : BaseProjectile
+    {
+        projectile = null;
+        if (!ServiceLocator.TryResolve(out ProjectilePoolService projectilePoolService)
+            || projectilePoolService == null)
+        {
+            WarnMissingProjectilePoolService(projectileType);
+            return false;
+        }
+
+        return projectilePoolService.TryRequestProjectile(projectileType, position, rotation, out projectile);
+    }
 
     /// <summary>
     /// Returns the target's current world position with the final aim offset applied.
@@ -255,5 +274,18 @@ public abstract class AttackBehaviour : MonoBehaviour
 
         accumulatedAmmoAttackCount -= ammoUnitsConsumed * effectiveAttacksPerAmmo;
         ownerTower.HandlePrimaryAttackAmmoConsumed(this, ammoUnitsConsumed);
+    }
+
+    private void WarnMissingProjectilePoolService(ProjectileType projectileType)
+    {
+        if (warnedMissingProjectilePoolService)
+        {
+            return;
+        }
+
+        warnedMissingProjectilePoolService = true;
+        Debug.LogWarning(
+            $"{GetType().Name} on '{name}' could not find a {nameof(ProjectilePoolService)} for {projectileType}. No projectile was fired.",
+            this);
     }
 }

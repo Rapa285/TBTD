@@ -201,10 +201,10 @@ Important constraints:
 
 ## Current Weapon Implementations
 Current tower-facing weapon implementations include:
-- Base gun: projectile weapon using `BaseStraightProjectile`.
+- Base gun: pooled projectile weapon using `BaseStraightProjectile`.
 - Shotgun: projectile spread volley.
 - Machine Gun: projectile weapon whose evolved `AttackSpeed` is the top fire rate; wind-up is implemented internally by skipping attack ticks before firing.
-- Laser: piercing hitscan beam that damages each valid target along a ray and uses `LineAttackFXComponent` for visual feedback.
+- Laser: pooled `BeamProjectile` weapon that damages valid targets along timed beam raycast ticks and uses `LineAttackFXComponent` for visual feedback.
 - Sniper: direct single-target damage against TowerEntity's current target; no projectile is spawned, and `LineAttackFXComponent` draws the shot line.
 - Grenade Launcher: arcing projectile weapon using a grenade projectile.
 - Aura: area pulse weapon over currently tracked vision targets.
@@ -212,7 +212,9 @@ Current tower-facing weapon implementations include:
 ## Projectile Modifier Pipeline
 `ProjectileModifierBehaviour` is the base class for C# authored hit modifiers and projectile modifiers.
 
-Modifier scripts can override initialization, tick, hit, and expiry hooks. Direct, sniper, laser, and other hitscan-style attacks only invoke the hit hook with `ProjectileModifierContext.Projectile == null`; projectile attacks instantiate a copied modifier set on each projectile and can invoke the full lifecycle. `ProjectilePropertiesModifierBehaviour` covers common lifetime, destroy-on-hit, straight projectile speed, and collider-size changes.
+Modifier scripts can override initialization, tick, hit, and expiry hooks. Direct, sniper, and other non-projectile attacks only invoke the hit hook with `ProjectileModifierContext.Projectile == null`; projectile attacks instantiate a copied modifier set on each projectile and can invoke the full lifecycle. `ProjectilePropertiesModifierBehaviour` covers common lifetime, destroy-on-hit, straight projectile speed, and collider-size changes.
+
+Projectile GameObjects are requested from `ProjectilePoolService` through `ProjectileType`/`ProjectileDefSO` mappings. Pooled projectiles reset their authored base state before reuse, including modifier-mutated lifetime, destroy-on-hit, straight speed, and supported collider dimensions.
 
 Projectile initialization still supports the old `Initialize(float damage, Transform owner)` overload, but upgraded projectile weapons should call the overload with tower, attack behaviour, and projectile modifier list.
 
@@ -223,6 +225,7 @@ Damage scaling should normally be authored as `ENTITY_STATS.GlobalDamage` stat e
 - Add new attack behaviours by deriving from `AttackBehaviour`; do not put weapon-specific logic in `TowerEntity`.
 - Add visual-only attack feedback by implementing `AttackFXComponent` and wiring it through the attack's `attackFX` reference.
 - Add projectile hit VFX by creating `VFXDefSO` assets, registering them on scene `VFXService`, and assigning `VFXType` on projectile `VFXRequester` components.
+- Add projectile prefabs by creating `ProjectileDefSO` assets, registering them on scene `ProjectilePoolService`, and assigning the requested `ProjectileType` on projectile attack behaviours.
 - Add new hit modifiers or projectile modifiers by deriving from `ProjectileModifierBehaviour`; do not hard-code modifier-specific behavior into `TowerEntity`, `AttackBehaviour`, or `BaseProjectile`.
 - Keep offer pools and complex offer rules out of `UnitStateManager`. If rarity, prerequisites, tags, or synergies grow, extract offer generation behind `UpgradesManager`.
 - Evolution prerequisite metadata lives on `EvolutionSO`; tower-facing effects still live on the resolved `UpgradeSO` leaf.

@@ -67,9 +67,11 @@ Class implementations in this folder are template/base behaviours for future att
 
 - Projectile GameObjects should use `BaseProjectile` or a subclass.
 - `BaseProjectile` owns lifetime, trigger-hit filtering, owner ignoring, and damage dispatch.
+- `ProjectilePoolService` owns scene-level projectile pooling through `ProjectileDefSO` mappings keyed by `ProjectileType`.
 - `ColliderTargetUtility` owns the shared collider-to-target transform rule: use `attachedRigidbody.transform` when present, otherwise use the collider transform.
 - Movement belongs in subclasses such as `BaseStraightProjectile`, not in attack behaviours.
-- Attack behaviours should instantiate projectile prefabs, initialize damage and owner, set direction/targeting data, then call `Fire()`.
+- Attack behaviours should request projectiles from `ProjectilePoolService`, initialize damage and owner, set direction/targeting data, then call `Fire()`.
+- If setup fails after a pooled projectile is requested, call `CancelProjectile()` instead of destroying the GameObject.
 - Upgraded projectile attacks should use the `BaseProjectile.Initialize(float, Transform, TowerEntity, AttackBehaviour, IReadOnlyList<ProjectileModifierBehaviour>)` overload.
 - A straight projectile prefab must have a trigger collider and `BaseStraightProjectile`.
 - Optional on-hit VFX should be wired by adding `VFXRequester` to the projectile prefab and selecting the desired `VFXType`; the scene must include a configured `VFXService`.

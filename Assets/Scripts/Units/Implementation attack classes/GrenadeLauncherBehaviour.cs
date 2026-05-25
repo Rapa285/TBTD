@@ -5,14 +5,11 @@ using UnityEngine;
 /// </summary>
 public sealed class GrenadeLauncherBehaviour : SplineLeadingAttackBehaviour
 {
-    [SerializeField, Tooltip("Projectile prefab expected to contain an ArchingBullet component.")]
-    private GameObject grenadePrefab;
+    [SerializeField, Tooltip("Projectile type expected to resolve to an ArchingBullet.")]
+    private ProjectileType projectileType = ProjectileType.Grenade;
 
     [SerializeField, Tooltip("Optional muzzle transform used as the projectile spawn origin.")]
     private Transform firePoint;
-
-    [SerializeField, Tooltip("Optional parent assigned to spawned projectile instances.")]
-    private Transform projectileParent;
 
     protected override Vector3 GetAttackOrigin()
     {
@@ -21,20 +18,15 @@ public sealed class GrenadeLauncherBehaviour : SplineLeadingAttackBehaviour
 
     protected override bool ExecuteAttack(Transform target, float damage)
     {
-        if (target == null || grenadePrefab == null)
+        if (target == null)
         {
             return false;
         }
 
         Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position;
         Quaternion spawnRotation = firePoint != null ? firePoint.rotation : transform.rotation;
-        GameObject grenadeObject = Instantiate(grenadePrefab, spawnPosition, spawnRotation, projectileParent);
-
-        ArchingBullet projectile = grenadeObject.GetComponent<ArchingBullet>();
-        if (projectile == null)
+        if (!TryRequestProjectile(projectileType, spawnPosition, spawnRotation, out ArchingBullet projectile))
         {
-            Debug.LogWarning($"{nameof(GrenadeLauncherBehaviour)} requires a grenade prefab with {nameof(ArchingBullet)}.", this);
-            Destroy(grenadeObject);
             return false;
         }
 
@@ -43,7 +35,7 @@ public sealed class GrenadeLauncherBehaviour : SplineLeadingAttackBehaviour
 
         if (!projectile.ReadyToFire())
         {
-            Destroy(grenadeObject);
+            projectile.CancelProjectile();
             return false;
         }
 

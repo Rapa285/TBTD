@@ -52,6 +52,17 @@ public sealed class ArchingBullet : BaseProjectile
         // Grenades resolve hits only at trajectory completion, not through physical trigger contact.
     }
 
+    protected override void ResetProjectileStateForReuse()
+    {
+        startPosition = Vector3.zero;
+        destination = Vector3.zero;
+        arcHeight = 0f;
+        flightDuration = 0f;
+        elapsedFlightTime = 0f;
+        hasDestination = false;
+        exploded = false;
+    }
+
     public void SetDestination(Vector3 worldDestination)
     {
         startPosition = transform.position;

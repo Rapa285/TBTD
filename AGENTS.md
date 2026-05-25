@@ -345,6 +345,8 @@ Roster-managed deployed units also expect:
 Projectile weapons additionally expect:
 
 - A projectile prefab with `BaseProjectile` or a derived projectile component.
+- A `ProjectileDefSO` asset mapping the requested `ProjectileType` to that prefab.
+- One `ProjectilePoolService` registered in the scene with `availableProjectiles` populated for every projectile type requested by active attack behaviours.
 - Correct collider setup for trigger hits.
 - Optional on-hit VFX should add `VFXRequester` to the projectile prefab and select the desired `VFXType`.
 

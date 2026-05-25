@@ -46,6 +46,16 @@ public sealed class LineAttackFXComponent : MonoBehaviour, AttackFXComponent
         ConfigureLineRenderer();
     }
 
+    private void OnDisable()
+    {
+        if (activeRoutine != null)
+        {
+            StopCoroutine(activeRoutine);
+        }
+
+        HideLine();
+    }
+
     public void PlayAttackFX(AttackFXContext context)
     {
         ResolveLineRenderer();
