@@ -17,6 +17,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 {
     [Header("References")]
     [SerializeField] private EnemyAudio enemyAudio;
+    [SerializeField] private GameObject shieldVFXObj;
 
     [Header("Auto Initialization")]
     [SerializeField, Tooltip("Initialize health automatically from the serialized starting values on Start.")]
@@ -98,6 +99,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         hasLastHitContext = false;
         lastHitContext = default;
         EnsureDeathEvent();
+
+        UpdateShieldVisuals();
     }
 
     public void TakeDamage(float amount)
@@ -128,6 +131,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             hasLastHitContext = false;
         }
 
+        float actualDamageTaken = amount;
+
         if (currentShield > 0f)
         {
             float absorbed = Mathf.Min(amount, currentShield);
@@ -142,6 +147,12 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             Debug.Log($"{gameObject.name} took {amount} damage. Remaining Health: {currentHealth}, Shield: {currentShield}");
         }
 
+        UpdateShieldVisuals();
+
+        // damage popup
+        DamagePopupVFX.GlobalPendingDamage = actualDamageTaken;        
+        TryRequestVFX(VFXType.DamagePopup, transform, attach: false);
+
         if (currentHealth <= 0f)
         {
             if (extraLives > 0)
@@ -150,6 +161,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
                 currentHealth = maxHealth;
                 currentShield = 0f;
                 Debug.Log($"{gameObject.name} has been revived! Remaining extra lives: {extraLives}");
+                
+                TryRequestVFX(VFXType.Revive, transform, attach: true);
                 return;
             }
             Die();
@@ -160,6 +173,29 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             {
                 enemyAudio.PlayHit();
             }
+
+            TryRequestVFX(VFXType.BulletHit, transform, attach: false);
+        }
+    }
+
+    private void TryRequestVFX(VFXType vfxType, Transform target, bool attach)
+    {
+        if (target == null || vfxType == VFXType.None)
+        {
+            return;
+        }
+
+        if (ServiceLocator.TryResolve<VFXService>(out VFXService vfxService) && vfxService != null)
+        {
+            vfxService.HandleRequest(vfxType, target, attach ? target : null, follow: attach);
+        }
+    }
+
+    private void UpdateShieldVisuals()
+    {
+        if (shieldVFXObj != null)
+        {
+            shieldVFXObj.SetActive(currentShield > 0f && !isDead);
         }
     }
 
@@ -171,6 +207,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         }
 
         isDead = true;
+        UpdateShieldVisuals();
         lifeTokenSource?.Cancel();
         Debug.Log($"{gameObject.name} has died.");
         EnsureDeathEvent();
@@ -205,9 +242,11 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     public void ApplyTemporaryShieldBuff(float amount, float duration)
     {
         if (isDead) return;
-        currentShield+= amount;
+        currentShield += amount;
         maxShield = Mathf.Max(maxShield, currentShield);
         Debug.Log($"{gameObject.name} received a temporary shield buff of {amount}. Current Shield: {currentShield}");
+        
+        UpdateShieldVisuals();
         _ = RemoveShieldBuffAfterDuration(amount, duration);
     }
 
@@ -222,6 +261,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
                 float amountToRemove = Mathf.Min(amount, currentShield);
                 currentShield -= amountToRemove;
                 Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
+                UpdateShieldVisuals();
             }
         }
         catch (OperationCanceledException)

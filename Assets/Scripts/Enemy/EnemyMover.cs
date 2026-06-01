@@ -6,6 +6,9 @@ using UnityEngine.Events;
 public class EnemyMover : MonoBehaviour
 {
     [SerializeField] private EnemyAudio enemyAudio;
+    
+    [Header("VFX")]
+    [SerializeField] private GameObject speedBuffVFXObj;
     private SplineAnimate splineAnimate;
     private float baseSpeed;
     private float auraBuffMultiplier = 1f;
@@ -25,6 +28,12 @@ public class EnemyMover : MonoBehaviour
     public void Initialize(float speed)
     {
         baseSpeed = Mathf.Max(0.1f, speed);
+        auraBuffMultiplier = 1f;
+        buffTimer = 0f;
+        hasReachedEnd = false;
+        
+        if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(false);
+
         UpdateSpeed();
         
         if (splineAnimate != null && !splineAnimate.IsPlaying)
@@ -41,6 +50,9 @@ public class EnemyMover : MonoBehaviour
         }
         
         auraBuffMultiplier = multiplier;
+        
+        if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(true);
+
         UpdateSpeed();
     }
 
@@ -82,6 +94,9 @@ public class EnemyMover : MonoBehaviour
             if (buffTimer <= 0)
             {
                 auraBuffMultiplier = 1f;
+                
+                if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(false);
+
                 UpdateSpeed();
             }
         }

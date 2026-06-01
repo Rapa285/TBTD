@@ -17,12 +17,22 @@ public class SummonerComponent : MonoBehaviour
     private SplineAnimate splineAnimate;
     private float lastSummonTime;
     private bool isSummoning;
+    private VFXService vfxService;
+
+    private void ResolveService()
+    {
+        if (vfxService == null)
+        {
+            ServiceLocator.TryResolve(out vfxService);
+        }
+    }
 
     private void Awake()
     {
         mover=GetComponent<EnemyMover>();
         entity=GetComponent<EnemyEntity>();
         splineAnimate=GetComponent<SplineAnimate>();
+        ResolveService();
     }
 
     private void Start()
@@ -48,6 +58,11 @@ public class SummonerComponent : MonoBehaviour
         if (enemyAudio != null)
         {
             enemyAudio.PlaySkill();
+        }
+
+        if (vfxService != null)
+        {
+            vfxService.HandleRequest(VFXType.EnemySummon, transform);
         }
 
         try{
