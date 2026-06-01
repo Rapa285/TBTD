@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AuraSpeedBuffComponent : MonoBehaviour
+public class AuraSpeedBuffComponent : MonoBehaviour, IDifficultyScalable
 {
     [SerializeField] private EnemyAudio enemyAudio;
     [Header("Aura Area")]
@@ -77,5 +77,12 @@ public class AuraSpeedBuffComponent : MonoBehaviour
         {
             Debug.Log($"{gameObject.name} cast buff pulse but found no valid buff targets.");
         }
+    }
+
+    public void ScaleDifficulty(float multiplier)
+    {
+        speedMultiplier = 1f + ((speedMultiplier - 1f) * multiplier); 
+        
+        buffCooldown = Mathf.Max(1.5f, buffCooldown / (1f + ((multiplier - 1f) * 0.2f)));
     }
 }

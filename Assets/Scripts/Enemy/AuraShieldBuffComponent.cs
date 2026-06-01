@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AuraShieldBuffComponent : MonoBehaviour
+public class AuraShieldBuffComponent : MonoBehaviour, IDifficultyScalable
 {
     [SerializeField] private EnemyAudio enemyAudio;
     [Header("Aura Area")]
@@ -73,5 +73,12 @@ public class AuraShieldBuffComponent : MonoBehaviour
                 enemyAudio.PlaySkill();
             }
         }
+    }
+
+    public void ScaleDifficulty(float multiplier)
+    {
+        shieldAmount *= multiplier;
+        
+        buffCooldown = Mathf.Max(1.5f, buffCooldown / (1f + ((multiplier - 1f) * 0.2f)));
     }
 }

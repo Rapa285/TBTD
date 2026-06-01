@@ -4,14 +4,16 @@ using System.Collections;
 [RequireComponent(typeof(LineRenderer))]
 public class SniperTracerVFX : MonoBehaviour
 {
-    [Header("Settings")]
-    [SerializeField] private float lingerDuration = 0.2f;
-    [SerializeField] private AnimationCurve alphaFadeCurve;
+    public static Vector3 GlobalStartPos;
+    public static Vector3 GlobalEndPos;
+
+    [SerializeField] private float lingerDuration = 0.2f; 
+    [SerializeField] private AnimationCurve alphaFadeCurve; 
 
     private LineRenderer line;
-    private Coroutine fadeRoutine;
     private Color originalStartColor;
     private Color originalEndColor;
+    private Coroutine fadeRoutine;
 
     private void Awake()
     {
@@ -25,13 +27,11 @@ public class SniperTracerVFX : MonoBehaviour
         }
     }
 
-    public void SetupTracer(Vector3 startPos, Vector3 endPos)
+    private void OnEnable()
     {
-        gameObject.SetActive(true);
-        
         line.positionCount = 2;
-        line.SetPosition(0, startPos);
-        line.SetPosition(1, endPos);
+        line.SetPosition(0, GlobalStartPos);
+        line.SetPosition(1, GlobalEndPos);
 
         if (fadeRoutine != null) StopCoroutine(fadeRoutine);
         fadeRoutine = StartCoroutine(FadeOutRoutine());
@@ -45,26 +45,14 @@ public class SniperTracerVFX : MonoBehaviour
         {
             elapsedTime += Time.deltaTime;
             float normalizedTime = elapsedTime / lingerDuration;
-
             float alphaValue = alphaFadeCurve.Evaluate(normalizedTime);
 
-
-            SetLineAlpha(alphaValue);
+            Color sC = originalStartColor; sC.a = alphaValue; line.startColor = sC;
+            Color eC = originalEndColor;   eC.a = alphaValue; line.endColor = eC;
 
             yield return null;
         }
 
         gameObject.SetActive(false); 
-    }
-
-    private void SetLineAlpha(float alpha)
-    {
-        Color sC = originalStartColor;
-        sC.a = alpha;
-        line.startColor = sC;
-
-        Color eC = originalEndColor;
-        eC.a = alpha;
-        line.endColor = eC;
     }
 }

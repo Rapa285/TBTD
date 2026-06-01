@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Splines;
 
 [RequireComponent(typeof(EnemyEntity),typeof(EnemyMover))]
-public class SummonerComponent : MonoBehaviour
+public class SummonerComponent : MonoBehaviour, IDifficultyScalable
 {
     [Header("Summoning Settings")]
     [SerializeField] private GameObject[] prefabsToSummon;
@@ -123,5 +123,12 @@ public class SummonerComponent : MonoBehaviour
             childSpline.NormalizedTime=offsetTime;
             childSpline.Play();
         }
+    }
+
+    public void ScaleDifficulty(float multiplier)
+    {
+        summonCooldown = Mathf.Max(2f, summonCooldown / (1f + ((multiplier - 1f) * 0.2f)));
+        
+        castTime = Mathf.Max(0.2f, castTime / (1f + ((multiplier - 1f) * 0.15f)));
     }
 }
