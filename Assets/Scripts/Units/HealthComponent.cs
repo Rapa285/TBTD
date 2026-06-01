@@ -34,9 +34,10 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     private int extraLives = 0;
 
     [Header("Death")]
-    [SerializeField, Tooltip("What happens to this GameObject after health reaches zero.")]
+    [SerializeField, Tooltip("What happens to this GameObject after health reaches zero (Fallback if no PooledObject).")]
     private HealthDeathMode deathMode = HealthDeathMode.DestroyGameObject;
 
+    private int initialExtraLives;
     private float maxHealth;
     private float currentHealth;
     private float maxShield;
@@ -63,6 +64,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 
     private void Awake()
     {
+        initialExtraLives = extraLives;
         EnsureDeathEvent();
     }
 
@@ -98,8 +100,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         isDead = false;
         hasLastHitContext = false;
         lastHitContext = default;
+        extraLives = initialExtraLives;
         EnsureDeathEvent();
-
         UpdateShieldVisuals();
     }
 
@@ -144,13 +146,12 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         if (amount > 0f)
         {
             currentHealth = Mathf.Max(0f, currentHealth - amount);
-            Debug.Log($"{gameObject.name} took {amount} damage. Remaining Health: {currentHealth}, Shield: {currentShield}");
+            Debug.Log($"{gameObject.name} took {amount} damage. Remaining Health: {currentHealth}");
         }
 
         UpdateShieldVisuals();
 
-        // damage popup
-        DamagePopupVFX.GlobalPendingDamage = actualDamageTaken;        
+        DamagePopupVFX.GlobalPendingDamage = actualDamageTaken;
         TryRequestVFX(VFXType.DamagePopup, transform, attach: false);
 
         if (currentHealth <= 0f)
@@ -161,7 +162,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
                 currentHealth = maxHealth;
                 currentShield = 0f;
                 Debug.Log($"{gameObject.name} has been revived! Remaining extra lives: {extraLives}");
-                
+                UpdateShieldVisuals();
                 TryRequestVFX(VFXType.Revive, transform, attach: true);
                 return;
             }
@@ -169,21 +170,14 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         }
         else
         {
-            if (enemyAudio != null)
-            {
-                enemyAudio.PlayHit();
-            }
-
+            if (enemyAudio != null) enemyAudio.PlayHit();
             TryRequestVFX(VFXType.BulletHit, transform, attach: false);
         }
     }
 
     private void TryRequestVFX(VFXType vfxType, Transform target, bool attach)
     {
-        if (target == null || vfxType == VFXType.None)
-        {
-            return;
-        }
+        if (target == null || vfxType == VFXType.None) return;
 
         if (ServiceLocator.TryResolve<VFXService>(out VFXService vfxService) && vfxService != null)
         {
@@ -191,52 +185,45 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         }
     }
 
-    private void UpdateShieldVisuals()
-    {
-        if (shieldVFXObj != null)
-        {
-            shieldVFXObj.SetActive(currentShield > 0f && !isDead);
-        }
-    }
-
     private void Die()
     {
-        if (isDead)
-        {
-            return;
-        }
+        if (isDead) return;
 
         isDead = true;
-        UpdateShieldVisuals();
         lifeTokenSource?.Cancel();
-        Debug.Log($"{gameObject.name} has died.");
         EnsureDeathEvent();
+        UpdateShieldVisuals();
+
         OnDeath?.Invoke();
 
-        if (enemyAudio != null)
+        if (enemyAudio != null) enemyAudio.PlayDeath();
+        
+        // pooling integration
+        PooledObject poolObj = GetComponent<PooledObject>();
+        if (poolObj != null)
         {
-            enemyAudio.PlayDeath();
+            poolObj.ReturnToPool();
         }
-        switch (deathMode)
+        else
         {
-            case HealthDeathMode.DisableGameObject:
-                gameObject.SetActive(false);
-                break;
-            case HealthDeathMode.None:
-                break;
-            case HealthDeathMode.DestroyGameObject:
-            default:
-                Destroy(gameObject);
-                break;
+            switch (deathMode)
+            {
+                case HealthDeathMode.DisableGameObject:
+                    gameObject.SetActive(false);
+                    break;
+                case HealthDeathMode.None:
+                    break;
+                case HealthDeathMode.DestroyGameObject:
+                default:
+                    Destroy(gameObject);
+                    break;
+            }
         }
     }
 
     private void EnsureDeathEvent()
     {
-        if (OnDeath == null)
-        {
-            OnDeath = new UnityEvent();
-        }
+        if (OnDeath == null) OnDeath = new UnityEvent();
     }
 
     public void ApplyTemporaryShieldBuff(float amount, float duration)
@@ -260,12 +247,19 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             {
                 float amountToRemove = Mathf.Min(amount, currentShield);
                 currentShield -= amountToRemove;
-                Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
                 UpdateShieldVisuals();
             }
         }
         catch (OperationCanceledException)
         {
+        }
+    }
+
+    private void UpdateShieldVisuals()
+    {
+        if (shieldVFXObj != null)
+        {
+            shieldVFXObj.SetActive(currentShield > 0f && !isDead);
         }
     }
 }

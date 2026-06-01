@@ -25,20 +25,28 @@ public class EnemyMover : MonoBehaviour
         splineAnimate = GetComponent<SplineAnimate>();
     }
 
+    /// <summary>
+    /// Will reset the enemy's movement state and initialize its speed
+    /// </summary>
     public void Initialize(float speed)
     {
-        baseSpeed = Mathf.Max(0.1f, speed);
+        baseSpeed = Mathf.Max(0.1f, speed);        
         auraBuffMultiplier = 1f;
         buffTimer = 0f;
         hasReachedEnd = false;
+        speedFactors.Clear();
         
         if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(false);
 
         UpdateSpeed();
         
-        if (splineAnimate != null && !splineAnimate.IsPlaying)
+        if (splineAnimate != null)
         {
-            splineAnimate.Play();
+            splineAnimate.NormalizedTime = 0f;
+            if (!splineAnimate.IsPlaying)
+            {
+                splineAnimate.Play();
+            }
         }
     }
 
@@ -104,12 +112,20 @@ public class EnemyMover : MonoBehaviour
         if (!hasReachedEnd && splineAnimate != null && splineAnimate.NormalizedTime >= 1f)
         {
             hasReachedEnd = true;
-            if (enemyAudio != null)
-            {
-                enemyAudio.PlayAttackBase();
-            }
+            if (enemyAudio != null) enemyAudio.PlayAttackBase();
             
             OnReachEnd?.Invoke();
+
+            // pooling integration
+            PooledObject poolObj = GetComponent<PooledObject>();
+            if (poolObj != null)
+            {
+                poolObj.ReturnToPool();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
         }
     }
 
