@@ -164,6 +164,12 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
                 Debug.Log($"{gameObject.name} has been revived! Remaining extra lives: {extraLives}");
                 UpdateShieldVisuals();
                 TryRequestVFX(VFXType.Revive, transform, attach: true);
+
+                EnemyMover mover = GetComponent<EnemyMover>();
+                if (mover != null)
+                {
+                    _=mover.PauseForSeconds(1f,activeLifeToken);
+                }
                 return;
             }
             Die();
@@ -197,28 +203,6 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         OnDeath?.Invoke();
 
         if (enemyAudio != null) enemyAudio.PlayDeath();
-        
-        // pooling integration
-        PooledObject poolObj = GetComponent<PooledObject>();
-        if (poolObj != null)
-        {
-            poolObj.ReturnToPool();
-        }
-        else
-        {
-            switch (deathMode)
-            {
-                case HealthDeathMode.DisableGameObject:
-                    gameObject.SetActive(false);
-                    break;
-                case HealthDeathMode.None:
-                    break;
-                case HealthDeathMode.DestroyGameObject:
-                default:
-                    Destroy(gameObject);
-                    break;
-            }
-        }
     }
 
     private void EnsureDeathEvent()

@@ -106,7 +106,15 @@ public class EnemyEntity : MonoBehaviour
             DamageAmount = stats.damage
         });
         
-        Destroy(gameObject);
+        PooledObject poolObj = GetComponent<PooledObject>();
+        if (poolObj != null)
+        {
+            poolObj.ReturnToPool();
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
     }
 
     private void HandleDeath()
@@ -114,6 +122,16 @@ public class EnemyEntity : MonoBehaviour
         if (health != null && health.HasLastHitContext)
         {
             AwardExperience(health.LastHitContext.Attacker, health.LastHitContext.AttackerRoot);
+        }
+
+        PooledObject poolObj = GetComponent<PooledObject>();
+        if (poolObj != null)
+        {
+            poolObj.ReturnToPool();
+        }
+        else
+        {
+            gameObject.SetActive(false);
         }
     }
 

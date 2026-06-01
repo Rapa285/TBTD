@@ -1319,7 +1319,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2341253221490338296, guid: 8ae8c74e1422d3e408e5d1486a6a11ca, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3371013971496695067, guid: 8ae8c74e1422d3e408e5d1486a6a11ca, type: 3}
       propertyPath: statusManager
@@ -2665,7 +2665,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7020939155529680203, guid: 446bb3e96987a7c46a13cb51aeca9c6c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2707,7 +2707,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f9ecee83f16d6b641a77b14c1561e401, type: 2}
   - {fileID: 11400000, guid: 28a6f88854a584641b6c688f2018620e, type: 2}
   - {fileID: 11400000, guid: f81579148cd2ca445880f1ba96ef4231, type: 2}
-  - {fileID: 11400000, guid: fb94afd091974514cb5942395b1cfaeb, type: 2}
+  - {fileID: 11400000, guid: 5aff3a9ab9a8a0240aa2935debfc58e7, type: 2}
   initialPoolSize: 6
 --- !u!4 &2066405908
 Transform:
@@ -2923,7 +2923,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7474991938346100898, guid: 65f049d4d95a57f459ba8b60e0df2b1d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

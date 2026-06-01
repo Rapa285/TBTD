@@ -1,11 +1,15 @@
 using UnityEngine;
 using UnityEngine.Splines;
 using UnityEngine.Events;
+using System.Threading;
 
 [RequireComponent(typeof(SplineAnimate))]
 public class EnemyMover : MonoBehaviour
 {
     [SerializeField] private EnemyAudio enemyAudio;
+
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
     
     [Header("VFX")]
     [SerializeField] private GameObject speedBuffVFXObj;
@@ -19,6 +23,8 @@ public class EnemyMover : MonoBehaviour
     public float BaseSpeed => baseSpeed;
 
     [HideInInspector] public UnityEvent OnReachEnd;
+
+    public float CurrentSpeedMultiplier { get; private set; } = 1f;
 
     private void Awake()
     {
@@ -81,15 +87,18 @@ public class EnemyMover : MonoBehaviour
         if (splineAnimate != null)
         { 
             float currentProgress = splineAnimate.NormalizedTime;
-            float totalMultiplier=auraBuffMultiplier;
+
+            CurrentSpeedMultiplier = auraBuffMultiplier;
 
             for (int i = 0; i < speedFactors.Count; i++)
             {
-                totalMultiplier *= speedFactors[i];
+                CurrentSpeedMultiplier *= speedFactors[i];
             }
             
-            splineAnimate.MaxSpeed = baseSpeed * totalMultiplier;            
+            splineAnimate.MaxSpeed = baseSpeed * CurrentSpeedMultiplier;            
             splineAnimate.NormalizedTime = currentProgress;
+
+            if (animator != null) animator.speed=CurrentSpeedMultiplier;
         }
     }
 
@@ -115,27 +124,31 @@ public class EnemyMover : MonoBehaviour
             if (enemyAudio != null) enemyAudio.PlayAttackBase();
             
             OnReachEnd?.Invoke();
-
-            // pooling integration
-            PooledObject poolObj = GetComponent<PooledObject>();
-            if (poolObj != null)
-            {
-                poolObj.ReturnToPool();
-            }
-            else
-            {
-                gameObject.SetActive(false);
-            }
         }
     }
 
     public void PauseMovement()
     {
         if (splineAnimate != null) splineAnimate.Pause();
+        if (animator != null) animator.speed = 0f;
     }
 
     public void ResumeMovement()
     {
         if (splineAnimate != null && !hasReachedEnd) splineAnimate.Play();
+        if (animator != null) animator.speed = CurrentSpeedMultiplier;
+    }
+
+    public async Awaitable PauseForSeconds(float duration, CancellationToken token)
+    {
+        PauseMovement();
+        try
+        {
+            await Awaitable.WaitForSecondsAsync(duration, token);
+            ResumeMovement();
+        }
+        catch (System.OperationCanceledException)
+        {
+        }
     }
 }
