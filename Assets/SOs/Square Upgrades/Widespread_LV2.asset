@@ -21,13 +21,13 @@ MonoBehaviour:
   statEffects:
   - stat: 2
     type: 0
-    value: 1.75
+    value: 1.55
   - stat: 5
     type: 0
-    value: 1.6
+    value: 1.45
   - stat: 0
     type: 0
-    value: 0.75
+    value: 0.82
   - stat: 1
     type: 0
-    value: 1.2
+    value: 1.1

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: AoE_LV3
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: AoE LV3
-  description: Maximum area pressure with fast attacks and heavily reduced damage.
+  description: Maximum area coverage with heavily reduced single-target damage.
   icon: {fileID: 21300000, guid: 3e84b6a1ec7480543b32c8b1a36de9fe, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,10 +21,7 @@ MonoBehaviour:
   statEffects:
   - stat: 2
     type: 0
-    value: 1.85
-  - stat: 1
-    type: 0
-    value: 0.6
+    value: 1.75
   - stat: 0
     type: 0
-    value: 0.6
+    value: 0.72

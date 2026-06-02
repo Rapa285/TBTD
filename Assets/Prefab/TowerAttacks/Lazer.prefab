@@ -45,13 +45,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserBehaviour
   baseDamage: 1
-  attacksPerAmmo: 5
+  attacksPerAmmo: 1
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.5, z: 0}
   attackFX: {fileID: 0}
-  beamProjectilePrefab: {fileID: 5652266590238752553, guid: d00865babe009a44cb52a1a715262ea0, type: 3}
+  projectileType: 3
   firePoint: {fileID: 0}
-  projectileParent: {fileID: 0}
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295

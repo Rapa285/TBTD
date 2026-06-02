@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// </summary>
 public class UnitDetailsUI : MonoBehaviour
 {
-    [SerializeField, Tooltip("Panel root shown while a deployed tower is selected. Defaults to this object.")]
+    [SerializeField, Tooltip("Panel root shown while a unit is selected. Defaults to this object.")]
     private GameObject root;
 
     [SerializeField, Tooltip("Player state source used for selected tower identity.")]
@@ -132,11 +132,19 @@ public class UnitDetailsUI : MonoBehaviour
         }
     }
 
+    private void HandleUnitDeployed(UnitDeployedEvent eventData)
+    {
+        if (IsSelectedUnit(eventData.UnitId))
+        {
+            RefreshFromSelection(eventData.Tower, eventData.UnitId);
+        }
+    }
+
     private void HandleUnitRecalled(UnitRecalledEvent eventData)
     {
         if (IsSelectedUnit(eventData.UnitId))
         {
-            ClearDisplay();
+            RefreshFromSelection(null, eventData.UnitId);
         }
     }
 
@@ -159,34 +167,33 @@ public class UnitDetailsUI : MonoBehaviour
     {
         ResolveReferences();
 
-        if (tower == null || !tower.Deployed)
-        {
-            ClearDisplay();
-            return;
-        }
-
-        selectedTower = tower;
+        selectedTower = tower != null && tower.Deployed ? tower : null;
         selectedUnitId = !string.IsNullOrWhiteSpace(unitId)
             ? unitId
-            : tower.UnitId;
+            : selectedTower != null ? selectedTower.UnitId : null;
 
         if (TryGetManagedUnit(out UnitStateManager.OwnedUnitState unit))
         {
             RefreshManagedDisplay(unit);
-        }
-        else
-        {
-            RefreshUnmanagedDisplay(tower);
+            SetRootVisible(true);
+            return;
         }
 
-        SetRootVisible(true);
+        if (selectedTower != null)
+        {
+            RefreshUnmanagedDisplay(selectedTower);
+            SetRootVisible(true);
+            return;
+        }
+
+        ClearDisplay();
     }
 
     private void RefreshManagedDisplay(UnitStateManager.OwnedUnitState unit)
     {
         string displayName = !string.IsNullOrWhiteSpace(unit.DisplayName)
             ? unit.DisplayName
-            : selectedTower != null ? selectedTower.name : string.Empty;
+            : selectedTower != null ? selectedTower.name : unit.UnitId;
 
         SetText(nameText, displayName, true);
         SetIcon(unit.Icon);
@@ -515,6 +522,7 @@ public class UnitDetailsUI : MonoBehaviour
         eventBus.UnitAmmoConsumed += HandleUnitAmmoConsumed;
         eventBus.TowerModified += HandleTowerModified;
         eventBus.UnitUpgradeSelected += HandleUnitUpgradeSelected;
+        eventBus.UnitDeployed += HandleUnitDeployed;
         eventBus.UnitRecalled += HandleUnitRecalled;
         eventBusSubscribed = true;
     }
@@ -530,6 +538,7 @@ public class UnitDetailsUI : MonoBehaviour
         eventBus.UnitAmmoConsumed -= HandleUnitAmmoConsumed;
         eventBus.TowerModified -= HandleTowerModified;
         eventBus.UnitUpgradeSelected -= HandleUnitUpgradeSelected;
+        eventBus.UnitDeployed -= HandleUnitDeployed;
         eventBus.UnitRecalled -= HandleUnitRecalled;
         eventBusSubscribed = false;
     }

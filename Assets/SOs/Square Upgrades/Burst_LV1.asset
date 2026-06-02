@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Burst_LV1
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Burst LV1
-  description: Larger damage windows with poorer cadence.
+  description: Stronger damage windows with slower cadence, lower ammo, and faster setup.
   icon: {fileID: 21300000, guid: bbe499a4802652248ad97b6fe7cb8e3f, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,7 +21,13 @@ MonoBehaviour:
   statEffects:
   - stat: 0
     type: 0
-    value: 1.45
+    value: 1.25
   - stat: 1
     type: 0
-    value: 1.35
+    value: 1.15
+  - stat: 5
+    type: 0
+    value: 0.95
+  - stat: 3
+    type: 1
+    value: -0.25

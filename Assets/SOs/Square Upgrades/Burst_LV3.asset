@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Burst_LV3
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Burst LV3
-  description: Huge burst windows with very poor cadence and longer setup.
+  description: Huge burst damage with poor cadence, low ammo, and faster setup.
   icon: {fileID: 21300000, guid: bbe499a4802652248ad97b6fe7cb8e3f, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,13 +21,13 @@ MonoBehaviour:
   statEffects:
   - stat: 0
     type: 0
-    value: 2.5
+    value: 1.7
   - stat: 1
     type: 0
-    value: 2.2
+    value: 1.6
   - stat: 5
     type: 0
-    value: 1.35
+    value: 0.75
   - stat: 3
     type: 1
-    value: 1.25
+    value: -0.75

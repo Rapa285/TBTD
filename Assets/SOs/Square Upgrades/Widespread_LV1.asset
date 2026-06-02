@@ -21,10 +21,10 @@ MonoBehaviour:
   statEffects:
   - stat: 2
     type: 0
-    value: 1.35
+    value: 1.25
   - stat: 5
     type: 0
-    value: 1.35
+    value: 1.25
   - stat: 0
     type: 0
-    value: 0.85
+    value: 0.9

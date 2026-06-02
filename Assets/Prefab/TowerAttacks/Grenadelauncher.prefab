@@ -45,9 +45,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrenadeLauncherBehaviour
   baseDamage: 5
-  attacksPerAmmo: 5
+  attacksPerAmmo: 1
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0, z: 0}
+  attackFX: {fileID: 0}
   distanceFactor: 0.05
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}
@@ -59,6 +60,5 @@ MonoBehaviour:
   aimPointGizmoColor: {r: 1, g: 0, b: 1, a: 1}
   nearestPointResolution: 4
   nearestPointIterations: 2
-  grenadePrefab: {fileID: 6833251139136695075, guid: c794cd71db545b2489f3ec54be4426c7, type: 3}
+  projectileType: 2
   firePoint: {fileID: 0}
-  projectileParent: {fileID: 0}

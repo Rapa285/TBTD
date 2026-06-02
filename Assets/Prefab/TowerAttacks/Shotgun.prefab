@@ -45,9 +45,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShotgunBehaviour
   baseDamage: 1
-  attacksPerAmmo: 5
+  attacksPerAmmo: 1
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0, z: 0}
+  attackFX: {fileID: 0}
   distanceFactor: 0.05
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}
@@ -59,8 +60,7 @@ MonoBehaviour:
   aimPointGizmoColor: {r: 1, g: 0, b: 1, a: 1}
   nearestPointResolution: 4
   nearestPointIterations: 2
-  bulletPrefab: {fileID: 8499451242163957605, guid: d85184feeda9b9247a5576cee8e0414e, type: 3}
+  projectileType: 1
   firePoint: {fileID: 0}
-  projectileParent: {fileID: 0}
   pelletCount: 6
   spreadAngleDegrees: 30

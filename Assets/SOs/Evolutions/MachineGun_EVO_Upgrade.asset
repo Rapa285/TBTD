@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MachineGun_EVO_Upgrade
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Machine Gun EVO
-  description: Evolves the pistol into a wind-up bullet stream.
+  description: Evolves the pistol into a wind-up bullet stream with a massive ammo reserve.
   icon: {fileID: 21300000, guid: bbe499a4802652248ad97b6fe7cb8e3f, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 4616823010010001003, guid: e689482232f7442fa1c46c1732798199, type: 3}
@@ -21,13 +21,13 @@ MonoBehaviour:
   statEffects:
   - stat: 1
     type: 0
-    value: 0.3
+    value: 0.45
   - stat: 5
     type: 0
-    value: 1.8
+    value: 3
   - stat: 0
     type: 0
-    value: 0.55
+    value: 0.75
   - stat: 3
     type: 1
-    value: 1
+    value: 0.75

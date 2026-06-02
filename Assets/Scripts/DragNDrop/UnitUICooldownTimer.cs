@@ -199,8 +199,8 @@ public class UnitUICooldownTimer : MonoBehaviour
             return false;
         }
 
-        // This overlay intentionally visualizes both unavailable states for the UI slot:
-        // recalled-unit DeploymentCooldown first, then deployed-tower SetupTime while combat is arming.
+        // This overlay only visualizes recalled-unit DeploymentCooldown.
+        // Deployed-tower SetupTime is displayed by UnitUISetupDisplay.
         if (unit.IsCoolingDown)
         {
             remaining = unit.CooldownRemaining;
@@ -208,15 +208,7 @@ public class UnitUICooldownTimer : MonoBehaviour
             return true;
         }
 
-        TowerEntity runtimeTower = unit.CurrentRuntimeInstance;
-        if (runtimeTower == null || !runtimeTower.IsInSetupTime)
-        {
-            return false;
-        }
-
-        remaining = runtimeTower.SetupTimeRemaining;
-        normalizedRemaining = runtimeTower.SetupTimeNormalizedRemaining;
-        return true;
+        return false;
     }
 
     private bool TryGetManagedUnit(out UnitStateManager.OwnedUnitState unit)

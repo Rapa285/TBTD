@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: StoppingPower_LV3
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Stopping Power LV3
-  description: Massive bullet force with very heavy recoil and lower ammo capacity.
+  description: Massive impact with very slow cadence and lower ammo capacity.
   icon: {fileID: 21300000, guid: d43fb28236d8ef84ba82dfb5c5f2a8a9, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,10 +21,10 @@ MonoBehaviour:
   statEffects:
   - stat: 0
     type: 0
-    value: 2.3
+    value: 1.65
   - stat: 1
     type: 0
-    value: 1.65
+    value: 1.5
   - stat: 5
     type: 0
-    value: 0.6
+    value: 0.8

@@ -181,6 +181,17 @@ public class PlayerStateController : MonoBehaviour
         return true;
     }
 
+    public bool TrySelectRosterUnit(string unitId)
+    {
+        if (!CanSelectTowers() || string.IsNullOrWhiteSpace(unitId))
+        {
+            return false;
+        }
+
+        SetSelectedRosterUnit(unitId);
+        return true;
+    }
+
     public void ClearSelection()
     {
         SetSelectedTower(null, null);
@@ -253,7 +264,8 @@ public class PlayerStateController : MonoBehaviour
             selectionTarget = null;
         }
 
-        if (selectedTower == tower && selectedSelectionTarget == selectionTarget)
+        string nextUnitId = tower != null ? tower.UnitId : null;
+        if (selectedTower == tower && selectedSelectionTarget == selectionTarget && selectedUnitId == nextUnitId)
         {
             return;
         }
@@ -268,7 +280,7 @@ public class PlayerStateController : MonoBehaviour
 
         selectedTower = tower;
         selectedSelectionTarget = selectionTarget;
-        selectedUnitId = tower != null ? tower.UnitId : null;
+        selectedUnitId = nextUnitId;
 
         if (selectedTower != null)
         {
@@ -284,9 +296,38 @@ public class PlayerStateController : MonoBehaviour
         RefreshInteractionState();
     }
 
+    private void SetSelectedRosterUnit(string unitId)
+    {
+        unitId = string.IsNullOrWhiteSpace(unitId) ? null : unitId;
+        if (selectedTower == null && selectedSelectionTarget == null && selectedUnitId == unitId)
+        {
+            return;
+        }
+
+        TowerEntity previousTower = selectedTower;
+        string previousUnitId = selectedUnitId;
+
+        if (previousTower != null)
+        {
+            previousTower.SetSelected(false);
+        }
+
+        selectedTower = null;
+        selectedSelectionTarget = null;
+        selectedUnitId = unitId;
+
+        SelectionChanged?.Invoke(new PlayerSelectionChangedEvent(
+            previousTower,
+            selectedTower,
+            previousUnitId,
+            selectedUnitId));
+
+        RefreshInteractionState();
+    }
+
     private void ClearInvalidSelection()
     {
-        if (selectedTower != null && selectedTower.Deployed)
+        if (selectedTower == null || selectedTower.Deployed)
         {
             return;
         }
@@ -360,7 +401,7 @@ public class PlayerStateController : MonoBehaviour
     {
         if (!string.IsNullOrWhiteSpace(selectedUnitId) && eventData.UnitId == selectedUnitId)
         {
-            ClearSelection();
+            SetSelectedRosterUnit(selectedUnitId);
         }
     }
 
@@ -415,7 +456,7 @@ public class PlayerStateController : MonoBehaviour
             return PlayerInteractionState.DeploymentPreview;
         }
 
-        return selectedTower != null
+        return selectedTower != null || !string.IsNullOrWhiteSpace(selectedUnitId)
             ? PlayerInteractionState.TowerSelected
             : PlayerInteractionState.None;
     }

@@ -105,6 +105,14 @@ public class UnitUICost : MonoBehaviour
         }
     }
 
+    private void HandleUnitCooldownEnded(UnitCooldownEndedEvent eventData)
+    {
+        if (IsMatchingUnit(eventData.UnitId))
+        {
+            RefreshDisplay();
+        }
+    }
+
     private void ResolveReferences()
     {
         if (uiUnitItem == null)
@@ -154,6 +162,7 @@ public class UnitUICost : MonoBehaviour
         eventBus.UnitDeploymentCostCompiled += HandleUnitDeploymentCostCompiled;
         eventBus.UnitDeployed += HandleUnitDeployed;
         eventBus.UnitRecalled += HandleUnitRecalled;
+        eventBus.UnitCooldownEnded += HandleUnitCooldownEnded;
         eventBusSubscribed = true;
     }
 
@@ -168,6 +177,7 @@ public class UnitUICost : MonoBehaviour
         eventBus.UnitDeploymentCostCompiled -= HandleUnitDeploymentCostCompiled;
         eventBus.UnitDeployed -= HandleUnitDeployed;
         eventBus.UnitRecalled -= HandleUnitRecalled;
+        eventBus.UnitCooldownEnded -= HandleUnitCooldownEnded;
         eventBusSubscribed = false;
     }
 
@@ -200,7 +210,9 @@ public class UnitUICost : MonoBehaviour
             return false;
         }
 
-        if (!uiUnitItem.TryGetOwnedUnit(out UnitStateManager.OwnedUnitState unit) || unit.IsDeployed)
+        if (!uiUnitItem.TryGetOwnedUnit(out UnitStateManager.OwnedUnitState unit)
+            || unit.IsDeployed
+            || unit.IsCoolingDown)
         {
             return false;
         }

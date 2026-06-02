@@ -49,10 +49,12 @@ public class UnitUIAmmoDisplay : UnitUIBehaviour
     private float emptyFlashMinAlpha = 0.35f;
 
     private bool isEmptyFlashing;
+    private bool isExternalStatusVisible;
 
     protected override void Awake()
     {
         base.Awake();
+        EnsureSetupDisplayCompanion();
         ClearDisplay();
     }
 
@@ -111,6 +113,16 @@ public class UnitUIAmmoDisplay : UnitUIBehaviour
         ResolveDisplayReferences();
     }
 
+    private void EnsureSetupDisplayCompanion()
+    {
+        if (!Application.isPlaying || GetComponent<UnitUISetupDisplay>() != null)
+        {
+            return;
+        }
+
+        gameObject.AddComponent<UnitUISetupDisplay>();
+    }
+
     protected override void SubscribeToEvents(UnitEventBus eventBus)
     {
         eventBus.UnitDeployed += HandleUnitDeployed;
@@ -159,11 +171,28 @@ public class UnitUIAmmoDisplay : UnitUIBehaviour
         }
     }
 
-    private void RefreshDisplay()
+    public void RefreshDisplay()
     {
         ResolveReferences();
 
-        if (!TryGetDisplayTower(out TowerEntity tower))
+        if (isExternalStatusVisible)
+        {
+            return;
+        }
+
+        if (!TryGetRuntimeTower(out TowerEntity tower))
+        {
+            ClearDisplay();
+            return;
+        }
+
+        if (tower.IsInSetupTime)
+        {
+            ClearDisplay();
+            return;
+        }
+
+        if (!UsesFiniteAmmo(tower))
         {
             ClearDisplay();
             return;
@@ -188,7 +217,48 @@ public class UnitUIAmmoDisplay : UnitUIBehaviour
         SetFillColor(isEmpty ? emptyAmmoColor : GetBandColor(ratio));
     }
 
-    private bool TryGetDisplayTower(out TowerEntity tower)
+    public void ShowExternalStatus(string displayText, float normalizedFill, Color fillColor)
+    {
+        ResolveReferences();
+
+        isExternalStatusVisible = true;
+        isEmptyFlashing = false;
+        SetAmmoVisible(true);
+
+        if (ammoText != null)
+        {
+            ammoText.text = displayText ?? string.Empty;
+            ammoText.enabled = true;
+        }
+
+        SetFillAmount(normalizedFill);
+        SetFillColor(fillColor);
+    }
+
+    public void ClearExternalStatus(bool refreshAmmoDisplay)
+    {
+        if (!isExternalStatusVisible)
+        {
+            if (refreshAmmoDisplay)
+            {
+                RefreshDisplay();
+            }
+
+            return;
+        }
+
+        isExternalStatusVisible = false;
+
+        if (refreshAmmoDisplay)
+        {
+            RefreshDisplay();
+            return;
+        }
+
+        ClearDisplay();
+    }
+
+    private bool TryGetRuntimeTower(out TowerEntity tower)
     {
         tower = null;
 
@@ -198,12 +268,19 @@ public class UnitUIAmmoDisplay : UnitUIBehaviour
         }
 
         tower = unit.CurrentRuntimeInstance;
-        if (tower == null || !tower.Deployed || tower.ActiveAttackBehaviour == null)
+        if (tower == null || !tower.Deployed)
         {
             return false;
         }
 
-        return tower.ActiveAttackBehaviour.UsesFiniteAmmo;
+        return true;
+    }
+
+    private bool UsesFiniteAmmo(TowerEntity tower)
+    {
+        return tower != null
+            && tower.ActiveAttackBehaviour != null
+            && tower.ActiveAttackBehaviour.UsesFiniteAmmo;
     }
 
     private Color GetBandColor(float ratio)
@@ -236,6 +313,7 @@ public class UnitUIAmmoDisplay : UnitUIBehaviour
 
     private void ClearDisplay()
     {
+        isExternalStatusVisible = false;
         isEmptyFlashing = false;
         SetAmmoVisible(false);
 

@@ -12,6 +12,15 @@ public class TowerAmmoUnitDisplay : MonoBehaviour
     [SerializeField, Tooltip("TMP text used to display current and max ammo units.")]
     private TMP_Text textDisplay;
 
+    [SerializeField, Range(0f, 1f), Tooltip("Remaining ammo ratio at or below this value shows the low-ammo warning sprite while ammo remains.")]
+    private float lowAmmoWarningThreshold = 0.25f;
+
+    [SerializeField, Tooltip("Optional sprite root shown when this tower is about to run out of ammo.")]
+    private GameObject lowAmmoWarningSprite;
+
+    [SerializeField, Tooltip("Optional sprite root shown when this tower has no ammo remaining.")]
+    private GameObject outOfAmmoSprite;
+
     private UnitEventBus eventBus;
     private string boundUnitId;
     private bool towerSubscribed;
@@ -48,6 +57,7 @@ public class TowerAmmoUnitDisplay : MonoBehaviour
 
     private void OnValidate()
     {
+        lowAmmoWarningThreshold = Mathf.Clamp01(lowAmmoWarningThreshold);
         ResolveReferences();
     }
 
@@ -177,7 +187,14 @@ public class TowerAmmoUnitDisplay : MonoBehaviour
             return;
         }
 
-        SetDisplayText($"{tower.CurrentAmmoUnits} / {tower.MaxAmmoUnits}");
+        int currentAmmo = tower.CurrentAmmoUnits;
+        int maxAmmo = tower.MaxAmmoUnits;
+        float ammoRatio = maxAmmo > 0 ? Mathf.Clamp01((float)currentAmmo / maxAmmo) : 0f;
+        bool isOutOfAmmo = currentAmmo <= 0;
+        bool isLowAmmo = !isOutOfAmmo && ammoRatio <= lowAmmoWarningThreshold;
+
+        SetDisplayText($"{currentAmmo} / {maxAmmo}");
+        SetAmmoWarningSpritesVisible(isLowAmmo, isOutOfAmmo);
     }
 
     private bool IsMatchingTower(string eventUnitId, TowerEntity eventTower)
@@ -208,6 +225,8 @@ public class TowerAmmoUnitDisplay : MonoBehaviour
 
     private void ClearDisplay()
     {
+        SetAmmoWarningSpritesVisible(false, false);
+
         if (textDisplay == null)
         {
             return;
@@ -215,5 +234,19 @@ public class TowerAmmoUnitDisplay : MonoBehaviour
 
         textDisplay.text = string.Empty;
         textDisplay.enabled = false;
+    }
+
+    private void SetAmmoWarningSpritesVisible(bool showLowAmmoWarning, bool showOutOfAmmo)
+    {
+        SetGameObjectVisible(lowAmmoWarningSprite, showLowAmmoWarning);
+        SetGameObjectVisible(outOfAmmoSprite, showOutOfAmmo);
+    }
+
+    private static void SetGameObjectVisible(GameObject target, bool isVisible)
+    {
+        if (target != null && target.activeSelf != isVisible)
+        {
+            target.SetActive(isVisible);
+        }
     }
 }

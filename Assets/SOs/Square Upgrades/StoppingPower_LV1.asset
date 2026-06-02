@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: StoppingPower_LV1
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Stopping Power LV1
-  description: Stronger bullets with heavier recoil.
+  description: Stronger impact with slower cadence and reduced ammo.
   icon: {fileID: 21300000, guid: d43fb28236d8ef84ba82dfb5c5f2a8a9, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,7 +21,10 @@ MonoBehaviour:
   statEffects:
   - stat: 0
     type: 0
-    value: 1.35
+    value: 1.2
   - stat: 1
     type: 0
     value: 1.2
+  - stat: 5
+    type: 0
+    value: 0.95

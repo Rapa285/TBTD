@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Aura_EVO_Upgrade
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Aura EVO
-  description: Evolves the pistol into a local damage field.
+  description: Evolves the pistol into a local damage field with a longer setup.
   icon: {fileID: 21300000, guid: acfe05f35986e2c4894462784af98009, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 8744715735098940307, guid: a02dd6c2197f5a940902dc5af5e9aada, type: 3}
@@ -21,19 +21,19 @@ MonoBehaviour:
   statEffects:
   - stat: 0
     type: 0
-    value: 0.55
+    value: 0.65
   - stat: 1
     type: 0
-    value: 0.55
+    value: 0.75
   - stat: 2
     type: 0
-    value: 0.55
+    value: 0.75
   - stat: 5
     type: 0
-    value: 1.8
+    value: 1.5
   - stat: 3
-    type: 0
-    value: 0.5
+    type: 1
+    value: 2
   - stat: 6
     type: 0
-    value: 1.5
+    value: 1.3
