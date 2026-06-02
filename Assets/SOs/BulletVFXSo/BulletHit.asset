@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: BulletHit
   m_EditorClassIdentifier: Assembly-CSharp::VFXDefSO
   vfxType: 1
-  vfxPrefab: {fileID: 0}
+  vfxPrefab: {fileID: 1758473627833946668, guid: c2564d0617b391a40ae67d7d364e1c12, type: 3}
