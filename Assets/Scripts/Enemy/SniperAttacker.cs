@@ -1,19 +1,18 @@
 using UnityEngine;
 
 [RequireComponent(typeof(EnemyMover))]
-public class SniperAttacker : MonoBehaviour
+public class SniperAttacker : MonoBehaviour, IDifficultyScalable
 {
     [Header("Sniper Stats")]
     [SerializeField] private float attackDamage = 15f;
-    [SerializeField] private float attackCooldown = 2f;
+    [SerializeField] private float baseAttackCooldown = 2f;
     
     [Header("Targeting")]
     [SerializeField] private UnitVision vision;
     [SerializeField] private EnemyAudio enemyAudio;
 
     [Header("VFX Settings")]
-    [SerializeField] private Transform firePoint;
-    [SerializeField] private SniperTracerVFX tracerPrefab;
+    [SerializeField] private Transform firePoint; 
 
     private EnemyMover mover;
     private float lastAttackTime;
@@ -22,11 +21,7 @@ public class SniperAttacker : MonoBehaviour
     private void Awake()
     {
         mover = GetComponent<EnemyMover>();
-        
-        if (vision == null)
-        {
-            vision = GetComponentInChildren<UnitVision>();
-        }
+        if (vision == null) vision = GetComponentInChildren<UnitVision>();
     }
 
     private void Update()
@@ -37,12 +32,13 @@ public class SniperAttacker : MonoBehaviour
 
         if (currentTarget != null)
         {
-            if (mover != null)
-            {
-                mover.PauseMovement();
-            }
+            if (mover != null) mover.PauseMovement();
             
-            if (Time.time >= lastAttackTime + attackCooldown)
+            float currentMultiplier = mover != null ? mover.CurrentSpeedMultiplier : 1f;
+            float actualCooldown = baseAttackCooldown / currentMultiplier; 
+            // Jika di-buff 2x lebih cepat, cooldown dibagi 2 (semakin cepat nembak)
+            
+            if (Time.time >= lastAttackTime + actualCooldown)
             {
                 AttackBase(currentTarget);
                 lastAttackTime = Time.time;
@@ -50,27 +46,32 @@ public class SniperAttacker : MonoBehaviour
         }
         else
         {
-            if (mover != null)
-            {
-                mover.ResumeMovement();
-            }
+            if (mover != null) mover.ResumeMovement();
         }
     }
 
     private void AttackBase(Transform target)
     {
-        Debug.Log($"{gameObject.name} is attacking {target.name} for {attackDamage} damage.");
         CombatDamageUtility.TryApplyDamage(target, attackDamage);
-        if (enemyAudio != null)
+        
+        if (enemyAudio != null) enemyAudio.PlayAttackBase(); 
+
+        if (firePoint != null && target != null)
         {
-            enemyAudio.PlayAttackBase();
+            SniperTracerVFX.GlobalStartPos = firePoint.position;
+            SniperTracerVFX.GlobalEndPos = target.position;
+
+            if (ServiceLocator.TryResolve<VFXService>(out VFXService vfxService))
+            {
+                vfxService.HandleRequest(VFXType.LaserHit, firePoint, null, false);
+            }
         }
-        if (tracerPrefab != null && firePoint != null)
-        {
-            // ganti instantiate ketika ada pool manager utk vfx
-            SniperTracerVFX laser = Instantiate(tracerPrefab, Vector3.zero, Quaternion.identity);
-            
-            laser.SetupTracer(firePoint.position, target.position);
-        }
+    }
+
+    public void ScaleDifficulty(float multiplier)
+    {
+        attackDamage *= multiplier;        
+
+        baseAttackCooldown = Mathf.Max(0.5f, baseAttackCooldown / (1f + ((multiplier - 1f) * 0.2f)));
     }
 }

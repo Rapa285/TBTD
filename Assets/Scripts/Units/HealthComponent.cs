@@ -17,6 +17,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 {
     [Header("References")]
     [SerializeField] private EnemyAudio enemyAudio;
+    [SerializeField] private GameObject shieldVFXObj;
 
     [Header("Auto Initialization")]
     [SerializeField, Tooltip("Initialize health automatically from the serialized starting values on Start.")]
@@ -33,9 +34,10 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
     private int extraLives = 0;
 
     [Header("Death")]
-    [SerializeField, Tooltip("What happens to this GameObject after health reaches zero.")]
+    [SerializeField, Tooltip("What happens to this GameObject after health reaches zero (Fallback if no PooledObject).")]
     private HealthDeathMode deathMode = HealthDeathMode.DestroyGameObject;
 
+    private int initialExtraLives;
     private float maxHealth;
     private float currentHealth;
     private float maxShield;
@@ -62,6 +64,7 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
 
     private void Awake()
     {
+        initialExtraLives = extraLives;
         EnsureDeathEvent();
     }
 
@@ -97,7 +100,9 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         isDead = false;
         hasLastHitContext = false;
         lastHitContext = default;
+        extraLives = initialExtraLives;
         EnsureDeathEvent();
+        UpdateShieldVisuals();
     }
 
     public void TakeDamage(float amount)
@@ -128,6 +133,8 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             hasLastHitContext = false;
         }
 
+        float actualDamageTaken = amount;
+
         if (currentShield > 0f)
         {
             float absorbed = Mathf.Min(amount, currentShield);
@@ -139,8 +146,13 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
         if (amount > 0f)
         {
             currentHealth = Mathf.Max(0f, currentHealth - amount);
-            Debug.Log($"{gameObject.name} took {amount} damage. Remaining Health: {currentHealth}, Shield: {currentShield}");
+            Debug.Log($"{gameObject.name} took {amount} damage. Remaining Health: {currentHealth}");
         }
+
+        UpdateShieldVisuals();
+
+        DamagePopupVFX.GlobalPendingDamage = actualDamageTaken;
+        TryRequestVFX(VFXType.DamagePopup, transform, attach: false);
 
         if (currentHealth <= 0f)
         {
@@ -150,64 +162,62 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
                 currentHealth = maxHealth;
                 currentShield = 0f;
                 Debug.Log($"{gameObject.name} has been revived! Remaining extra lives: {extraLives}");
+                UpdateShieldVisuals();
+                TryRequestVFX(VFXType.Revive, transform, attach: true);
+
+                EnemyMover mover = GetComponent<EnemyMover>();
+                if (mover != null)
+                {
+                    _=mover.PauseForSeconds(1f,activeLifeToken);
+                }
                 return;
             }
             Die();
         }
         else
         {
-            if (enemyAudio != null)
-            {
-                enemyAudio.PlayHit();
-            }
+            if (enemyAudio != null) enemyAudio.PlayHit();
+            TryRequestVFX(VFXType.BulletHit, transform, attach: false);
+        }
+    }
+
+    private void TryRequestVFX(VFXType vfxType, Transform target, bool attach)
+    {
+        if (target == null || vfxType == VFXType.None) return;
+
+        if (ServiceLocator.TryResolve<VFXService>(out VFXService vfxService) && vfxService != null)
+        {
+            vfxService.HandleRequest(vfxType, target, attach ? target : null, follow: attach);
         }
     }
 
     private void Die()
     {
-        if (isDead)
-        {
-            return;
-        }
+        if (isDead) return;
 
         isDead = true;
         lifeTokenSource?.Cancel();
-        Debug.Log($"{gameObject.name} has died.");
         EnsureDeathEvent();
+        UpdateShieldVisuals();
+
         OnDeath?.Invoke();
 
-        if (enemyAudio != null)
-        {
-            enemyAudio.PlayDeath();
-        }
-        switch (deathMode)
-        {
-            case HealthDeathMode.DisableGameObject:
-                gameObject.SetActive(false);
-                break;
-            case HealthDeathMode.None:
-                break;
-            case HealthDeathMode.DestroyGameObject:
-            default:
-                Destroy(gameObject);
-                break;
-        }
+        if (enemyAudio != null) enemyAudio.PlayDeath();
     }
 
     private void EnsureDeathEvent()
     {
-        if (OnDeath == null)
-        {
-            OnDeath = new UnityEvent();
-        }
+        if (OnDeath == null) OnDeath = new UnityEvent();
     }
 
     public void ApplyTemporaryShieldBuff(float amount, float duration)
     {
         if (isDead) return;
-        currentShield+= amount;
+        currentShield += amount;
         maxShield = Mathf.Max(maxShield, currentShield);
         Debug.Log($"{gameObject.name} received a temporary shield buff of {amount}. Current Shield: {currentShield}");
+        
+        UpdateShieldVisuals();
         _ = RemoveShieldBuffAfterDuration(amount, duration);
     }
 
@@ -221,11 +231,19 @@ public class HealthComponent : MonoBehaviour, IAttackContextDamageable, IDamagea
             {
                 float amountToRemove = Mathf.Min(amount, currentShield);
                 currentShield -= amountToRemove;
-                Debug.Log($"{gameObject.name}'s temporary shield buff expired. Current Shield: {currentShield}");
+                UpdateShieldVisuals();
             }
         }
         catch (OperationCanceledException)
         {
+        }
+    }
+
+    private void UpdateShieldVisuals()
+    {
+        if (shieldVFXObj != null)
+        {
+            shieldVFXObj.SetActive(currentShield > 0f && !isDead);
         }
     }
 }

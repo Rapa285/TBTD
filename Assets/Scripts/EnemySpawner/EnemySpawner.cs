@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using TMPro;
-using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Splines;
+using UnityEngine.Pool;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -23,13 +22,15 @@ public class EnemySpawner : MonoBehaviour
     // Add enemy types here
     public List<NormalEnemyObject> normalEnemyList = new List<NormalEnemyObject>();
     public List<SpecialEnemyObject> specialEnemyList = new List<SpecialEnemyObject>();
+    private Dictionary<EnemyObject, ObjectPool<PooledObject>> poolDictionary = new Dictionary<EnemyObject, ObjectPool<PooledObject>>();
 
     public int baseBudget = 10;
     public float budgetMultiplier = 1;
     private int budget;
 
     [SerializeField]
-    private List<GameObject> enemyToSpawn = new List<GameObject>();
+    private List<EnemyObject> enemyToSpawn = new List<EnemyObject>();
+    private List<GameObject> enemyGameObjectCache = new List<GameObject>();
 
     private bool isInfiniteRound = false;
 
@@ -41,19 +42,22 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
+        // Setup Spawner Attributes
         currWave = 0;
-        // GenerateWave();
+
+        foreach (var enemy in normalEnemyList) RegisterEnemyPool(enemy);
+        foreach (var enemy in specialEnemyList) RegisterEnemyPool(enemy);
     }
 
     private void Awake()
     {
+        // Setup Spline
         SplineContainer spline = GetComponent<SplineContainer>();
         if (spline != null)
         {
             mapSpline = spline;
         }
     }
-
 
     // FixedUpdate for consistency
     void FixedUpdate()
@@ -65,20 +69,13 @@ public class EnemySpawner : MonoBehaviour
 
         if (gracePeriod > 0)
         {
-            gracePeriod -= Time.fixedDeltaTime;
-            int currentSecond = Mathf.CeilToInt(gracePeriod);
-            if (currentSecond != lastGraceTickSecond && currentSecond >= 0)
-            {
-                lastGraceTickSecond = currentSecond;
-                RaiseGraceTimerTickEvent();
-            }
+            HandleGracePeriodTick();
             return;
         }
 
         if (!hasGracePeriodEnded)
         {
-            hasGracePeriodEnded = true;
-            RaiseGraceTimerEndedEvent();
+            HandleGracePeriodOver();
         }
 
         // Pre Infinite Round Handling
@@ -128,21 +125,29 @@ public class EnemySpawner : MonoBehaviour
 
         if (spawnTimer <= 0)
         {
-            if(enemyToSpawn.Count > 0)
-            {
-                spawnTimer = spawnInterval;
-
-                // TODO change this
-                Instantiate(enemyToSpawn[0], transform.position, transform.rotation).SetActive(true);
-                enemyToSpawn.RemoveAt(0);   
-                
-                // Get pool
-            }
+            SpawnEnemies();
         }
         else
         {
             spawnTimer -= Time.fixedDeltaTime;   
         }
+    }
+
+    public void HandleGracePeriodTick()
+    {
+        gracePeriod -= Time.fixedDeltaTime;
+        int currentSecond = Mathf.CeilToInt(gracePeriod);
+        if (currentSecond != lastGraceTickSecond && currentSecond >= 0)
+        {
+            lastGraceTickSecond = currentSecond;
+            RaiseGraceTimerTickEvent();
+        }
+    }
+
+    public void HandleGracePeriodOver()
+    {
+        hasGracePeriodEnded = true;
+        RaiseGraceTimerEndedEvent();
     }
 
     public void GenerateWave()
@@ -194,8 +199,7 @@ public class EnemySpawner : MonoBehaviour
 
             if (budget - randEnemyCost >= 0)
             {
-                GameObject randEnemyObject = normalEnemyList[randEnemyId].enemyPrefab;
-                SetupEnemy(randEnemyObject);
+                EnemyObject randEnemyObject = normalEnemyList[randEnemyId];
 
                 enemyToSpawn.Add(randEnemyObject);
                 budget -= randEnemyCost;
@@ -218,26 +222,45 @@ public class EnemySpawner : MonoBehaviour
         {
             if (currWave == specialEnemyList[i].waveToSpawn)
             {
-                GameObject specialEnemyObject = specialEnemyList[i].enemyPrefab;
-                SetupEnemy(specialEnemyObject);
+                EnemyObject specialEnemyObject = specialEnemyList[i];
 
                 enemyToSpawn.Add(specialEnemyObject);
             }
         }
+    }
 
-        void SetupEnemy(GameObject enemyPrefab)
+    private void SetupEnemy(GameObject enemyPrefab)
+    {
+        enemyPrefab.transform.SetPositionAndRotation(transform.position, transform.rotation);
+
+        // Setup Spline
+        SplineAnimate animator = enemyPrefab.GetComponent<SplineAnimate>();
+
+        if (mapSpline != null && animator != null)
         {
-            SplineAnimate animator = enemyPrefab.GetComponent<SplineAnimate>();
+            // Link them
+            animator.Container = mapSpline;
 
-            if (mapSpline != null && animator != null)
-            {
-                // 3. Link them
-                animator.Container = mapSpline;
-            }
-            else
-            {
-                Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
-            }
+            animator.Restart(false);
+            animator.Play();
+        }
+        else
+        {
+            Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
+        }
+    }
+
+    public void SpawnEnemies()
+    {
+        if(enemyToSpawn.Count > 0)
+        {
+            spawnTimer = spawnInterval;
+            
+            EnemyObject currentEnemyData = enemyToSpawn[0];
+            PooledObject enemyInstance = poolDictionary[currentEnemyData].Get();
+            SetupEnemy(enemyInstance.gameObject);
+
+            enemyToSpawn.RemoveAt(0);  
         }
     }
 
@@ -279,7 +302,14 @@ public class EnemySpawner : MonoBehaviour
         if (eventBus != null)
         {
             Debug.Log($"Raising NewWaveEvent: Wave {currWave} with {enemyToSpawn.Count} enemies.");
-            eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyToSpawn));
+            
+            enemyGameObjectCache.Clear();
+            for (int i = 0; i < enemyToSpawn.Count; i++)
+            {
+                enemyGameObjectCache.Add(enemyToSpawn[i].GetPrefabCopy());
+            }
+
+            eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyGameObjectCache));
         }
     }
 
@@ -320,12 +350,43 @@ public class EnemySpawner : MonoBehaviour
             eventBus.RaiseInfiniteRoundTriggered();
         }
     }
+
+    private void RegisterEnemyPool(EnemyObject enemy)
+    {
+        if (enemy.objectPrefab == null || poolDictionary.ContainsKey(enemy)) return;
+
+        var pool = new ObjectPool<PooledObject>(
+            createFunc: () => {
+                PooledObject instance = Instantiate(enemy.objectPrefab, this.transform);
+                instance.SetPool(poolDictionary[enemy]);
+                return instance;
+            },
+            actionOnGet: (obj) => {
+                obj.gameObject.SetActive(true);
+                obj.OnGet?.Invoke();
+            },
+            actionOnRelease: (obj) => {
+                obj.gameObject.SetActive(false);
+                obj.OnRelease?.Invoke();
+            },
+            actionOnDestroy: (obj) => Destroy(obj.gameObject)
+        );
+
+        poolDictionary.Add(enemy, pool);
+    }
 }
 
 [System.Serializable]
-public class NormalEnemyObject
+public class EnemyObject
 {
-    public GameObject enemyPrefab;
+    public PooledObject objectPrefab;
+    public GameObject GetPrefabCopy() => objectPrefab.gameObject;
+}
+
+
+[System.Serializable]
+public class NormalEnemyObject: EnemyObject
+{
     public int cost;
     public ExtraAttr attribute = new ExtraAttr();
 }
@@ -338,12 +399,11 @@ public class ExtraAttr
 }
 
 [System.Serializable]
-public class SpecialEnemyObject
+public class SpecialEnemyObject: EnemyObject
 {
     // Object for Elites/Bosses
     // Special Enemies MUST spawn at certain waves and aren't affected by budget
 
     public int waveToSpawn = 50;
-    public GameObject enemyPrefab;
     // public int cost; #NOTE: Special enemies are not affected by budget
 }

@@ -5,7 +5,15 @@ public enum VFXType
     None,
     BulletHit,
     GrenadeHit,
-    LaserHit
+    LaserHit,
+
+    // Enemy-specific effects
+    EnemySummon,
+    DamagePopup,
+    BuffAura,
+    BuffAttach,
+    Revive,
+    SplitDeath
 }
 
 /// <summary>

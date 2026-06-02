@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Splines;
 
 [RequireComponent(typeof(EnemyEntity),typeof(EnemyMover))]
-public class SummonerComponent : MonoBehaviour
+public class SummonerComponent : MonoBehaviour, IDifficultyScalable
 {
     [Header("Summoning Settings")]
     [SerializeField] private GameObject[] prefabsToSummon;
@@ -17,12 +17,22 @@ public class SummonerComponent : MonoBehaviour
     private SplineAnimate splineAnimate;
     private float lastSummonTime;
     private bool isSummoning;
+    private VFXService vfxService;
+
+    private void ResolveService()
+    {
+        if (vfxService == null)
+        {
+            ServiceLocator.TryResolve(out vfxService);
+        }
+    }
 
     private void Awake()
     {
         mover=GetComponent<EnemyMover>();
         entity=GetComponent<EnemyEntity>();
         splineAnimate=GetComponent<SplineAnimate>();
+        ResolveService();
     }
 
     private void Start()
@@ -48,6 +58,11 @@ public class SummonerComponent : MonoBehaviour
         if (enemyAudio != null)
         {
             enemyAudio.PlaySkill();
+        }
+
+        if (vfxService != null)
+        {
+            vfxService.HandleRequest(VFXType.EnemySummon, transform);
         }
 
         try{
@@ -108,5 +123,12 @@ public class SummonerComponent : MonoBehaviour
             childSpline.NormalizedTime=offsetTime;
             childSpline.Play();
         }
+    }
+
+    public void ScaleDifficulty(float multiplier)
+    {
+        summonCooldown = Mathf.Max(2f, summonCooldown / (1f + ((multiplier - 1f) * 0.2f)));
+        
+        castTime = Mathf.Max(0.2f, castTime / (1f + ((multiplier - 1f) * 0.15f)));
     }
 }
