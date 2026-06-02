@@ -55,6 +55,17 @@ public class EnemyEntity : MonoBehaviour
 
     private void Start()
     {
+        //Assumed to be initialized externally by EnemySpawner when spawned, but if not, initialize with default stats and base target
+        //Initialize(stats, baseTarget);
+
+        if (meshRenderer != null && enemyMaterial != null)
+        {
+            meshRenderer.material = enemyMaterial;
+        }
+    }
+
+    public void Initialize()
+    {
         if (health != null)
         {
             health.Initialize(stats.health, stats.initialShield);
@@ -64,11 +75,12 @@ public class EnemyEntity : MonoBehaviour
         {
             mover.Initialize(stats.movementSpeed);
         }
-
-        if (meshRenderer != null && enemyMaterial != null)
-        {
-            meshRenderer.material = enemyMaterial;
-        }
+    }
+    public void Initialize(EnemyStats newStats, Transform newBaseTarget)
+    {
+        stats = newStats;
+        baseTarget = newBaseTarget;
+        Initialize();
     }
 
     private void OnDestroy()

@@ -429,6 +429,7 @@ GameObject:
   - component: {fileID: 1627325428167897236}
   - component: {fileID: 5558165790164757295}
   - component: {fileID: 4843373451112337369}
+  - component: {fileID: -4759524539810303696}
   m_Layer: 6
   m_Name: BaseEnemy
   m_TagString: Untagged
@@ -647,6 +648,24 @@ MonoBehaviour:
   deathSound: {fileID: 8300000, guid: 3e522d63431083940b3e0710b2768a56, type: 3}
   attackBaseSound: {fileID: 8300000, guid: e87722ab74b5c3c4383eace213cc0af9, type: 3}
   skillSound: {fileID: 0}
+--- !u!114 &-4759524539810303696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8371444609426255717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0589702e401afcf48a382c51afe2d8d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PooledObject
+  OnGet:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRelease:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &9045070914709005361
 GameObject:
   m_ObjectHideFlags: 0

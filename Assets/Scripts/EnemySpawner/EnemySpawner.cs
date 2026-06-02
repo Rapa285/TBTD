@@ -248,6 +248,8 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
         }
+
+        enemyPrefab.GetComponent<EnemyEntity>()?.Initialize();
     }
 
     public void SpawnEnemies()
