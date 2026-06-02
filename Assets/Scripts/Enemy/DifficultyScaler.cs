@@ -7,30 +7,30 @@ public class DifficultyScaler : MonoBehaviour
 
     private void Awake()
     {
-        if (health == null)
-        {
-            health = GetComponent<HealthComponent>();
-        }
-        if (mover == null)
-        {
-            mover = GetComponent<EnemyMover>();
-        }
+        if (health == null) health = GetComponent<HealthComponent>();
+        if (mover == null) mover = GetComponent<EnemyMover>();
     }
     
     public void ApplyDifficulty(float multiplier)
     {
         if (health != null)
         {
-            float scaledHP=health.MaxHealth*multiplier;
-            float scaledShield=health.MaxShield*multiplier;
-
+            float scaledHP = health.MaxHealth * multiplier;
+            float scaledShield = health.MaxShield * multiplier;
             health.Initialize(scaledHP, scaledShield);
         }
         if (mover != null)
         {
-            float speedBonus=1f+((multiplier-1f)*0.1f);
-            mover.Initialize(mover.BaseSpeed*speedBonus);
+            float speedBonus = 1f + ((multiplier - 1f) * 0.1f);
+            mover.Initialize(mover.BaseSpeed * speedBonus);
         }
-        Debug.Log($"Applied difficulty multiplier {multiplier} to {gameObject.name}. New HP: {health.MaxHealth}, New Shield: {health.MaxShield}");
+
+        IDifficultyScalable[] scalableSkills = GetComponentsInChildren<IDifficultyScalable>();
+        
+        foreach (var skill in scalableSkills)
+        {
+            skill.ScaleDifficulty(multiplier);
+        }
+        Debug.Log($"Applied difficulty multiplier {multiplier} to {gameObject.name}.");
     }
 }

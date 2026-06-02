@@ -8,6 +8,9 @@ public class BaseHealthManager : MonoBehaviour
     private float baseHealth = 100f;
     public TextMeshProUGUI healthValueText;
 
+    [SerializeField]
+    private bool infinitHealth = false;
+
     private void OnEnable()
     {
         // Mulai mendengarkan event BaseDamagedEvent
@@ -23,13 +26,16 @@ public class BaseHealthManager : MonoBehaviour
 
     private void DamageBase(BaseDamagedEvent eventData)
     {
+        if (infinitHealth) return;
         baseHealth -= eventData.DamageAmount;
-        healthValueText.text = baseHealth.ToString();
         if (baseHealth <= 0)
         {
             healthValueText.text = "0";
             GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent{});
+            return;
         }
+        healthValueText.text = baseHealth.ToString();
+
     }
 
 

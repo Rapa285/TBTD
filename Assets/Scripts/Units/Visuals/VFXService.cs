@@ -40,7 +40,7 @@ public sealed class VFXService : MonoBehaviour
         initialPoolSize = Mathf.Max(0, initialPoolSize);
     }
 
-    public void HandleRequest(VFXType vfxType, Transform targetLocation)
+    public void HandleRequest(VFXType vfxType, Transform targetLocation, Transform attachTo = null, bool follow = false)
     {
         if (vfxType == VFXType.None || targetLocation == null)
         {
@@ -62,6 +62,17 @@ public sealed class VFXService : MonoBehaviour
 
         Transform instanceTransform = instance.transform;
         instanceTransform.SetPositionAndRotation(targetLocation.position, targetLocation.rotation);
+
+        // Parent the instance if requested so it can follow a moving target.
+        if (attachTo != null)
+        {
+            instanceTransform.SetParent(attachTo, true);
+        }
+        else if (follow)
+        {
+            instanceTransform.SetParent(targetLocation, true);
+        }
+
         instance.SetActive(true);
     }
 

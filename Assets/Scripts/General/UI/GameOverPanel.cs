@@ -6,7 +6,7 @@ public class GameOverPanel : MonoBehaviour
     public GameObject gameOverPanel;
     public Button gameOverPanelExitButton;
     public Button gameOverPanelRetryButton;
-
+    private TimeService timeService;
 
     private bool showingPanel = false;
 
@@ -18,7 +18,7 @@ public class GameOverPanel : MonoBehaviour
         gameOverPanelRetryButton.onClick.RemoveAllListeners();
         gameOverPanelRetryButton.onClick.AddListener(retry);
 
-        
+        ResolveTimeService();
     }
 
     private void OnEnable()
@@ -31,18 +31,23 @@ public class GameOverPanel : MonoBehaviour
         GeneralEventBus<GameOverEvent>.Unsubscribe(ShowGameOverPanel);
     }
 
-    private void ShowGameOverPanel(GameOverEvent eventData)
+    private void ResolveTimeService()
     {
-        gameOverPanel.SetActive(true);
-        showingPanel = true;
+        if (timeService == null)
+        {
+            ServiceLocator.TryResolve(out timeService);
+        }
     }
 
-    private void closeGameOverPanel()
+    private void ShowGameOverPanel(GameOverEvent eventData)
     {
-        gameOverPanel.SetActive(false);
-        showingPanel = false;
-
-        // call event to change scene to main menu or sumthn
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.RequestPause(this, true);
+        }
+        gameOverPanel.SetActive(true);
+        showingPanel = true;
     }
 
     private void retry()

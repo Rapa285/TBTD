@@ -8,7 +8,6 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private SceneLoader sceneLoader;
 
-    private GameObject SelectedTower;
     private TimeService timeService;
 
     private void Awake()
@@ -19,7 +18,6 @@ public class GameManager : MonoBehaviour
 
     private void OnEnable()
     {
-        GeneralEventBus<BaseDamagedEvent>.Subscribe(DamageBase);
         GeneralEventBus<GamePausedEvent>.Subscribe(PauseGame);
         GeneralEventBus<GameUnPausedEvent>.Subscribe(UnPauseGame);
         GeneralEventBus<RetryGameEvent>.Subscribe(RetryGame);
@@ -28,31 +26,12 @@ public class GameManager : MonoBehaviour
 
     private void OnDisable()
     {
-        GeneralEventBus<BaseDamagedEvent>.Unsubscribe(DamageBase);
         GeneralEventBus<GamePausedEvent>.Unsubscribe(PauseGame);
         GeneralEventBus<GameUnPausedEvent>.Unsubscribe(UnPauseGame);
         GeneralEventBus<RetryGameEvent>.Unsubscribe(RetryGame);
         GeneralEventBus<ExitToMainMenuEvent>.Unsubscribe(ExitToMainMenu);
     }
 
-    private void DamageBase(BaseDamagedEvent eventData)
-    {
-        baseHealth -= eventData.DamageAmount;
-        if (baseHealth <= 0)
-        {
-            GameOver();
-        }
-    }
-
-    private void GameOver()
-    {
-        GeneralEventBus<GameOverEvent>.Publish(new GameOverEvent { });
-        ResolveTimeService();
-        if (timeService != null)
-        {
-            timeService.RequestPause(this, true);
-        }
-    }
 
     private void PauseGame(GamePausedEvent eventData)
     {

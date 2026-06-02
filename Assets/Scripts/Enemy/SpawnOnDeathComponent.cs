@@ -14,6 +14,7 @@ public class SpawnOnDeathComponent : MonoBehaviour
 
     private EnemyEntity parentEntity;
     private SplineAnimate parentSpline;
+    private VFXService vfxService;
 
     private void Awake()
     {
@@ -21,10 +22,15 @@ public class SpawnOnDeathComponent : MonoBehaviour
         parentSpline = GetComponent<SplineAnimate>();
 
         GetComponent<HealthComponent>().OnDeath.AddListener(SpawnUnits);
+        ServiceLocator.TryResolve(out vfxService);
     }
 
     private void SpawnUnits()
     {
+        if (vfxService != null)
+        {
+            vfxService.HandleRequest(VFXType.SplitDeath, transform);
+        }
         float baseNormalizedTime = parentSpline != null ? parentSpline.NormalizedTime : 0f;
 
         for (int i = 0; i < prefabsToSpawn.Length; i++)

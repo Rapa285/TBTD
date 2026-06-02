@@ -1,11 +1,18 @@
 using UnityEngine;
 using UnityEngine.Splines;
 using UnityEngine.Events;
+using System.Threading;
 
 [RequireComponent(typeof(SplineAnimate))]
 public class EnemyMover : MonoBehaviour
 {
     [SerializeField] private EnemyAudio enemyAudio;
+
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    
+    [Header("VFX")]
+    [SerializeField] private GameObject speedBuffVFXObj;
     private SplineAnimate splineAnimate;
     private float baseSpeed;
     private float auraBuffMultiplier = 1f;
@@ -17,19 +24,35 @@ public class EnemyMover : MonoBehaviour
 
     [HideInInspector] public UnityEvent OnReachEnd;
 
+    public float CurrentSpeedMultiplier { get; private set; } = 1f;
+
     private void Awake()
     {
         splineAnimate = GetComponent<SplineAnimate>();
     }
 
+    /// <summary>
+    /// Will reset the enemy's movement state and initialize its speed
+    /// </summary>
     public void Initialize(float speed)
     {
-        baseSpeed = Mathf.Max(0.1f, speed);
+        baseSpeed = Mathf.Max(0.1f, speed);        
+        auraBuffMultiplier = 1f;
+        buffTimer = 0f;
+        hasReachedEnd = false;
+        speedFactors.Clear();
+        
+        if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(false);
+
         UpdateSpeed();
         
-        if (splineAnimate != null && !splineAnimate.IsPlaying)
+        if (splineAnimate != null)
         {
-            splineAnimate.Play();
+            splineAnimate.NormalizedTime = 0f;
+            if (!splineAnimate.IsPlaying)
+            {
+                splineAnimate.Play();
+            }
         }
     }
 
@@ -41,6 +64,9 @@ public class EnemyMover : MonoBehaviour
         }
         
         auraBuffMultiplier = multiplier;
+        
+        if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(true);
+
         UpdateSpeed();
     }
 
@@ -61,15 +87,18 @@ public class EnemyMover : MonoBehaviour
         if (splineAnimate != null)
         { 
             float currentProgress = splineAnimate.NormalizedTime;
-            float totalMultiplier=auraBuffMultiplier;
+
+            CurrentSpeedMultiplier = auraBuffMultiplier;
 
             for (int i = 0; i < speedFactors.Count; i++)
             {
-                totalMultiplier *= speedFactors[i];
+                CurrentSpeedMultiplier *= speedFactors[i];
             }
             
-            splineAnimate.MaxSpeed = baseSpeed * totalMultiplier;            
+            splineAnimate.MaxSpeed = baseSpeed * CurrentSpeedMultiplier;            
             splineAnimate.NormalizedTime = currentProgress;
+
+            if (animator != null) animator.speed=CurrentSpeedMultiplier;
         }
     }
 
@@ -82,6 +111,9 @@ public class EnemyMover : MonoBehaviour
             if (buffTimer <= 0)
             {
                 auraBuffMultiplier = 1f;
+                
+                if (speedBuffVFXObj != null) speedBuffVFXObj.SetActive(false);
+
                 UpdateSpeed();
             }
         }
@@ -89,10 +121,7 @@ public class EnemyMover : MonoBehaviour
         if (!hasReachedEnd && splineAnimate != null && splineAnimate.NormalizedTime >= 1f)
         {
             hasReachedEnd = true;
-            if (enemyAudio != null)
-            {
-                enemyAudio.PlayAttackBase();
-            }
+            if (enemyAudio != null) enemyAudio.PlayAttackBase();
             
             OnReachEnd?.Invoke();
         }
@@ -101,10 +130,25 @@ public class EnemyMover : MonoBehaviour
     public void PauseMovement()
     {
         if (splineAnimate != null) splineAnimate.Pause();
+        if (animator != null) animator.speed = 0f;
     }
 
     public void ResumeMovement()
     {
         if (splineAnimate != null && !hasReachedEnd) splineAnimate.Play();
+        if (animator != null) animator.speed = CurrentSpeedMultiplier;
+    }
+
+    public async Awaitable PauseForSeconds(float duration, CancellationToken token)
+    {
+        PauseMovement();
+        try
+        {
+            await Awaitable.WaitForSecondsAsync(duration, token);
+            ResumeMovement();
+        }
+        catch (System.OperationCanceledException)
+        {
+        }
     }
 }
