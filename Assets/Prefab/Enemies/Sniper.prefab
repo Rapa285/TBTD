@@ -68,6 +68,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitVision
   range: 8
+  effectiveInfiniteRange: 50
+  infiniteRangeVisualizationRadius: 1
   targetLayers:
     serializedVersion: 2
     m_Bits: 512
@@ -137,6 +139,18 @@ PrefabInstance:
       propertyPath: enemyData
       value: 
       objectReference: {fileID: 11400000, guid: 678bbeca6e9d3c047af299f564d072ee, type: 2}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: typeColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: typeColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: typeColor.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: stats.damage
       value: 30
@@ -237,11 +251,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SniperAttacker
   attackDamage: 30
-  attackCooldown: 2
+  baseAttackCooldown: 2
   vision: {fileID: 8624410826663696689}
   enemyAudio: {fileID: 5811551631504377886}
   firePoint: {fileID: 6212318065119324070}
-  tracerPrefab: {fileID: 2648116136029384228, guid: cd5c873abd559864b9b65b437b8bb9dc, type: 3}
 --- !u!4 &7606841305384114324 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8791365988307345235, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}

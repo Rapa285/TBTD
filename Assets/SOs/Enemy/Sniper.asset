@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Sniper
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Sniper
-  enemyIcon: {fileID: 0}
+  enemyType: 1
   specialAbilityDescription: This enemy will snipe the base multipe time as long
     as the base is in it radius
+  displayModelPrefab: {fileID: 0}

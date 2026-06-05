@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Immortal
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Immortal
-  enemyIcon: {fileID: 0}
+  enemyType: 5
   specialAbilityDescription: This enemy will revive one time upon death
+  displayModelPrefab: {fileID: 0}

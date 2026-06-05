@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Summoner
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Summoner
-  enemyIcon: {fileID: 0}
+  enemyType: 2
   specialAbilityDescription: This enemy will summon 3 basic enemy while it move toward
     the base
+  displayModelPrefab: {fileID: 0}

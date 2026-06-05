@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Runner
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Runner
-  enemyIcon: {fileID: 0}
+  enemyType: 6
   specialAbilityDescription: This enemy is faster than any other enemy
+  displayModelPrefab: {fileID: 0}

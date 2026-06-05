@@ -4,7 +4,7 @@ using UnityEngine;
 public class EnemyDataSO : ScriptableObject
 {
     public string enemyName;
-    public Sprite enemyIcon;
-    // public string flavorText;
+    public EnemyType enemyType;
     public string specialAbilityDescription;
+    public GameObject displayModelPrefab;
 }

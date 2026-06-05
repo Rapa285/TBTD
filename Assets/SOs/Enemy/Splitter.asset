@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Splitter
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Splitter
-  enemyIcon: {fileID: 0}
+  enemyType: 3
   specialAbilityDescription: This enemy will split into basic enemy upon its death
+  displayModelPrefab: {fileID: 0}

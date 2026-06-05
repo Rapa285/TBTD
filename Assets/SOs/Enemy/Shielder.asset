@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Shielder
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Shielder
-  enemyIcon: {fileID: 0}
+  enemyType: 8
   specialAbilityDescription: This enemy will give shield to enemy in his radius
+  displayModelPrefab: {fileID: 0}

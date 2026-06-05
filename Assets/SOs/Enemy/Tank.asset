@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Tank
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
   enemyName: Tank
-  enemyIcon: {fileID: 0}
+  enemyType: 9
   specialAbilityDescription: This enemy have great HP value
+  displayModelPrefab: {fileID: 0}

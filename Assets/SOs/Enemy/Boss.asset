@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1a22402874c29934f808bcb4d943ecf2, type: 3}
-  m_Name: Booster
+  m_Name: Boss
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
-  enemyName: Booster
-  enemyType: 7
-  specialAbilityDescription: 'This enemy will boost the enemy speed that within it
-    radius '
+  enemyName: Boss
+  enemyType: 4
+  specialAbilityDescription: This is a boss enemy. It's stats is wayy higher than
+    any enemy
   displayModelPrefab: {fileID: 0}

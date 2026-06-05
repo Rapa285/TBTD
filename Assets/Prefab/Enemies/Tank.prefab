@@ -13,6 +13,18 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 080763304fe53614887143edccfb433b, type: 2}
     - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: typeColor.b
+      value: 0.07450981
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: typeColor.g
+      value: 0.2705882
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: typeColor.r
+      value: 0.5450981
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: stats.damage
       value: 30
       objectReference: {fileID: 0}
