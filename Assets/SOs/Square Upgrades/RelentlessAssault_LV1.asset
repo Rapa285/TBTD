@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RelentlessAssault_LV1
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Relentless Assault LV1
-  description: Faster sustained fire with more ammo, less range, and longer setup.
+  description: Faster attack frequency with a longer setup time.
   icon: {fileID: 21300000, guid: 210cfd8620ec63247a43f320ee83a495, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,13 +21,7 @@ MonoBehaviour:
   statEffects:
   - stat: 1
     type: 0
-    value: 0.8
-  - stat: 5
-    type: 0
-    value: 1.1
-  - stat: 2
-    type: 0
-    value: 0.95
+    value: 0.83333
   - stat: 3
     type: 1
-    value: 0.25
+    value: 0.5

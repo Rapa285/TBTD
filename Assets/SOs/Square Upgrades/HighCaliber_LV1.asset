@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
-  m_Name: AoE_LV1
+  m_Name: HighCaliber_LV1
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
-  upgradeName: AoE LV1
-  description: Larger target coverage with slightly weaker single-target damage.
-  icon: {fileID: 21300000, guid: 3e84b6a1ec7480543b32c8b1a36de9fe, type: 3}
+  upgradeName: High Caliber LV1
+  description: Increased damage with slightly reduced attack frequency.
+  icon: {fileID: 21300000, guid: d43fb28236d8ef84ba82dfb5c5f2a8a9, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 2
-    type: 0
-    value: 1.25
   - stat: 0
     type: 0
-    value: 0.9
+    value: 1.2
+  - stat: 1
+    type: 0
+    value: 1.05263

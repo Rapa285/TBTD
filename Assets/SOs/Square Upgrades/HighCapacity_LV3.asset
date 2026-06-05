@@ -10,21 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
-  m_Name: StoppingPower_LV2
+  m_Name: HighCapacity_LV3
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
-  upgradeName: Stopping Power LV2
-  description: Heavier impact with slower cadence and reduced ammo.
-  icon: {fileID: 21300000, guid: d43fb28236d8ef84ba82dfb5c5f2a8a9, type: 3}
+  upgradeName: High Capacity LV3
+  description: Massive ammo capacity with heavily reduced damage.
+  icon: {fileID: 21300000, guid: 80196acf433dbaa4b86db577691cc57d, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 0
-    type: 0
-    value: 1.4
-  - stat: 1
-    type: 0
-    value: 1.35
   - stat: 5
     type: 0
-    value: 0.9
+    value: 2
+  - stat: 0
+    type: 0
+    value: 0.7

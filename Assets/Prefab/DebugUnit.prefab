@@ -65,7 +65,7 @@ MonoBehaviour:
   - stat: 2
     value: 5
   - stat: 3
-    value: 5
+    value: 1.5
   - stat: 4
     value: 1
   - stat: 5
@@ -74,6 +74,8 @@ MonoBehaviour:
     value: 8
   - stat: 7
     value: 200
+  - stat: 8
+    value: 1
   upgrades: []
   onDeploy:
     m_PersistentCalls:

@@ -47,12 +47,12 @@ public partial class TowerEntity : MonoBehaviour
     [SerializeField, Tooltip("Base stat values before upgrade modifiers are applied.")]
     private List<EntityStat> baseStats = new List<EntityStat>
     {
-        new EntityStat { stat = ENTITY_STATS.GlobalDamage, value = 1f },
+        new EntityStat { stat = ENTITY_STATS.GlobalDamage, value = 40f },
         new EntityStat { stat = ENTITY_STATS.AttackSpeed, value = 1f },
         new EntityStat { stat = ENTITY_STATS.VisualRange, value = 5f },
-        new EntityStat { stat = ENTITY_STATS.SetupTime, value = 0f },
+        new EntityStat { stat = ENTITY_STATS.SetupTime, value = 1.5f },
         new EntityStat { stat = ENTITY_STATS.AmmoEffectiveness, value = 1f },
-        new EntityStat { stat = ENTITY_STATS.AmmoUnits, value = 10f },
+        new EntityStat { stat = ENTITY_STATS.AmmoUnits, value = 40f },
         new EntityStat { stat = ENTITY_STATS.DeploymentCooldown, value = 10f },
         new EntityStat { stat = ENTITY_STATS.DeploymentCost, value = 100f },
         new EntityStat { stat = ENTITY_STATS.BulletSize, value = 1f }

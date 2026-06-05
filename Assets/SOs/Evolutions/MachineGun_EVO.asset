@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EvolutionSO
   resolvedUpgrade: {fileID: 11400000, guid: bbc65ce136fc4a2085e569582dac0c0b, type: 2}
   prerequisites:
-  - multiUpgrade: {fileID: 11400000, guid: f3232636c921451c9d7fe5354279f0bb, type: 2}
+  - multiUpgrade: {fileID: 11400000, guid: 5080456803ee499b895b611c7b94053f, type: 2}
     minimumLevel: 2
   - multiUpgrade: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
     minimumLevel: 2

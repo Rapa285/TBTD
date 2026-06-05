@@ -321,19 +321,17 @@ MonoBehaviour:
   eventBus: {fileID: 2502235434475985850}
   unitStateManager: {fileID: 6888908950347897388}
   upgradePool:
-  - {fileID: 11400000, guid: b9fdf24d92c2405aa3db038d2f0ba181, type: 2}
-  - {fileID: 11400000, guid: 6ce6731e33c34edf914b03c6d50ca254, type: 2}
-  - {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
-  - {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
   - {fileID: 11400000, guid: f3232636c921451c9d7fe5354279f0bb, type: 2}
+  - {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
   - {fileID: 11400000, guid: 5080456803ee499b895b611c7b94053f, type: 2}
+  - {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
+  - {fileID: 11400000, guid: b9fdf24d92c2405aa3db038d2f0ba181, type: 2}
   evolutionPool:
-  - {fileID: 11400000, guid: 750d59f3a0cc446da6cdd0acd39253f8, type: 2}
-  - {fileID: 11400000, guid: 6f75673c4fcb4b6da8c0c6d2be1a3f73, type: 2}
-  - {fileID: 11400000, guid: ec4d2aafbb534266bb35283612373493, type: 2}
-  - {fileID: 11400000, guid: 0ea66aef64244669908fa8ae29e10339, type: 2}
   - {fileID: 11400000, guid: 6aaa92746b404756a20150c3c8f8fce5, type: 2}
+  - {fileID: 11400000, guid: 0ea66aef64244669908fa8ae29e10339, type: 2}
+  - {fileID: 11400000, guid: 750d59f3a0cc446da6cdd0acd39253f8, type: 2}
   - {fileID: 11400000, guid: e9f543ba36f54da785c1b8cc7aba90b2, type: 2}
+  - {fileID: 11400000, guid: 6f75673c4fcb4b6da8c0c6d2be1a3f73, type: 2}
   upgradeChoiceCount: 3
   baseRerollCost: 10
   rerollCostIncrement: 10

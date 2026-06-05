@@ -13,24 +13,27 @@ MonoBehaviour:
   m_Name: Shotgun_EVO_Upgrade
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Shotgun EVO
-  description: Evolves the pistol into a short-range burst cone with constrained per-pellet damage.
+  description: Evolves the pistol into a panic burst weapon with very fast setup and lower ammo capacity.
   icon: {fileID: 21300000, guid: 851d8c6d213013a4b870f229702940aa, type: 3}
   weaponUpgradeType: 1
   weaponBehaviourPrefab: {fileID: 6971942567615480730, guid: 753de46d91a41c447be6f722d240fa70, type: 3}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 0
+  - stat: 3
     type: 0
-    value: 0.35
-  - stat: 1
-    type: 0
-    value: 0.64
-  - stat: 2
-    type: 0
-    value: 0.65
+    value: 0.25
   - stat: 5
     type: 0
-    value: 0.75
-  - stat: 6
+    value: 0.6
+  - stat: 0
     type: 0
-    value: 1.3
+    value: 1.2
+  - stat: 1
+    type: 0
+    value: 0.90909
+  - stat: 8
+    type: 0
+    value: 1.15
+  - stat: 2
+    type: 0
+    value: 0.9

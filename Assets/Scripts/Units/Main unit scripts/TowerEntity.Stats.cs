@@ -119,17 +119,17 @@ public partial class TowerEntity
         switch (stat)
         {
             case ENTITY_STATS.GlobalDamage:
-                return 1f;
+                return 40f;
             case ENTITY_STATS.AttackSpeed:
                 return 1f;
             case ENTITY_STATS.VisualRange:
                 return 5f;
             case ENTITY_STATS.SetupTime:
-                return 0f;
+                return 1.5f;
             case ENTITY_STATS.AmmoEffectiveness:
                 return 1f;
             case ENTITY_STATS.AmmoUnits:
-                return 10f;
+                return 40f;
             case ENTITY_STATS.DeploymentCooldown:
                 return 10f;
             case ENTITY_STATS.DeploymentCost:

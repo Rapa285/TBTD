@@ -10,24 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
-  m_Name: Widespread_LV2
+  m_Name: HighCaliber_LV2
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
-  upgradeName: Widespread LV2
-  description: Much wider coverage and more ammo, with weaker and slower shots.
-  icon: {fileID: 21300000, guid: 80196acf433dbaa4b86db577691cc57d, type: 3}
+  upgradeName: High Caliber LV2
+  description: Greatly increased damage with reduced attack frequency.
+  icon: {fileID: 21300000, guid: d43fb28236d8ef84ba82dfb5c5f2a8a9, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 2
-    type: 0
-    value: 1.55
-  - stat: 5
-    type: 0
-    value: 1.45
   - stat: 0
     type: 0
-    value: 0.82
+    value: 1.5
   - stat: 1
     type: 0
-    value: 1.1
+    value: 1.33333

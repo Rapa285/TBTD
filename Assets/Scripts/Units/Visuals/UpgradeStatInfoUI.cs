@@ -75,7 +75,7 @@ public class UpgradeStatInfoUI : MonoBehaviour
                     builder.AppendLine();
                 }
 
-                builder.Append(effect.stat);
+                builder.Append(GetStatLabel(effect.stat));
                 builder.Append(' ');
                 builder.Append(FormatModifier(effect));
             }
@@ -105,7 +105,7 @@ public class UpgradeStatInfoUI : MonoBehaviour
                     builder.AppendLine();
                 }
 
-                builder.Append(nextEffect.stat);
+                builder.Append(GetStatLabel(nextEffect.stat));
                 builder.Append(' ');
 
                 if (TryFindComparableEffect(currentUpgrade, nextEffect, out UpgradeSO.StatEffect currentEffect))
@@ -136,9 +136,33 @@ public class UpgradeStatInfoUI : MonoBehaviour
             case STAT_TYPE.Add:
                 return effect.value >= 0f ? $"+{effect.value:0.##}" : effect.value.ToString("0.##");
             case STAT_TYPE.Mult:
-                return $"x{effect.value:0.##}";
+                float displayValue = effect.stat == ENTITY_STATS.AttackSpeed && !Mathf.Approximately(effect.value, 0f)
+                    ? 1f / effect.value
+                    : effect.value;
+                return $"x{displayValue:0.##}";
             default:
                 return effect.value.ToString("0.##");
+        }
+    }
+
+    private static string GetStatLabel(ENTITY_STATS stat)
+    {
+        switch (stat)
+        {
+            case ENTITY_STATS.GlobalDamage:
+                return "DMG";
+            case ENTITY_STATS.AttackSpeed:
+                return "ASP";
+            case ENTITY_STATS.VisualRange:
+                return "VIS";
+            case ENTITY_STATS.AmmoUnits:
+                return "AMO";
+            case ENTITY_STATS.SetupTime:
+                return "SET";
+            case ENTITY_STATS.BulletSize:
+                return "BUL";
+            default:
+                return stat.ToString();
         }
     }
 

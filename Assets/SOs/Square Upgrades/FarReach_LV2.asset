@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: FarReach_LV2
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Far-Reach LV2
-  description: Long threat range with modest damage and a longer setup window.
+  description: Increased visual range.
   icon: {fileID: 21300000, guid: 83f79231a4226fb41a2872cfccb74565, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -21,10 +21,4 @@ MonoBehaviour:
   statEffects:
   - stat: 2
     type: 0
-    value: 1.65
-  - stat: 0
-    type: 0
-    value: 1.2
-  - stat: 3
-    type: 1
-    value: 1
+    value: 1.3

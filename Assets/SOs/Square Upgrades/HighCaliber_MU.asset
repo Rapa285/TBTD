@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
-  m_Name: AoE_MU
+  m_Name: HighCaliber_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
-  upgradeName: AoE
-  description: Multi-target coverage with weaker single-target pressure. Supports Grenade Launcher and Aura evolutions.
+  upgradeName: High Caliber
+  description: Higher damage with slower attack frequency. Supports Sniper and Grenade Launcher evolutions.
   levelUpgrades:
-  - {fileID: 11400000, guid: e69dbc7e37144bdd879c619b3838ab01, type: 2}
-  - {fileID: 11400000, guid: eeec9e3c8b854d2aa6e29d3398995d1d, type: 2}
-  - {fileID: 11400000, guid: da04700aa04b408b800add45b7a84e01, type: 2}
+  - {fileID: 11400000, guid: a4736802066c44cfbc0bb4a39862f6fd, type: 2}
+  - {fileID: 11400000, guid: 97eff8fe43a5450095cb3fb9d01f8434, type: 2}
+  - {fileID: 11400000, guid: 7983c91af29c433e987ade098dd9a19b, type: 2}

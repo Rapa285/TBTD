@@ -16,5 +16,5 @@ MonoBehaviour:
   prerequisites:
   - multiUpgrade: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
     minimumLevel: 2
-  - multiUpgrade: {fileID: 11400000, guid: 6ce6731e33c34edf914b03c6d50ca254, type: 2}
+  - multiUpgrade: {fileID: 11400000, guid: f3232636c921451c9d7fe5354279f0bb, type: 2}
     minimumLevel: 2

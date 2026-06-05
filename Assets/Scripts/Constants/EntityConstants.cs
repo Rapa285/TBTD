@@ -4,7 +4,7 @@
 public enum ENTITY_STATS
 {
     GlobalDamage, // Global damage mult
-    AttackSpeed, // Time to aim and between firings
+    AttackSpeed, // Cooldown seconds between attack ticks; UI may display its inverse as ASP frequency
     VisualRange,
     SetupTime, // Time taken from units deployment until actively attacking
     AmmoEffectiveness, // Multiplies attacksPerAmmo on the primary weapon

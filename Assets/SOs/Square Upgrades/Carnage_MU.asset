@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
-  m_Name: Widespread_MU
+  m_Name: Carnage_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
-  upgradeName: Widespread
-  description: More coverage and ammo with less precision. Supports Aura and Shotgun evolutions.
+  upgradeName: Carnage
+  description: Larger projectiles at the cost of ammo capacity. Supports Shotgun and Grenade Launcher evolutions.
   levelUpgrades:
-  - {fileID: 11400000, guid: 30264b883cfc47b3980cf05065c2944c, type: 2}
-  - {fileID: 11400000, guid: c5cd8c808e454ee98b0d659f8a462072, type: 2}
-  - {fileID: 11400000, guid: 298c7a9e4ebd496f9677e5ec3774ba2e, type: 2}
+  - {fileID: 11400000, guid: e69dbc7e37144bdd879c619b3838ab01, type: 2}
+  - {fileID: 11400000, guid: eeec9e3c8b854d2aa6e29d3398995d1d, type: 2}
+  - {fileID: 11400000, guid: da04700aa04b408b800add45b7a84e01, type: 2}

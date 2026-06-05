@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
-  m_Name: StoppingPower_MU
+  m_Name: HighCapacity_MU
   m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
-  upgradeName: Stopping Power
-  description: Stronger bullets with heavier recoil and reduced ammo. Supports Shotgun and Machine Gun evolutions.
+  upgradeName: High Capacity
+  description: More ammo capacity at the cost of damage. Supports Shotgun and Machine Gun evolutions.
   levelUpgrades:
-  - {fileID: 11400000, guid: a4736802066c44cfbc0bb4a39862f6fd, type: 2}
-  - {fileID: 11400000, guid: 97eff8fe43a5450095cb3fb9d01f8434, type: 2}
-  - {fileID: 11400000, guid: 7983c91af29c433e987ade098dd9a19b, type: 2}
+  - {fileID: 11400000, guid: 30264b883cfc47b3980cf05065c2944c, type: 2}
+  - {fileID: 11400000, guid: c5cd8c808e454ee98b0d659f8a462072, type: 2}
+  - {fileID: 11400000, guid: 298c7a9e4ebd496f9677e5ec3774ba2e, type: 2}

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RelentlessAssault_LV3
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
   upgradeName: Relentless Assault LV3
-  description: Maximum sustained fire with a large ammo reserve, less range, and longer setup.
+  description: Maximum attack frequency with a heavy setup commitment.
   icon: {fileID: 21300000, guid: 210cfd8620ec63247a43f320ee83a495, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
@@ -22,12 +22,6 @@ MonoBehaviour:
   - stat: 1
     type: 0
     value: 0.5
-  - stat: 5
-    type: 0
-    value: 1.4
   - stat: 3
     type: 1
-    value: 0.75
-  - stat: 2
-    type: 0
-    value: 0.85
+    value: 2

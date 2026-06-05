@@ -10,25 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
-  m_Name: Widespread_LV3
+  m_Name: HighCapacity_LV2
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
-  upgradeName: Widespread LV3
-  description: Extreme coverage and ammo capacity with heavily reduced damage
-    and slower shots.
+  upgradeName: High Capacity LV2
+  description: Greatly increased ammo capacity with reduced damage.
   icon: {fileID: 21300000, guid: 80196acf433dbaa4b86db577691cc57d, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 2
-    type: 0
-    value: 1.9
   - stat: 5
     type: 0
-    value: 1.75
+    value: 1.5
   - stat: 0
     type: 0
-    value: 0.72
-  - stat: 1
-    type: 0
-    value: 1.2
+    value: 0.85

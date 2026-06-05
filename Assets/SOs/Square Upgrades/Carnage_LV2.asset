@@ -10,21 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
-  m_Name: StoppingPower_LV3
+  m_Name: Carnage_LV2
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
-  upgradeName: Stopping Power LV3
-  description: Massive impact with very slow cadence and lower ammo capacity.
-  icon: {fileID: 21300000, guid: d43fb28236d8ef84ba82dfb5c5f2a8a9, type: 3}
+  upgradeName: Carnage LV2
+  description: Much larger bullets with reduced ammo capacity.
+  icon: {fileID: 21300000, guid: 3e84b6a1ec7480543b32c8b1a36de9fe, type: 3}
   weaponUpgradeType: 0
   weaponBehaviourPrefab: {fileID: 0}
   projectileModifierPrefabs: []
   statEffects:
-  - stat: 0
-    type: 0
-    value: 1.65
-  - stat: 1
+  - stat: 8
     type: 0
     value: 1.5
   - stat: 5
     type: 0
-    value: 0.8
+    value: 0.85
