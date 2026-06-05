@@ -535,7 +535,7 @@ MonoBehaviour:
   stats:
     health: 100
     damage: 10
-    movementSpeed: 1.5
+    movementSpeed: 1
     initialShield: 0
   enemyData: {fileID: 11400000, guid: 8e6a0b3c8aec5464e9efe9ef52defd2e, type: 2}
   experienceReward: 1
