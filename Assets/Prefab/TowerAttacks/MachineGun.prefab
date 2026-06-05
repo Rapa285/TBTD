@@ -49,6 +49,8 @@ MonoBehaviour:
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.5, z: 0}
   attackFX: {fileID: 0}
+  attackSound: {fileID: 8300000, guid: d53782fe3a18cc944b675dbdb97445d7, type: 3}
+  randomizeAttackSoundPitch: 1
   distanceFactor: 0.05
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}
@@ -62,6 +64,11 @@ MonoBehaviour:
   nearestPointIterations: 2
   projectileType: 1
   firePoint: {fileID: 0}
-  skippedTicksByStage: 080000000600000004000000020000000100000000000000
+  skippedTicksByStage: 04000000020000000100000001000000
   spinHoldDuration: 2
   spinResetDuration: 2
+  spinStartSound: {fileID: 0}
+  spinLoopSound: {fileID: 0}
+  spinStopSound: {fileID: 0}
+  spinLoopSource: {fileID: 0}
+  randomizeSpinOneShotPitch: 0
