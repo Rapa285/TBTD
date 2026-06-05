@@ -1197,6 +1197,7 @@ MonoBehaviour:
   levelUpModeButton: {fileID: 752141204}
   evolutionButtonRoot: {fileID: 1107165329}
   evolutionButtonPrefab: {fileID: 8975074264168396926, guid: b7a417c9890fab4479b851255e3ae02a, type: 3}
+  resetUpgradesButtonLabel: Reset Upgrades
   statusText: {fileID: 957692877}
   evolutions: []
   selectionLayers:
@@ -4825,6 +4826,6 @@ SceneRoots:
   - {fileID: 1462165335}
   - {fileID: 259278867}
   - {fileID: 918869268}
+  - {fileID: 1977852189}
   - {fileID: 1178752176}
   - {fileID: 486797498}
-  - {fileID: 1977852189}

@@ -8,6 +8,10 @@ public class SettingsPanel : MonoBehaviour
     public Button settingsPanelHomeButton;
     public Button settingsPanelRetryButton;
 
+    public GameObject DisclaimerPanel;
+    public Button DisclaimerPanelCancelButton;
+    public Button DisclaimerPanelProceedButton;
+
 
     public Button settingsPanelCloseButton;
     public Button settingsPanelContinueButton;
@@ -22,13 +26,17 @@ public class SettingsPanel : MonoBehaviour
         settingsPanelHomeButton.onClick.RemoveAllListeners();
         settingsPanelRetryButton.onClick.RemoveAllListeners();
         settingsPanelContinueButton.onClick.RemoveAllListeners();
+        DisclaimerPanelProceedButton.onClick.RemoveAllListeners();
+        DisclaimerPanelCancelButton.onClick.RemoveAllListeners();
 
 
         settingsButton.onClick.AddListener(showPanel);
         settingsPanelCloseButton.onClick.AddListener(closePanel);
-        settingsPanelHomeButton.onClick.AddListener(HomeButtonClicked);
+        settingsPanelHomeButton.onClick.AddListener(showDisclaimerPanel);
         settingsPanelRetryButton.onClick.AddListener(RetryButtonClicked);
         settingsPanelContinueButton.onClick.AddListener(ContinueButtonClicked);
+        DisclaimerPanelCancelButton.onClick.AddListener(closeDisclaimerPanel);
+        DisclaimerPanelProceedButton.onClick.AddListener(HomeButtonClicked);
     }
 
     private void OnEnable()
@@ -73,6 +81,16 @@ public class SettingsPanel : MonoBehaviour
         settingsPanel.SetActive(false);
         settingsButton.interactable = true;
         showingPanel = false;
+    }
+
+    private void closeDisclaimerPanel()
+    {
+        DisclaimerPanel.SetActive(false);
+    }
+
+    private void showDisclaimerPanel()
+    {
+        DisclaimerPanel.SetActive(true);
     }
 
     private void HomeButtonClicked()
