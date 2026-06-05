@@ -9,11 +9,16 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioMixerGroup bgmGroup;
     [SerializeField] private AudioMixerGroup towerSfxGroup;
     [SerializeField] private AudioMixerGroup enemySfxGroup;
+    [SerializeField] private AudioMixerGroup uiSfxGroup;
 
     [Header("Dedicated Audio Sources")]
     [SerializeField] private AudioSource bgmSource;
     [SerializeField] private AudioSource towerSfxSource;
     [SerializeField] private AudioSource enemySfxSource;
+    [SerializeField] private AudioSource uiSfxSource;
+
+    [Header("Music Service")]
+    [SerializeField] private MusicService musicService;
 
     private void Awake()
     {
@@ -30,16 +35,68 @@ public class AudioManager : MonoBehaviour
         if (bgmSource != null && bgmGroup != null) bgmSource.outputAudioMixerGroup = bgmGroup;
         if (towerSfxSource != null && towerSfxGroup != null) towerSfxSource.outputAudioMixerGroup = towerSfxGroup;
         if (enemySfxSource != null && enemySfxGroup != null) enemySfxSource.outputAudioMixerGroup = enemySfxGroup;
+        EnsureUISfxSource();
+
+        ResolveMusicService();
+        ServiceLocator.Register<AudioManager>(this);
+    }
+
+    private void OnDestroy()
+    {
+        ServiceLocator.Unregister<AudioManager>(this);
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     public void PlayBGM(AudioClip clip)
     {
-        if (clip == null || bgmSource == null) return;
+        if (clip == null) return;
+
+        ResolveMusicService();
+
+        if (musicService != null)
+        {
+            musicService.PlayClip(clip);
+            return;
+        }
+
+        if (bgmSource == null) return;
+
         if (bgmSource.clip == clip) return;
 
         bgmSource.clip = clip;
         bgmSource.loop = true;
         bgmSource.Play();
+    }
+
+    public void PlayMusic(MusicIdentifier musicId)
+    {
+        ResolveMusicService();
+
+        if (musicService == null)
+        {
+            Debug.LogWarning($"{nameof(AudioManager)} cannot play {musicId} because no {nameof(MusicService)} is available.", this);
+            return;
+        }
+
+        musicService.PlayMusic(musicId);
+    }
+
+    public void StopMusic()
+    {
+        if (musicService != null)
+        {
+            musicService.StopMusic();
+            return;
+        }
+
+        if (bgmSource != null)
+        {
+            bgmSource.Stop();
+        }
     }
 
     public void PlayTowerSFX(AudioClip clip, bool randomizePitch = true)
@@ -56,5 +113,51 @@ public class AudioManager : MonoBehaviour
 
         enemySfxSource.pitch = randomizePitch ? Random.Range(0.9f, 1.1f) : 1f;
         enemySfxSource.PlayOneShot(clip);
+    }
+
+    public void PlayUISFX(AudioClip clip, bool randomizePitch = false)
+    {
+        if (clip == null) return;
+
+        EnsureUISfxSource();
+        if (uiSfxSource == null) return;
+
+        uiSfxSource.pitch = randomizePitch ? Random.Range(0.95f, 1.05f) : 1f;
+        uiSfxSource.PlayOneShot(clip);
+    }
+
+    private void ResolveMusicService()
+    {
+        if (musicService == null)
+        {
+            musicService = GetComponent<MusicService>();
+        }
+
+        if (musicService == null)
+        {
+            ServiceLocator.TryResolve(out musicService);
+        }
+
+        if (musicService == null)
+        {
+            musicService = gameObject.AddComponent<MusicService>();
+        }
+
+        musicService.ConfigureAudioSource(bgmSource, bgmGroup);
+    }
+
+    private void EnsureUISfxSource()
+    {
+        if (uiSfxSource == null)
+        {
+            uiSfxSource = gameObject.AddComponent<AudioSource>();
+            uiSfxSource.playOnAwake = false;
+        }
+
+        AudioMixerGroup targetGroup = uiSfxGroup != null ? uiSfxGroup : towerSfxGroup;
+        if (targetGroup != null)
+        {
+            uiSfxSource.outputAudioMixerGroup = targetGroup;
+        }
     }
 }

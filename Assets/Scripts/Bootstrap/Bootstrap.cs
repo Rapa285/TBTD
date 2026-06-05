@@ -14,6 +14,8 @@ public class Bootstrap : MonoBehaviour
     [Header("References")]
     [SerializeField] ConfigWorker configWorker;
     [SerializeField] SceneLoader sceneLoader;
+    [SerializeField] MusicService musicService;
+    [SerializeField] bool ensureMusicService = true;
     // [SerializeField] ServiceRegistry serviceRegistry;
 
     static bool hasBootstrapped;
@@ -39,6 +41,11 @@ public class Bootstrap : MonoBehaviour
             sceneLoader = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoader) ? resolvedSceneLoader : sceneLoader;
         }
 
+        if (ensureMusicService)
+        {
+            ResolveMusicService();
+        }
+
         // if (serviceRegistry == null)
         // {
         //     serviceRegistry = FindFirstObjectByType<ServiceRegistry>(FindObjectsInactive.Include);
@@ -55,6 +62,10 @@ public class Bootstrap : MonoBehaviour
         if (configWorker != null)
         {
             configWorker.EnsureInitialized();
+            if (musicService != null)
+            {
+                musicService.RefreshConfig();
+            }
         }
         else
         {
@@ -111,5 +122,28 @@ public class Bootstrap : MonoBehaviour
         }
 
         Debug.LogWarning("Bootstrap has an invalid SceneReferenceSO (not in build settings).", this);
+    }
+
+    void ResolveMusicService()
+    {
+        if (musicService == null)
+        {
+            musicService = ServiceLocator.TryResolve(out MusicService resolvedMusicService)
+                ? resolvedMusicService
+                : musicService;
+        }
+
+        if (musicService == null)
+        {
+            musicService = FindAnyObjectByType<MusicService>(FindObjectsInactive.Include);
+        }
+
+        if (musicService != null)
+        {
+            return;
+        }
+
+        GameObject musicServiceObject = new GameObject(nameof(MusicService));
+        musicService = musicServiceObject.AddComponent<MusicService>();
     }
 }
