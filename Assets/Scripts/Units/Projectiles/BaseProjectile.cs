@@ -26,6 +26,13 @@ public abstract class BaseProjectile : MonoBehaviour
     [SerializeField, Tooltip("Trigger collider used for projectile hit detection.")]
     private Collider projectileCollider;
 
+    [Header("Hit SFX")]
+    [SerializeField, Tooltip("Optional tower SFX played when this projectile raises a bullet-hit event.")]
+    private AudioClip hitSound;
+
+    [SerializeField, Tooltip("Randomizes pitch for this projectile's hit sound.")]
+    private bool randomizeHitSoundPitch = true;
+
     private Transform ignoredRoot;
     private Transform ownerRoot;
     private TowerEntity ownerTower;
@@ -306,6 +313,7 @@ public abstract class BaseProjectile : MonoBehaviour
             return;
         }
 
+        PlayHitSound();
         OnBulletHit?.Invoke(hitTransform);
     }
 
@@ -573,6 +581,31 @@ public abstract class BaseProjectile : MonoBehaviour
         {
             projectileCollider.isTrigger = true;
         }
+    }
+
+    private void PlayHitSound()
+    {
+        if (hitSound == null)
+        {
+            return;
+        }
+
+        AudioManager audioManager = ResolveAudioManager();
+        if (audioManager != null)
+        {
+            audioManager.PlayTowerSFX(hitSound, randomizeHitSoundPitch);
+        }
+    }
+
+    private static AudioManager ResolveAudioManager()
+    {
+        if (AudioManager.Instance != null)
+        {
+            return AudioManager.Instance;
+        }
+
+        ServiceLocator.TryResolve(out AudioManager audioManager);
+        return audioManager;
     }
 
     protected bool IsInHitLayers(GameObject target)

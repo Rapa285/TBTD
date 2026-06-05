@@ -295,6 +295,7 @@ public class UnitUIRecall : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         isHoldingRecall = true;
         recallButtonFX?.BeginHold(holdDuration);
         recallAnimController?.PlayRecallInProgress(tower, holdDuration);
+        RaiseRecallStarted(tower);
 
         if (holdDuration <= 0f)
         {
@@ -399,6 +400,24 @@ public class UnitUIRecall : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             && uiUnitItem.TryGetOwnedUnit(out UnitStateManager.OwnedUnitState unit)
             ? unit.CurrentRuntimeInstance
             : null;
+    }
+
+    private void RaiseRecallStarted(TowerEntity tower)
+    {
+        if (tower == null || uiUnitItem == null || string.IsNullOrWhiteSpace(uiUnitItem.UnitId))
+        {
+            return;
+        }
+
+        if (eventBus == null)
+        {
+            ResolveReferences();
+        }
+
+        if (eventBus != null)
+        {
+            eventBus.RaiseUnitRecallStarted(new UnitRecallStartedEvent(uiUnitItem.UnitId, tower));
+        }
     }
 
     private bool IsRecallVisible()

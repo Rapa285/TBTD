@@ -107,6 +107,17 @@ public class AudioManager : MonoBehaviour
         towerSfxSource.PlayOneShot(clip);
     }
 
+    public void ConfigureTowerSFXSource(AudioSource source)
+    {
+        if (source == null) return;
+
+        source.playOnAwake = false;
+        if (towerSfxGroup != null)
+        {
+            source.outputAudioMixerGroup = towerSfxGroup;
+        }
+    }
+
     public void PlayEnemySFX(AudioClip clip, bool randomizePitch = false)
     {
         if (clip == null || enemySfxSource == null) return;

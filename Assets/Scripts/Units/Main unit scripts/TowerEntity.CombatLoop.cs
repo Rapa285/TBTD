@@ -58,7 +58,9 @@ public partial class TowerEntity
 
     private void ClearDeploymentRuntimeState()
     {
+        NotifyActiveAttackBehavioursTargetsUnavailable();
         deploymentTimersInitialized = false;
+        setupCompleteBroadcasted = false;
         currentTarget = null;
         activeAfterTime = float.PositiveInfinity;
         nextAttackTime = float.PositiveInfinity;
@@ -82,6 +84,7 @@ public partial class TowerEntity
         targetSelectionDirty = true;
         hadValidTargets = false;
         deploymentTimersInitialized = true;
+        setupCompleteBroadcasted = false;
 
         if (vision != null)
         {
@@ -92,6 +95,25 @@ public partial class TowerEntity
 
         SynchronizeTargetPresenceState();
         nextEnemyPollTime = Time.time + GetEnemyPollPeriod();
+    }
+
+    private void BroadcastSetupCompletedIfReady()
+    {
+        if (setupCompleteBroadcasted
+            || !deploymentTimersInitialized
+            || Time.time < activeAfterTime
+            || string.IsNullOrWhiteSpace(unitId))
+        {
+            return;
+        }
+
+        setupCompleteBroadcasted = true;
+
+        UnitEventBus resolvedEventBus = ResolveEventBus();
+        if (resolvedEventBus != null)
+        {
+            resolvedEventBus.RaiseTowerSetupCompleted(new TowerSetupCompletedEvent(unitId, this));
+        }
     }
 
     private void RefreshDeploymentRuntime()
@@ -123,18 +145,14 @@ public partial class TowerEntity
     {
         if (vision == null)
         {
+            NotifyActiveAttackBehavioursTargetsUnavailable();
             currentTarget = null;
             hadValidTargets = false;
             return;
         }
 
         bool hasValidTargets = vision.HasValidTargets;
-        if (hasValidTargets && !hadValidTargets)
-        {
-            ApplyFirstTargetCooldownIfNeeded();
-        }
-
-        hadValidTargets = hasValidTargets;
+        ApplyTargetPresenceTransition(hasValidTargets);
 
         if (!hasValidTargets)
         {
@@ -163,14 +181,29 @@ public partial class TowerEntity
     {
         if (vision == null)
         {
+            NotifyActiveAttackBehavioursTargetsUnavailable();
             hadValidTargets = false;
             return;
         }
 
-        bool hasValidTargets = vision.HasValidTargets;
-        if (hasValidTargets && !hadValidTargets)
+        ApplyTargetPresenceTransition(vision.HasValidTargets);
+    }
+
+    private void ApplyTargetPresenceTransition(bool hasValidTargets)
+    {
+        if (hasValidTargets == hadValidTargets)
+        {
+            return;
+        }
+
+        if (hasValidTargets)
         {
             ApplyFirstTargetCooldownIfNeeded();
+            NotifyActiveAttackBehavioursTargetsAvailable();
+        }
+        else
+        {
+            NotifyActiveAttackBehavioursTargetsUnavailable();
         }
 
         hadValidTargets = hasValidTargets;
@@ -256,5 +289,37 @@ public partial class TowerEntity
     private float GetEnemyPollPeriod()
     {
         return Mathf.Max(0.01f, enemyPollPeriod);
+    }
+
+    private void NotifyActiveAttackBehavioursTargetsAvailable()
+    {
+        for (int i = 0; i < activeAttackBehaviours.Count; i++)
+        {
+            AttackBehaviour behaviour = activeAttackBehaviours[i];
+            if (behaviour != null)
+            {
+                behaviour.NotifyTowerTargetsAvailable();
+            }
+        }
+    }
+
+    private void NotifyActiveAttackBehavioursTargetsUnavailable()
+    {
+        for (int i = 0; i < activeAttackBehaviours.Count; i++)
+        {
+            AttackBehaviour behaviour = activeAttackBehaviours[i];
+            if (behaviour != null)
+            {
+                behaviour.NotifyTowerTargetsUnavailable();
+            }
+        }
+    }
+
+    private void NotifyAttackBehaviourDeactivated(AttackBehaviour behaviour)
+    {
+        if (behaviour != null)
+        {
+            behaviour.NotifyTowerAttackBehaviourDeactivated();
+        }
     }
 }

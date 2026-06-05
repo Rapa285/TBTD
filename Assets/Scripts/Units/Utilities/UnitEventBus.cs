@@ -19,6 +19,36 @@ public struct UnitDeployedEvent
 }
 
 /// <summary>
+/// Raised after any tower has completed deployment activation.
+/// </summary>
+public readonly struct TowerDeployedEvent
+{
+    public string UnitId { get; }
+    public TowerEntity Tower { get; }
+
+    public TowerDeployedEvent(string unitId, TowerEntity tower)
+    {
+        UnitId = unitId;
+        Tower = tower;
+    }
+}
+
+/// <summary>
+/// Raised once after a deployed tower's setup time has elapsed.
+/// </summary>
+public readonly struct TowerSetupCompletedEvent
+{
+    public string UnitId { get; }
+    public TowerEntity Tower { get; }
+
+    public TowerSetupCompletedEvent(string unitId, TowerEntity tower)
+    {
+        UnitId = unitId;
+        Tower = tower;
+    }
+}
+
+/// <summary>
 /// Raised when a deployed unit gains experience.
 /// </summary>
 public struct UnitExperienceChangedEvent
@@ -222,6 +252,21 @@ public struct UnitRecalledEvent
 }
 
 /// <summary>
+/// Raised when the player starts holding recall for a deployed roster unit.
+/// </summary>
+public readonly struct UnitRecallStartedEvent
+{
+    public string UnitId { get; }
+    public TowerEntity Tower { get; }
+
+    public UnitRecallStartedEvent(string unitId, TowerEntity tower)
+    {
+        UnitId = unitId;
+        Tower = tower;
+    }
+}
+
+/// <summary>
 /// Raised after a recalled unit's deployment cooldown has elapsed.
 /// </summary>
 public struct UnitCooldownEndedEvent
@@ -370,6 +415,8 @@ public struct UnitDeploymentPreviewEndedEvent
 public class UnitEventBus : MonoBehaviour
 {
     public event Action<UnitDeployedEvent> UnitDeployed;
+    public event Action<TowerDeployedEvent> TowerDeployed;
+    public event Action<TowerSetupCompletedEvent> TowerSetupCompleted;
     public event Action<UnitExperienceChangedEvent> UnitExperienceChanged;
     public event Action<UnitUpgradeThresholdReachedEvent> UnitUpgradeThresholdReached;
     public event Action<UnitUpgradeChoicesOfferedEvent> UnitUpgradeChoicesOffered;
@@ -379,6 +426,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitUpgradeMenuClosedEvent> UnitUpgradeMenuClosed;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
+    public event Action<UnitRecallStartedEvent> UnitRecallStarted;
     public event Action<UnitCooldownEndedEvent> UnitCooldownEnded;
     public event Action<UnitAmmoConsumedEvent> UnitAmmoConsumed;
     public event Action<TowerModifiedEvent> TowerModified;
@@ -403,6 +451,22 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitDeployed(UnitDeployedEvent eventData)
     {
         UnitDeployed?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that any tower completed deployment activation.
+    /// </summary>
+    public void RaiseTowerDeployed(TowerDeployedEvent eventData)
+    {
+        TowerDeployed?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that a deployed tower's setup time has elapsed.
+    /// </summary>
+    public void RaiseTowerSetupCompleted(TowerSetupCompletedEvent eventData)
+    {
+        TowerSetupCompleted?.Invoke(eventData);
     }
 
     /// <summary>
@@ -475,6 +539,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitRecalled(UnitRecalledEvent eventData)
     {
         UnitRecalled?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that the player started holding recall for one unit.
+    /// </summary>
+    public void RaiseUnitRecallStarted(UnitRecallStartedEvent eventData)
+    {
+        UnitRecallStarted?.Invoke(eventData);
     }
 
     /// <summary>

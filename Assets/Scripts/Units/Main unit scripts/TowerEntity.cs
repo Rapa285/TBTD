@@ -80,6 +80,7 @@ public partial class TowerEntity : MonoBehaviour
     private float nextTargetRefreshTime;
     private bool deploymentTimersInitialized;
     private bool deploymentBroadcasted;
+    private bool setupCompleteBroadcasted;
     private bool targetSelectionDirty;
     private bool hadValidTargets;
     private bool isSelected;
@@ -181,6 +182,12 @@ public partial class TowerEntity : MonoBehaviour
 
         deploymentBroadcasted = true;
         onDeploy?.Invoke(unitId);
+
+        UnitEventBus resolvedEventBus = ResolveEventBus();
+        if (resolvedEventBus != null)
+        {
+            resolvedEventBus.RaiseTowerDeployed(new TowerDeployedEvent(unitId, this));
+        }
     }
 
     private void Start()
@@ -202,8 +209,15 @@ public partial class TowerEntity : MonoBehaviour
 
     private void Update()
     {
+        if (!deployed)
+        {
+            return;
+        }
+
+        BroadcastSetupCompletedIfReady();
+
         AttackBehaviour currentAttackBehaviour = GetActiveAttackBehaviour();
-        if (!deployed || currentAttackBehaviour == null || vision == null || Time.time < activeAfterTime)
+        if (currentAttackBehaviour == null || vision == null || Time.time < activeAfterTime)
         {
             return;
         }
@@ -223,6 +237,10 @@ public partial class TowerEntity : MonoBehaviour
 
         AttackWithActiveBehaviours(currentTarget, GetStat(ENTITY_STATS.GlobalDamage));
         nextAttackTime = Time.time + GetAttackCooldown();
+        if (vision != null && vision.HasValidTargets)
+        {
+            NotifyActiveAttackBehavioursTargetsAvailable();
+        }
     }
 
     /// <summary>

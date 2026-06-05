@@ -30,6 +30,7 @@ public partial class TowerEntity
 
         if (previousPrimaryAttackBehaviour != null && previousPrimaryAttackBehaviour != activeAttackBehaviour)
         {
+            NotifyAttackBehaviourDeactivated(previousPrimaryAttackBehaviour);
             previousPrimaryAttackBehaviour.ResetAmmoConsumptionState();
         }
 
@@ -40,6 +41,10 @@ public partial class TowerEntity
         }
 
         RebuildActiveAttackBehaviourList();
+        if (deployed && hadValidTargets)
+        {
+            NotifyActiveAttackBehavioursTargetsAvailable();
+        }
     }
 
     private void ConfigureAttackBehaviour(
@@ -98,6 +103,7 @@ public partial class TowerEntity
     {
         if (runtimeReplacementAttackBehaviour != null)
         {
+            NotifyAttackBehaviourDeactivated(runtimeReplacementAttackBehaviour);
             Destroy(runtimeReplacementAttackBehaviour.gameObject);
             runtimeReplacementAttackBehaviour = null;
         }
@@ -139,6 +145,7 @@ public partial class TowerEntity
             AttackBehaviour augment = runtimeAugmentAttackBehaviours[i];
             if (augment != null)
             {
+                NotifyAttackBehaviourDeactivated(augment);
                 Destroy(augment.gameObject);
             }
         }

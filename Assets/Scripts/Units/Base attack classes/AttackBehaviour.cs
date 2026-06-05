@@ -37,6 +37,13 @@ public abstract class AttackBehaviour : MonoBehaviour
     [SerializeField, Tooltip("Optional MonoBehaviour that implements AttackFXComponent. Concrete attacks decide when to play it.")]
     private MonoBehaviour attackFX;
 
+    [Header("Tower SFX")]
+    [SerializeField, Tooltip("Optional sound played once when this attack behaviour dispatches a real attack.")]
+    private AudioClip attackSound;
+
+    [SerializeField, Tooltip("Randomizes pitch for this attack's one-shot sound.")]
+    private bool randomizeAttackSoundPitch = true;
+
     private IReadOnlyList<ProjectileModifierBehaviour> activeHitModifiers;
     private IReadOnlyList<ProjectileModifierBehaviour> projectileModifiers;
     private TowerEntity ownerTower;
@@ -111,11 +118,89 @@ public abstract class AttackBehaviour : MonoBehaviour
 
         if (ExecuteAttack(target, baseDamage * Mathf.Max(0f, damageMultiplier)))
         {
+            PlayAttackSound();
             HandleAttackDispatched();
         }
     }
 
     protected abstract bool ExecuteAttack(Transform target, float damage);
+
+    internal void NotifyTowerTargetsAvailable()
+    {
+        OnTowerTargetsAvailable();
+    }
+
+    internal void NotifyTowerTargetsUnavailable()
+    {
+        OnTowerTargetsUnavailable();
+    }
+
+    internal void NotifyTowerAttackBehaviourDeactivated()
+    {
+        OnTowerAttackBehaviourDeactivated();
+    }
+
+    protected virtual void OnTowerTargetsAvailable()
+    {
+    }
+
+    protected virtual void OnTowerTargetsUnavailable()
+    {
+    }
+
+    protected virtual void OnTowerAttackBehaviourDeactivated()
+    {
+    }
+
+    protected virtual void OnDisable()
+    {
+        OnTowerAttackBehaviourDeactivated();
+    }
+
+    protected void PlayAttackSound()
+    {
+        PlayTowerSound(attackSound, randomizeAttackSoundPitch);
+    }
+
+    protected void PlayTowerSound(AudioClip clip, bool randomizePitch = true)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        AudioManager audioManager = ResolveAudioManager();
+        if (audioManager == null)
+        {
+            return;
+        }
+
+        audioManager.PlayTowerSFX(clip, randomizePitch);
+    }
+
+    protected AudioSource EnsureTowerSFXSource(AudioSource source)
+    {
+        AudioSource resolvedSource = source != null ? source : gameObject.AddComponent<AudioSource>();
+        ConfigureTowerSFXSource(resolvedSource);
+        return resolvedSource;
+    }
+
+    protected void ConfigureTowerSFXSource(AudioSource source)
+    {
+        if (source == null)
+        {
+            return;
+        }
+
+        AudioManager audioManager = ResolveAudioManager();
+        if (audioManager != null)
+        {
+            audioManager.ConfigureTowerSFXSource(source);
+            return;
+        }
+
+        source.playOnAwake = false;
+    }
 
     protected bool TryRequestProjectile<T>(
         ProjectileType projectileType,
@@ -287,5 +372,16 @@ public abstract class AttackBehaviour : MonoBehaviour
         Debug.LogWarning(
             $"{GetType().Name} on '{name}' could not find a {nameof(ProjectilePoolService)} for {projectileType}. No projectile was fired.",
             this);
+    }
+
+    private static AudioManager ResolveAudioManager()
+    {
+        if (AudioManager.Instance != null)
+        {
+            return AudioManager.Instance;
+        }
+
+        ServiceLocator.TryResolve(out AudioManager audioManager);
+        return audioManager;
     }
 }

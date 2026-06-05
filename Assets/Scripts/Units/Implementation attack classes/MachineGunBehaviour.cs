@@ -20,12 +20,29 @@ public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
     [SerializeField, Min(0.01f), Tooltip("Seconds it takes for current spin to linearly fall back to zero after the hold duration.")]
     private float spinResetDuration = 2f;
 
+    [Header("Spin SFX")]
+    [SerializeField, Tooltip("Optional sound played once when machine gun spin begins.")]
+    private AudioClip spinStartSound;
+
+    [SerializeField, Tooltip("Optional looping sound played while machine gun spin is active.")]
+    private AudioClip spinLoopSound;
+
+    [SerializeField, Tooltip("Optional sound played once when machine gun spin stops.")]
+    private AudioClip spinStopSound;
+
+    [SerializeField, Tooltip("AudioSource used for the sustained machine gun spin loop. One is added at runtime when missing.")]
+    private AudioSource spinLoopSource;
+
+    [SerializeField, Tooltip("Randomizes pitch for machine gun spin start and stop sounds.")]
+    private bool randomizeSpinOneShotPitch;
+
     private float lastAttackTickTime = float.NegativeInfinity;
     private float decayStartTime;
     private float decayStartProgress;
     private int windupStage;
     private int ticksSkippedAtCurrentStage;
     private bool decayActive;
+    private bool spinAudioActive;
 
     protected override void OnValidate()
     {
@@ -57,6 +74,7 @@ public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
         }
 
         UpdateSpinDecay();
+        StartSpinAudio();
 
         lastAttackTickTime = Time.time;
         decayActive = false;
@@ -178,5 +196,58 @@ public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
         windupStage = 0;
         ticksSkippedAtCurrentStage = 0;
         decayActive = false;
+        StopSpinAudio(true);
+    }
+
+    protected override void OnTowerTargetsUnavailable()
+    {
+        StopSpinAudio(true);
+    }
+
+    protected override void OnTowerAttackBehaviourDeactivated()
+    {
+        StopSpinAudio(false);
+    }
+
+    private void StartSpinAudio()
+    {
+        if (spinAudioActive)
+        {
+            return;
+        }
+
+        spinAudioActive = true;
+        PlayTowerSound(spinStartSound, randomizeSpinOneShotPitch);
+
+        if (spinLoopSound == null)
+        {
+            return;
+        }
+
+        spinLoopSource = EnsureTowerSFXSource(spinLoopSource);
+        spinLoopSource.clip = spinLoopSound;
+        spinLoopSource.loop = true;
+        spinLoopSource.pitch = 1f;
+        spinLoopSource.Play();
+    }
+
+    private void StopSpinAudio(bool playStopSound)
+    {
+        if (!spinAudioActive)
+        {
+            return;
+        }
+
+        spinAudioActive = false;
+
+        if (spinLoopSource != null && spinLoopSource.isPlaying)
+        {
+            spinLoopSource.Stop();
+        }
+
+        if (playStopSound)
+        {
+            PlayTowerSound(spinStopSound, randomizeSpinOneShotPitch);
+        }
     }
 }
