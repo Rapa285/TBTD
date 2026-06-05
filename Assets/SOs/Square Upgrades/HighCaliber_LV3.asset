@@ -21,7 +21,7 @@ MonoBehaviour:
   statEffects:
   - stat: 0
     type: 0
-    value: 2
+    value: 3
   - stat: 1
     type: 0
     value: 2

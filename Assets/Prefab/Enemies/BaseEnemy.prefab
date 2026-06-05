@@ -644,8 +644,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b800142b5b63c4ab906700ed42e417, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAudio
-  hitSound: {fileID: 8300000, guid: 7218edad0566fb4448261d064691d609, type: 3}
-  deathSound: {fileID: 8300000, guid: 3e522d63431083940b3e0710b2768a56, type: 3}
+  hitSound: {fileID: 8300000, guid: d6eeff86ffeee714098f249cb08c709f, type: 3}
+  deathSound: {fileID: 8300000, guid: 20d0c79a70d38f348b0caa96ab16eedf, type: 3}
   attackBaseSound: {fileID: 8300000, guid: e87722ab74b5c3c4383eace213cc0af9, type: 3}
   skillSound: {fileID: 0}
 --- !u!114 &-4759524539810303696

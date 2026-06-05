@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffe7a10d8eda42b499ceda6ccb59606d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrenadeLauncherBehaviour
-  baseDamage: 5
+  baseDamage: 1
   attacksPerAmmo: 1
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0, z: 0}

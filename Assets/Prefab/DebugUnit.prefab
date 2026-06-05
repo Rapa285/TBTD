@@ -148,6 +148,8 @@ MonoBehaviour:
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.5, z: 0}
   attackFX: {fileID: 0}
+  attackSound: {fileID: 8300000, guid: 241e8414f97ec5d40942c568d89b7af5, type: 3}
+  randomizeAttackSoundPitch: 1
   distanceFactor: 0.05
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}

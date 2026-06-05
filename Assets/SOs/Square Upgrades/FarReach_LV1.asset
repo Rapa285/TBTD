@@ -21,4 +21,4 @@ MonoBehaviour:
   statEffects:
   - stat: 2
     type: 0
-    value: 1.1
+    value: 1.5

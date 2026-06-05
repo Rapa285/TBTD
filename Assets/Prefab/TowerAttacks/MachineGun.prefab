@@ -64,9 +64,9 @@ MonoBehaviour:
   nearestPointIterations: 2
   projectileType: 1
   firePoint: {fileID: 0}
-  skippedTicksByStage: 04000000020000000100000001000000
-  spinHoldDuration: 2
-  spinResetDuration: 2
+  skippedTicksByStage: 0400000008000000040000000200000001000000010000000100000001000000
+  spinHoldDuration: 1
+  spinResetDuration: 1
   spinStartSound: {fileID: 0}
   spinLoopSound: {fileID: 0}
   spinStopSound: {fileID: 0}
