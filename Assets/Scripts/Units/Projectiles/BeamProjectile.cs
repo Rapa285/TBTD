@@ -37,6 +37,7 @@ public sealed class BeamProjectile : BaseProjectile
     private int defaultRayResolution;
     private float defaultBeamWidth;
     private int defaultDamageTicks;
+    private float beamVisualWidthScale = 1f;
 
     protected override void Awake()
     {
@@ -73,6 +74,7 @@ public sealed class BeamProjectile : BaseProjectile
         tickInterval = 0.2f;
         nextDamageTickTime = 0f;
         damageTicksApplied = 0;
+        beamVisualWidthScale = 1f;
     }
 
     public void ConfigureBeam(
@@ -148,6 +150,12 @@ public sealed class BeamProjectile : BaseProjectile
             ApplyDamageTick();
             nextDamageTickTime += tickInterval;
         }
+    }
+
+    protected override void ApplyBulletSize(float bulletSize)
+    {
+        beamWidth = Mathf.Max(0f, beamWidth * bulletSize);
+        beamVisualWidthScale = Mathf.Max(0f, bulletSize);
     }
 
     private void ApplyDamageTick()
@@ -241,7 +249,7 @@ public sealed class BeamProjectile : BaseProjectile
             return;
         }
 
-        beamFX.PlaySustainedLine(beamOrigin, beamOrigin + beamDirection * beamRange, beamDuration);
+        beamFX.PlaySustainedLine(beamOrigin, beamOrigin + beamDirection * beamRange, beamDuration, beamVisualWidthScale);
     }
 
     private void ResolveBeamFX()

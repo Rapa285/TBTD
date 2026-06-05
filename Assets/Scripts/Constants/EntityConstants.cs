@@ -10,7 +10,8 @@ public enum ENTITY_STATS
     AmmoEffectiveness, // Multiplies attacksPerAmmo on the primary weapon
     AmmoUnits, // Deployment-time ammo pool for finite primary weapons
     DeploymentCooldown, // Time before a recalled unit can deploy again
-    DeploymentCost // Currency cost paid when roster-managed units deploy
+    DeploymentCost, // Currency cost paid when roster-managed units deploy
+    BulletSize // Multiplier applied to projectile hit size
 }
 
 /// <summary>

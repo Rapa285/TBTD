@@ -77,6 +77,11 @@ public sealed class LineAttackFXComponent : MonoBehaviour, AttackFXComponent
 
     public void PlaySustainedLine(Vector3 start, Vector3 end, float visibleDuration)
     {
+        PlaySustainedLine(start, end, visibleDuration, 1f);
+    }
+
+    public void PlaySustainedLine(Vector3 start, Vector3 end, float visibleDuration, float widthScale)
+    {
         ResolveLineRenderer();
         if (lineRenderer == null)
         {
@@ -88,7 +93,11 @@ public sealed class LineAttackFXComponent : MonoBehaviour, AttackFXComponent
             StopCoroutine(activeRoutine);
         }
 
-        activeRoutine = StartCoroutine(PlaySustainedLineRoutine(start, end, Mathf.Max(0f, visibleDuration)));
+        activeRoutine = StartCoroutine(PlaySustainedLineRoutine(
+            start,
+            end,
+            Mathf.Max(0f, visibleDuration),
+            Mathf.Max(0f, widthScale)));
     }
 
     private IEnumerator PlayLineFade(Vector3 start, Vector3 end)
@@ -113,13 +122,13 @@ public sealed class LineAttackFXComponent : MonoBehaviour, AttackFXComponent
         HideLine();
     }
 
-    private IEnumerator PlaySustainedLineRoutine(Vector3 start, Vector3 end, float visibleDuration)
+    private IEnumerator PlaySustainedLineRoutine(Vector3 start, Vector3 end, float visibleDuration, float widthScale)
     {
         CacheWidthMultiplier();
         lineRenderer.enabled = true;
         lineRenderer.SetPosition(0, start);
         lineRenderer.SetPosition(1, end);
-        lineRenderer.widthMultiplier = startWidthMultiplier;
+        lineRenderer.widthMultiplier = startWidthMultiplier * widthScale;
 
         float elapsed = 0f;
         while (visibleDuration > 0f && elapsed < visibleDuration)

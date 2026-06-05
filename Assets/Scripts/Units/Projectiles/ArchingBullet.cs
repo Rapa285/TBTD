@@ -34,6 +34,14 @@ public sealed class ArchingBullet : BaseProjectile
     private float elapsedFlightTime;
     private bool hasDestination;
     private bool exploded;
+    private bool defaultsCached;
+    private float defaultExplosionRadius;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        CacheDefaults();
+    }
 
     protected override void OnValidate()
     {
@@ -54,6 +62,8 @@ public sealed class ArchingBullet : BaseProjectile
 
     protected override void ResetProjectileStateForReuse()
     {
+        CacheDefaults();
+        explosionRadius = defaultExplosionRadius;
         startPosition = Vector3.zero;
         destination = Vector3.zero;
         arcHeight = 0f;
@@ -61,6 +71,12 @@ public sealed class ArchingBullet : BaseProjectile
         elapsedFlightTime = 0f;
         hasDestination = false;
         exploded = false;
+    }
+
+    protected override void ApplyBulletSize(float bulletSize)
+    {
+        CacheDefaults();
+        explosionRadius = Mathf.Max(0f, defaultExplosionRadius * bulletSize);
     }
 
     public void SetDestination(Vector3 worldDestination)
@@ -147,5 +163,16 @@ public sealed class ArchingBullet : BaseProjectile
 
         RaiseBulletHit(transform);
         Expire();
+    }
+
+    private void CacheDefaults()
+    {
+        if (defaultsCached)
+        {
+            return;
+        }
+
+        defaultsCached = true;
+        defaultExplosionRadius = explosionRadius;
     }
 }

@@ -151,6 +151,9 @@ public abstract class BaseProjectile : MonoBehaviour
         expired = false;
         DestroyProjectileModifiers();
 
+        float bulletSize = ownerTower != null ? ownerTower.GetStat(ENTITY_STATS.BulletSize) : 1f;
+        ApplyBulletSize(Mathf.Max(0f, bulletSize));
+
         InstantiateProjectileModifiers(projectileModifierPrefabs);
         DispatchProjectileInitializedModifiers();
     }
@@ -232,6 +235,28 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected virtual void ResetProjectileStateForReuse()
     {
+    }
+
+    protected virtual void ApplyBulletSize(float bulletSize)
+    {
+        if (Mathf.Approximately(bulletSize, 1f))
+        {
+            return;
+        }
+
+        switch (projectileCollider)
+        {
+            case SphereCollider sphere:
+                sphere.radius = Mathf.Max(0f, sphere.radius * bulletSize);
+                break;
+            case CapsuleCollider capsule:
+                capsule.radius = Mathf.Max(0f, capsule.radius * bulletSize);
+                capsule.height = Mathf.Max(0f, capsule.height * bulletSize);
+                break;
+            case BoxCollider box:
+                box.size = Vector3.Max(Vector3.zero, box.size * bulletSize);
+                break;
+        }
     }
 
     /// <summary>

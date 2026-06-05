@@ -134,6 +134,8 @@ public partial class TowerEntity
                 return 10f;
             case ENTITY_STATS.DeploymentCost:
                 return 100f;
+            case ENTITY_STATS.BulletSize:
+                return 1f;
             default:
                 return 0f;
         }
