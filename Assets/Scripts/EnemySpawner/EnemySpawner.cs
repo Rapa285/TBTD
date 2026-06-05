@@ -40,6 +40,8 @@ public class EnemySpawner : MonoBehaviour
     private bool hasGracePeriodEnded = false;
     private int lastGraceTickSecond = -1;
 
+    private bool isSpecialWave = false;
+
     void Start()
     {
         // Setup Spawner Attributes
@@ -152,6 +154,8 @@ public class EnemySpawner : MonoBehaviour
 
     public void GenerateWave()
     {
+        isSpecialWave = false;
+
         budget = Mathf.RoundToInt(currWave * budgetMultiplier) + baseBudget; // NOTE: Change Total Cost of each wave here
         GenerateEnemies();
 
@@ -170,6 +174,11 @@ public class EnemySpawner : MonoBehaviour
         if (!isInfiniteRound)
         {
             RaiseNewWaveEvent();
+
+            if (isSpecialWave) {
+                Debug.Log($"Special Wave triggered on Wave {currWave}!");
+                RaiseSpecialWaveEvent();
+            }
         }
     }
 
@@ -222,9 +231,12 @@ public class EnemySpawner : MonoBehaviour
         {
             if (currWave == specialEnemyList[i].waveToSpawn)
             {
+                isSpecialWave = true;
                 EnemyObject specialEnemyObject = specialEnemyList[i];
 
                 enemyToSpawn.Add(specialEnemyObject);
+
+                Debug.Log($"Added Special Enemy for Wave {currWave}: {specialEnemyObject.objectPrefab.name}");
             }
         }
     }
@@ -340,6 +352,17 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.Log("Raising GraceTimerEndedEvent");
             eventBus.RaiseGraceTimerEnded();
+        }
+    }
+
+    private void RaiseSpecialWaveEvent()
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            Debug.Log($"Raising SpecialWaveEvent: Wave {currWave}");
+
+            eventBus.RaiseSpecialWave();
         }
     }
 
