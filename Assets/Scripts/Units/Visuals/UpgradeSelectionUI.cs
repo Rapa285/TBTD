@@ -23,6 +23,9 @@ public class UpgradeSelectionUI : MonoBehaviour
     [SerializeField, Tooltip("Optional details panel updated when an upgrade choice is hovered or focused.")]
     private UpgradeInfoDetailsUI upgradeInfoDetailsUI;
 
+    [SerializeField, Tooltip("Optional strip showing the active unit's already purchased upgrades.")]
+    private UpgradeSelectionExistingUpgradesUI existingUpgradesUI;
+
     [SerializeField, Tooltip("Optional button used to close the upgrade menu without selecting.")]
     private Button closeButton;
 
@@ -197,6 +200,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         activeUnitId = eventData.UnitId;
         ClearChoices();
+        RefreshExistingUpgrades();
 
         for (int i = 0; i < eventData.Choices.Length; i++)
         {
@@ -226,6 +230,7 @@ public class UpgradeSelectionUI : MonoBehaviour
         if (upgradesManager != null && upgradesManager.HasPendingOffer(activeUnitId))
         {
             ClearChoices();
+            RefreshExistingUpgrades();
             RefreshRerollState();
             return;
         }
@@ -288,6 +293,11 @@ public class UpgradeSelectionUI : MonoBehaviour
 
             item.ClearBinding();
             item.gameObject.SetActive(false);
+        }
+
+        if (existingUpgradesUI != null)
+        {
+            existingUpgradesUI.Clear();
         }
     }
 
@@ -391,6 +401,16 @@ public class UpgradeSelectionUI : MonoBehaviour
         if (upgradeInfoDetailsUI == null)
         {
             upgradeInfoDetailsUI = GetComponentInChildren<UpgradeInfoDetailsUI>(true);
+        }
+
+        if (existingUpgradesUI == null)
+        {
+            existingUpgradesUI = GetComponentInChildren<UpgradeSelectionExistingUpgradesUI>(true);
+        }
+
+        if (existingUpgradesUI == null)
+        {
+            existingUpgradesUI = ResolveRuntimeExistingUpgradesUI();
         }
 
         if (rerollButtonRoot == null && rerollButton != null)
@@ -546,5 +566,78 @@ public class UpgradeSelectionUI : MonoBehaviour
         {
             target.SetActive(hasActiveOffer);
         }
+    }
+
+    private void RefreshExistingUpgrades()
+    {
+        if (existingUpgradesUI == null)
+        {
+            ResolveReferences();
+        }
+
+        if (existingUpgradesUI == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(activeUnitId))
+        {
+            existingUpgradesUI.Clear();
+            return;
+        }
+
+        existingUpgradesUI.Bind(activeUnitId);
+    }
+
+    private UpgradeSelectionExistingUpgradesUI ResolveRuntimeExistingUpgradesUI()
+    {
+        Transform stripRoot = FindChildByName(transform, "PurchasedUpgrades");
+        if (stripRoot == null)
+        {
+            stripRoot = FindChildByName(transform, "ExistingUpgrades");
+        }
+
+        if (stripRoot == null)
+        {
+            stripRoot = FindChildByName(transform, "Existing Upgrades");
+        }
+
+        if (stripRoot == null)
+        {
+            return null;
+        }
+
+        if (!stripRoot.TryGetComponent(out UpgradeSelectionExistingUpgradesUI resolvedExistingUpgradesUI))
+        {
+            resolvedExistingUpgradesUI = stripRoot.gameObject.AddComponent<UpgradeSelectionExistingUpgradesUI>();
+        }
+
+        resolvedExistingUpgradesUI.Configure(stripRoot.gameObject, stripRoot, null, null);
+        return resolvedExistingUpgradesUI;
+    }
+
+    private static Transform FindChildByName(Transform parent, string childName)
+    {
+        if (parent == null || string.IsNullOrWhiteSpace(childName))
+        {
+            return null;
+        }
+
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+            if (child.name == childName)
+            {
+                return child;
+            }
+
+            Transform match = FindChildByName(child, childName);
+            if (match != null)
+            {
+                return match;
+            }
+        }
+
+        return null;
     }
 }
