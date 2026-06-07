@@ -463,10 +463,9 @@ MonoBehaviour:
   bestiaryPanel: {fileID: 580420850}
   detailNameText: {fileID: 1476166553}
   detailDescriptionText: {fileID: 37771903}
-  modelViewer: {fileID: 0}
+  modelViewer: {fileID: 1777135451}
   buttonPrefab: {fileID: 3045486346428353231, guid: 15e9c35a3b9e9b1479a1803c2ef1cf03, type: 3}
   buttonContainer: {fileID: 175210879}
-  modelSpawnPoint: {fileID: 0}
 --- !u!4 &251438971
 Transform:
   m_ObjectHideFlags: 0
@@ -1112,7 +1111,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8293922311063674484, guid: e7bcf7e72d5d6dd4f8858a3dead49cee, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3588,6 +3587,7 @@ MonoBehaviour:
   modelRotation: {x: 0, y: 180, z: 0}
   cameraFOV: 40
   modelScaleMultiplier: 1
+  rotationSpeed: -0.5
 --- !u!1 &1804169525
 GameObject:
   m_ObjectHideFlags: 0
@@ -4163,7 +4163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7020939155529680203, guid: 446bb3e96987a7c46a13cb51aeca9c6c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
