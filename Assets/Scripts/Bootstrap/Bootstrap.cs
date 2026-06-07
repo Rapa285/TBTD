@@ -14,8 +14,7 @@ public class Bootstrap : MonoBehaviour
     [Header("References")]
     [SerializeField] ConfigWorker configWorker;
     [SerializeField] SceneLoader sceneLoader;
-    [SerializeField] MusicService musicService;
-    [SerializeField] bool ensureMusicService = true;
+    [SerializeField] PersistentServicesInitializer persistentServicesInitializer;
     // [SerializeField] ServiceRegistry serviceRegistry;
 
     static bool hasBootstrapped;
@@ -41,10 +40,8 @@ public class Bootstrap : MonoBehaviour
             sceneLoader = ServiceLocator.TryResolve(out SceneLoader resolvedSceneLoader) ? resolvedSceneLoader : sceneLoader;
         }
 
-        if (ensureMusicService)
-        {
-            ResolveMusicService();
-        }
+        ResolvePersistentServicesInitializer();
+        persistentServicesInitializer.EnsureInitialized();
 
         // if (serviceRegistry == null)
         // {
@@ -62,10 +59,7 @@ public class Bootstrap : MonoBehaviour
         if (configWorker != null)
         {
             configWorker.EnsureInitialized();
-            if (musicService != null)
-            {
-                musicService.RefreshConfig();
-            }
+            persistentServicesInitializer?.RefreshResolvedServiceConfig();
         }
         else
         {
@@ -124,26 +118,22 @@ public class Bootstrap : MonoBehaviour
         Debug.LogWarning("Bootstrap has an invalid SceneReferenceSO (not in build settings).", this);
     }
 
-    void ResolveMusicService()
+    void ResolvePersistentServicesInitializer()
     {
-        if (musicService == null)
-        {
-            musicService = ServiceLocator.TryResolve(out MusicService resolvedMusicService)
-                ? resolvedMusicService
-                : musicService;
-        }
-
-        if (musicService == null)
-        {
-            musicService = FindAnyObjectByType<MusicService>(FindObjectsInactive.Include);
-        }
-
-        if (musicService != null)
+        if (persistentServicesInitializer != null)
         {
             return;
         }
 
-        GameObject musicServiceObject = new GameObject(nameof(MusicService));
-        musicService = musicServiceObject.AddComponent<MusicService>();
+        persistentServicesInitializer = GetComponent<PersistentServicesInitializer>();
+        if (persistentServicesInitializer == null)
+        {
+            persistentServicesInitializer = FindAnyObjectByType<PersistentServicesInitializer>(FindObjectsInactive.Include);
+        }
+
+        if (persistentServicesInitializer == null)
+        {
+            persistentServicesInitializer = gameObject.AddComponent<PersistentServicesInitializer>();
+        }
     }
 }

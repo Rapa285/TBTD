@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using TMPro;
 
 public class UIWarningDisplayer : MonoBehaviour
 {
@@ -11,6 +10,7 @@ public class UIWarningDisplayer : MonoBehaviour
     [SerializeField] private float displayDuration = 5f;
     [SerializeField]
     private WaveEventBus eventBus;
+    [SerializeField] private UISFXID warningSfx = UISFXID.WaveAlert;
     private bool eventBusSubscribed;
 
     private Coroutine fadeCoroutine;
@@ -35,29 +35,47 @@ public class UIWarningDisplayer : MonoBehaviour
 
     public void TriggerBossWarning()
     {
+        if (!gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
         StartCoroutine(ShowWarningRoutine());
     }
 
     private IEnumerator ShowWarningRoutine()
     {
-        warningUI.SetActive(true);
-        
-        // TODO: Play a warning siren audio clip here
-        // AudioSource.PlayClipAtPoint(warningSiren, Camera.main.transform.position);
+        ResolveReferences();
+
+        if (warningUI != null)
+        {
+            warningUI.SetActive(true);
+        }
+
+        RequestWarningSFX();
 
         // Start fading in 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
-        fadeCoroutine = StartCoroutine(Fade(0f, 1f));
+        if (warningCanvasGroup != null)
+        {
+            fadeCoroutine = StartCoroutine(Fade(0f, 1f));
+        }
 
         yield return new WaitForSeconds(displayDuration);
 
         // Start fading out
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
-        fadeCoroutine = StartCoroutine(Fade(1f, 0f));
+        if (warningCanvasGroup != null)
+        {
+            fadeCoroutine = StartCoroutine(Fade(1f, 0f));
+        }
 
         yield return new WaitForSeconds(fadeDuration);
 
-        warningUI.SetActive(false);
+        if (warningUI != null)
+        {
+            warningUI.SetActive(false);
+        }
     }
 
     private void OnDisable()
@@ -84,10 +102,10 @@ public class UIWarningDisplayer : MonoBehaviour
     {
         if (warningUI == null)
         {
-            warningUI = GetComponent<GameObject>();
+            warningUI = gameObject;
         }
 
-        if (warningCanvasGroup == null)
+        if (warningCanvasGroup == null && warningUI != null)
         {
             warningCanvasGroup = warningUI.GetComponent<CanvasGroup>();
         }
@@ -95,6 +113,25 @@ public class UIWarningDisplayer : MonoBehaviour
         if (eventBus == null)
         {
             ServiceLocator.TryResolve(out eventBus);
+        }
+    }
+
+    private void RequestWarningSFX()
+    {
+        if (warningSfx == UISFXID.None)
+        {
+            return;
+        }
+
+        if (ServiceLocator.TryResolve(out PersistentEventBus persistentEventBus) && persistentEventBus != null)
+        {
+            persistentEventBus.RaiseUISFX(warningSfx);
+            return;
+        }
+
+        if (ServiceLocator.TryResolve(out UISFXService uiSfxService) && uiSfxService != null)
+        {
+            uiSfxService.PlayUISFX(warningSfx);
         }
     }
 
@@ -132,6 +169,11 @@ public class UIWarningDisplayer : MonoBehaviour
 
     private IEnumerator Fade(float startAlpha, float endAlpha)
     {
+        if (warningCanvasGroup == null)
+        {
+            yield break;
+        }
+
         float elapsedTime = 0f;
         warningCanvasGroup.alpha = startAlpha;
 

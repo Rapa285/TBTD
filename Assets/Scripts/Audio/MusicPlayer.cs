@@ -15,18 +15,18 @@ public sealed class MusicPlayer : MonoBehaviour
 
     public void Play()
     {
+        if (ServiceLocator.TryResolve(out PersistentEventBus persistentEventBus) && persistentEventBus != null)
+        {
+            persistentEventBus.RaiseMusic(musicToPlay);
+            return;
+        }
+
         if (ServiceLocator.TryResolve(out MusicService musicService) && musicService != null)
         {
             musicService.PlayMusic(musicToPlay);
             return;
         }
 
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayMusic(musicToPlay);
-            return;
-        }
-
-        Debug.LogWarning($"{nameof(MusicPlayer)} could not find a {nameof(MusicService)} or {nameof(AudioManager)}.", this);
+        Debug.LogWarning($"{nameof(MusicPlayer)} could not find a {nameof(PersistentEventBus)} or {nameof(MusicService)}.", this);
     }
 }

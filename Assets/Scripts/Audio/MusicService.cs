@@ -6,8 +6,6 @@ using UnityEngine.Audio;
 [DefaultExecutionOrder(-830)]
 public sealed class MusicService : MonoBehaviour
 {
-    public static MusicService Instance { get; private set; }
-
     [Header("Routing")]
     [SerializeField] private AudioSource musicSource;
     [SerializeField] private AudioMixerGroup bgmGroup;
@@ -27,6 +25,8 @@ public sealed class MusicService : MonoBehaviour
 
     private readonly Dictionary<MusicIdentifier, MusicClipData> tracksById = new Dictionary<MusicIdentifier, MusicClipData>();
     private MusicClipData currentMusicData;
+    private PersistentEventBus persistentEventBus;
+    private bool subscribedToPersistentEventBus;
     private float masterVolume = 1f;
     private float musicVolume = 1f;
 
@@ -35,14 +35,6 @@ public sealed class MusicService : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-
         if (persistAcrossScenes)
         {
             DontDestroyOnLoad(gameObject);
@@ -57,10 +49,13 @@ public sealed class MusicService : MonoBehaviour
     private void OnEnable()
     {
         GeneralEventBus<SettingsChangedEvent>.Subscribe(HandleSettingsChanged);
+        SubscribeToPersistentEventBus();
     }
 
     private void Start()
     {
+        SubscribeToPersistentEventBus();
+
         if (playOnStart)
         {
             PlayMusic(startMusic);
@@ -70,16 +65,13 @@ public sealed class MusicService : MonoBehaviour
     private void OnDisable()
     {
         GeneralEventBus<SettingsChangedEvent>.Unsubscribe(HandleSettingsChanged);
+        UnsubscribeFromPersistentEventBus();
     }
 
     private void OnDestroy()
     {
+        UnsubscribeFromPersistentEventBus();
         ServiceLocator.Unregister<MusicService>(this);
-
-        if (Instance == this)
-        {
-            Instance = null;
-        }
     }
 
     public void ConfigureAudioSource(AudioSource source, AudioMixerGroup outputGroup)
@@ -272,6 +264,45 @@ public sealed class MusicService : MonoBehaviour
     private void HandleSettingsChanged(SettingsChangedEvent e)
     {
         ApplyConfig(e.Config);
+    }
+
+    private void HandleMusicRequested(MusicRequestEvent eventData)
+    {
+        PlayMusic(eventData.MusicId);
+    }
+
+    private void SubscribeToPersistentEventBus()
+    {
+        if (subscribedToPersistentEventBus)
+        {
+            return;
+        }
+
+        if (persistentEventBus == null)
+        {
+            ServiceLocator.TryResolve(out persistentEventBus);
+        }
+
+        if (persistentEventBus == null)
+        {
+            return;
+        }
+
+        persistentEventBus.MusicRequested += HandleMusicRequested;
+        persistentEventBus.MusicStopRequested += StopMusic;
+        subscribedToPersistentEventBus = true;
+    }
+
+    private void UnsubscribeFromPersistentEventBus()
+    {
+        if (!subscribedToPersistentEventBus || persistentEventBus == null)
+        {
+            return;
+        }
+
+        persistentEventBus.MusicRequested -= HandleMusicRequested;
+        persistentEventBus.MusicStopRequested -= StopMusic;
+        subscribedToPersistentEventBus = false;
     }
 
     private void ApplyCurrentConfig()
