@@ -56,6 +56,11 @@ public class UpgradeIconLevelUI : MonoBehaviour
 
     public void BindEvolution(EvolutionSO evolution)
     {
+        BindEvolution(evolution, null);
+    }
+
+    public void BindEvolution(EvolutionSO evolution, UnitStateManager.OwnedUnitState unit)
+    {
         ResolveReferences();
 
         if (evolution == null || !evolution.HasResolvedUpgrade)
@@ -79,7 +84,14 @@ public class UpgradeIconLevelUI : MonoBehaviour
 
         if (hoverableItem != null)
         {
-            hoverableItem.Bind(evolution);
+            if (hoverableItem is DetailUpgradeHoverableItem detailHoverableItem)
+            {
+                detailHoverableItem.Bind(evolution, unit);
+            }
+            else
+            {
+                hoverableItem.Bind(evolution);
+            }
         }
 
         SetRootVisible(true);
@@ -105,7 +117,7 @@ public class UpgradeIconLevelUI : MonoBehaviour
 
         if (hoverableItem != null)
         {
-            hoverableItem.Clear();
+            ClearHoverableItem();
         }
 
         SetRootVisible(true);
@@ -126,10 +138,34 @@ public class UpgradeIconLevelUI : MonoBehaviour
 
         if (hoverableItem != null)
         {
-            hoverableItem.Clear();
+            ClearHoverableItem();
         }
 
         SetRootVisible(false);
+    }
+
+    public DetailUpgradeHoverableItem EnsureDetailHoverableItem()
+    {
+        ResolveReferences();
+
+        if (hoverableItem is DetailUpgradeHoverableItem existingDetailHoverableItem)
+        {
+            return existingDetailHoverableItem;
+        }
+
+        if (!TryGetComponent(out DetailUpgradeHoverableItem detailHoverableItem))
+        {
+            detailHoverableItem = gameObject.AddComponent<DetailUpgradeHoverableItem>();
+        }
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.enabled = false;
+        }
+
+        hoverableItem = detailHoverableItem;
+        hoverableItem.enabled = true;
+        return detailHoverableItem;
     }
 
     private void BindInternal(
@@ -173,7 +209,14 @@ public class UpgradeIconLevelUI : MonoBehaviour
 
         if (hoverableItem != null)
         {
-            hoverableItem.Bind(multiUpgrade, targetIconLevel, currentLevel);
+            if (hoverableItem is DetailUpgradeHoverableItem detailHoverableItem)
+            {
+                detailHoverableItem.Bind(multiUpgrade, targetIconLevel, currentLevel, unit);
+            }
+            else
+            {
+                hoverableItem.Bind(multiUpgrade, targetIconLevel, currentLevel);
+            }
         }
 
         SetRootVisible(true);
@@ -218,6 +261,17 @@ public class UpgradeIconLevelUI : MonoBehaviour
         {
             hoverableItem = GetComponent<UpgradeHoverableItem>();
         }
+    }
+
+    private void ClearHoverableItem()
+    {
+        if (hoverableItem is DetailUpgradeHoverableItem detailHoverableItem)
+        {
+            detailHoverableItem.Clear();
+            return;
+        }
+
+        hoverableItem.Clear();
     }
 
     private void SetRootVisible(bool isVisible)

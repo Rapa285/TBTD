@@ -784,11 +784,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c729c2efce644e4eb70fef73f236199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitDetailsRecallButton
+  holdDuration: 0.8
+  recallAnimController: {fileID: 0}
   recallButton: {fileID: 6824610550335332862}
   recallButtonRoot: {fileID: 2203656797938285577}
-  holdDuration: 0.8
   recallButtonFX: {fileID: 4691252813071627940}
-  recallAnimController: {fileID: 0}
   playerStateController: {fileID: 0}
   unitStateManager: {fileID: 0}
 --- !u!1 &1261129490457581395
@@ -6551,6 +6551,7 @@ MonoBehaviour:
   unitStateManager: {fileID: 0}
   eventBus: {fileID: 0}
   detailFx: {fileID: 5114919852095705648}
+  leftSideWorldXCutoff: 0
   nameText: {fileID: 4906936492528809373}
   iconImage: {fileID: 7849151242003956579}
   xpText: {fileID: 6420755770328956552}
@@ -6572,8 +6573,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb455da238476ec498a9f808b59bd577, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitDetailUIFX
-  target: {fileID: 5580181828055404994}
-  root: {fileID: 679782683883551797}
+  target: {fileID: 8297464768042656549}
+  root: {fileID: 7725471711004414346}
   openTime: 0.25
   closeTime: 0.2
   openCurve:
@@ -6624,6 +6625,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  shownRightX: -400
+  shownLeftX: -1500
 --- !u!1 &7779625645501755602
 GameObject:
   m_ObjectHideFlags: 0
