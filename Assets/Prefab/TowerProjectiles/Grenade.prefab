@@ -100,6 +100,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2442352380925354256}
   - component: {fileID: 2009152706445467217}
+  - component: {fileID: 9173312234691437021}
   - component: {fileID: 5838053392867049392}
   - component: {fileID: -1855197315305423909}
   - component: {fileID: -2154441599101239311}
@@ -148,6 +149,33 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.2
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &9173312234691437021
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6833251139136695075}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 1
+  m_Constraints: 0
+  m_CollisionDetection: 1
 --- !u!114 &5838053392867049392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,7 +216,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15943a8dfb5b86d479a0455d007f44ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VFXRequester
-  hitVFXType: 1
+  hitVFXType: 2
   projectile: {fileID: 5838053392867049392}
 --- !u!96 &-2154441599101239311
 TrailRenderer:

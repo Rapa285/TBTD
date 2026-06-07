@@ -4,6 +4,7 @@ using UnityEngine;
 /// <summary>
 /// Projectile that follows a fixed visual arc, then explodes at its trajectory endpoint.
 /// </summary>
+[RequireComponent(typeof(Rigidbody))]
 public sealed class ArchingBullet : BaseProjectile
 {
     [SerializeField, Min(0f), Tooltip("Explosion radius used when the arc reaches its destination.")]
@@ -36,6 +37,8 @@ public sealed class ArchingBullet : BaseProjectile
     private bool exploded;
     private bool defaultsCached;
     private float defaultExplosionRadius;
+
+    protected override bool UsesRigidbodyMovement => true;
 
     protected override void Awake()
     {
@@ -81,7 +84,7 @@ public sealed class ArchingBullet : BaseProjectile
 
     public void SetDestination(Vector3 worldDestination)
     {
-        startPosition = transform.position;
+        startPosition = ProjectilePosition;
         destination = worldDestination;
 
         float horizontalDistance = GetHorizontalDistanceTo(destination);
@@ -94,7 +97,7 @@ public sealed class ArchingBullet : BaseProjectile
         Vector3 lookDirection = destination - startPosition;
         if (lookDirection.sqrMagnitude > Mathf.Epsilon)
         {
-            transform.rotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+            SetProjectilePose(ProjectilePosition, Quaternion.LookRotation(lookDirection.normalized, Vector3.up));
         }
     }
 
@@ -130,7 +133,7 @@ public sealed class ArchingBullet : BaseProjectile
         float normalizedTime = Mathf.Clamp01(elapsedFlightTime / flightDuration);
         Vector3 nextPosition = Vector3.Lerp(startPosition, destination, normalizedTime);
         nextPosition.y += Mathf.Sin(normalizedTime * Mathf.PI) * arcHeight;
-        transform.position = nextPosition;
+        MoveProjectilePosition(nextPosition);
 
         if (normalizedTime >= 1f)
         {
@@ -148,7 +151,7 @@ public sealed class ArchingBullet : BaseProjectile
         exploded = true;
         HashSet<Transform> damagedTargets = new HashSet<Transform>();
         Collider[] hits = Physics.OverlapSphere(
-            transform.position,
+            ProjectilePosition,
             explosionRadius,
             HitLayers,
             QueryTriggerInteraction.Collide);
@@ -182,7 +185,7 @@ public sealed class ArchingBullet : BaseProjectile
 
     private float GetHorizontalDistanceTo(Vector3 worldDestination)
     {
-        Vector3 horizontalOffset = Vector3.ProjectOnPlane(worldDestination - transform.position, Vector3.up);
+        Vector3 horizontalOffset = Vector3.ProjectOnPlane(worldDestination - ProjectilePosition, Vector3.up);
         return horizontalOffset.magnitude;
     }
 }

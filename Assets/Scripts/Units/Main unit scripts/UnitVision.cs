@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.Splines;
 
 /// <summary>
-/// Trigger-based target tracker used by towers for current-target retention and reacquisition.
+/// Overlap-scan target tracker used by towers for current-target retention and reacquisition.
 /// </summary>
 [RequireComponent(typeof(SphereCollider))]
 public sealed class UnitVision : MonoBehaviour
@@ -21,6 +21,9 @@ public sealed class UnitVision : MonoBehaviour
     [SerializeField, Tooltip("Layers this vision volume is allowed to track as valid targets.")]
     private LayerMask targetLayers = ~0;
 
+    [SerializeField, Min(0.02f), Tooltip("Seconds between runtime overlap scans used to refresh targets without requiring target Rigidbodies.")]
+    private float targetScanInterval = 0.1f;
+
     [SerializeField, Tooltip("Optional object scaled to the vision diameter for range previews.")]
     private GameObject visualization;
 
@@ -28,10 +31,12 @@ public sealed class UnitVision : MonoBehaviour
     private bool visualizationVisibleByDefault;
 
     private readonly List<Transform> validTargets = new List<Transform>();
+    private readonly HashSet<Transform> scannedTargets = new HashSet<Transform>();
     private readonly Dictionary<Transform, HealthComponent> targetHealthComponents = new Dictionary<Transform, HealthComponent>();
     private readonly Dictionary<HealthComponent, int> trackedHealthCounts = new Dictionary<HealthComponent, int>();
     private SphereCollider visionCollider;
     private bool isVisualizationVisible;
+    private float nextTargetScanTime;
 
     public IReadOnlyList<Transform> ValidTargets => validTargets;
     public bool IsVisualizationVisible => isVisualizationVisible;
@@ -67,14 +72,31 @@ public sealed class UnitVision : MonoBehaviour
         SyncVisualization();
     }
 
+    private void OnEnable()
+    {
+        nextTargetScanTime = 0f;
+    }
+
     private void OnValidate()
     {
         range = Mathf.Max(0f, range);
         effectiveInfiniteRange = Mathf.Max(0f, effectiveInfiniteRange);
         infiniteRangeVisualizationRadius = Mathf.Max(0f, infiniteRangeVisualizationRadius);
+        targetScanInterval = Mathf.Max(0.02f, targetScanInterval);
         visionCollider = GetComponent<SphereCollider>();
         SyncCollider();
         SyncVisualization();
+    }
+
+    private void Update()
+    {
+        if (Time.time < nextTargetScanTime)
+        {
+            return;
+        }
+
+        RefreshTargetsFromOverlap(false);
+        nextTargetScanTime = Time.time + targetScanInterval;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -208,29 +230,7 @@ public sealed class UnitVision : MonoBehaviour
     /// </summary>
     public void ScanForTargetsOnce()
     {
-        bool hadTargets = validTargets.Count > 0;
-        ClearTargetsWithoutEvents();
-        SyncCollider();
-        Physics.SyncTransforms();
-
-        bool addedAnyTarget = false;
-        Vector3 center = GetWorldCenter();
-        float radius = GetWorldRadius();
-        Collider[] overlappingColliders = Physics.OverlapSphere(
-            center,
-            radius,
-            ~0,
-            QueryTriggerInteraction.Collide);
-
-        for (int i = 0; i < overlappingColliders.Length; i++)
-        {
-            addedAnyTarget |= TryAddTarget(ColliderTargetUtility.GetTargetTransform(overlappingColliders[i]), false);
-        }
-
-        if (addedAnyTarget || hadTargets)
-        {
-            TargetsChanged?.Invoke();
-        }
+        RefreshTargetsFromOverlap(true);
     }
 
     /// <summary>
@@ -249,7 +249,7 @@ public sealed class UnitVision : MonoBehaviour
 
     private bool TryAddTarget(Transform target, bool raiseChanged)
     {
-        if (target == null || IsOwnTransform(target) || !IsInTargetLayer(target.gameObject) || validTargets.Contains(target))
+        if (!CanTrackTarget(target) || validTargets.Contains(target))
         {
             return false;
         }
@@ -264,6 +264,70 @@ public sealed class UnitVision : MonoBehaviour
         }
 
         return true;
+    }
+
+    private void RefreshTargetsFromOverlap(bool syncTransforms)
+    {
+        SyncCollider();
+        if (syncTransforms)
+        {
+            Physics.SyncTransforms();
+        }
+
+        scannedTargets.Clear();
+        Vector3 center = GetWorldCenter();
+        float radius = GetWorldRadius();
+        Collider[] overlappingColliders = Physics.OverlapSphere(
+            center,
+            radius,
+            targetLayers,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < overlappingColliders.Length; i++)
+        {
+            Transform target = ColliderTargetUtility.GetTargetTransform(overlappingColliders[i]);
+            if (CanTrackTarget(target))
+            {
+                scannedTargets.Add(target);
+            }
+        }
+
+        bool changed = false;
+        for (int i = validTargets.Count - 1; i >= 0; i--)
+        {
+            Transform target = validTargets[i];
+            if (target == null || !scannedTargets.Contains(target) || IsInvalidTarget(target))
+            {
+                RemoveTargetAt(i);
+                changed = true;
+            }
+        }
+
+        foreach (Transform target in scannedTargets)
+        {
+            if (validTargets.Contains(target))
+            {
+                continue;
+            }
+
+            validTargets.Add(target);
+            TrackTargetHealth(target);
+            TargetAdded?.Invoke(target);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            TargetsChanged?.Invoke();
+        }
+    }
+
+    private bool CanTrackTarget(Transform target)
+    {
+        return target != null
+            && !IsOwnTransform(target)
+            && IsInTargetLayer(target.gameObject)
+            && !IsInvalidTarget(target);
     }
 
     private void RemoveTarget(Transform target)
