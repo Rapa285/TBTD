@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Ambience;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-830)]
 public sealed class MusicService : MonoBehaviour
@@ -19,6 +20,12 @@ public sealed class MusicService : MonoBehaviour
     [SerializeField] private MusicIdentifier startMusic = MusicIdentifier.MainMenuBGM;
     [SerializeField] private bool persistAcrossScenes = true;
 
+    [Header("Thematic Music")]
+    [SerializeField] private bool playMusicOnSpecialWave = true;
+    [SerializeField] private MusicIdentifier specialWaveMusic = MusicIdentifier.InGameBoss;
+    [SerializeField] private bool playMusicOnSpecialWaveEnded = true;
+    [SerializeField] private MusicIdentifier specialWaveEndMusic = MusicIdentifier.InGameA;
+
     [Header("Config Bus Paths")]
     [SerializeField] private string masterBusPath = "bus:/";
     [SerializeField] private string musicBusPath = "bus:/BGM";
@@ -27,6 +34,8 @@ public sealed class MusicService : MonoBehaviour
     private MusicClipData currentMusicData;
     private PersistentEventBus persistentEventBus;
     private bool subscribedToPersistentEventBus;
+    private WaveEventBus waveEventBus;
+    private bool subscribedToWaveEventBus;
     private float masterVolume = 1f;
     private float musicVolume = 1f;
 
@@ -49,12 +58,15 @@ public sealed class MusicService : MonoBehaviour
     private void OnEnable()
     {
         GeneralEventBus<SettingsChangedEvent>.Subscribe(HandleSettingsChanged);
+        SceneManager.sceneLoaded += HandleSceneLoaded;
         SubscribeToPersistentEventBus();
+        SubscribeToWaveEventBus();
     }
 
     private void Start()
     {
         SubscribeToPersistentEventBus();
+        SubscribeToWaveEventBus();
 
         if (playOnStart)
         {
@@ -65,12 +77,15 @@ public sealed class MusicService : MonoBehaviour
     private void OnDisable()
     {
         GeneralEventBus<SettingsChangedEvent>.Unsubscribe(HandleSettingsChanged);
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
         UnsubscribeFromPersistentEventBus();
+        UnsubscribeFromWaveEventBus();
     }
 
     private void OnDestroy()
     {
         UnsubscribeFromPersistentEventBus();
+        UnsubscribeFromWaveEventBus();
         ServiceLocator.Unregister<MusicService>(this);
     }
 
@@ -271,6 +286,27 @@ public sealed class MusicService : MonoBehaviour
         PlayMusic(eventData.MusicId);
     }
 
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        SubscribeToWaveEventBus(forceResolve: true);
+    }
+
+    private void HandleSpecialWave()
+    {
+        if (playMusicOnSpecialWave)
+        {
+            PlayMusic(specialWaveMusic);
+        }
+    }
+
+    private void HandleSpecialWaveEnded()
+    {
+        if (playMusicOnSpecialWaveEnded)
+        {
+            PlayMusic(specialWaveEndMusic);
+        }
+    }
+
     private void SubscribeToPersistentEventBus()
     {
         if (subscribedToPersistentEventBus)
@@ -303,6 +339,48 @@ public sealed class MusicService : MonoBehaviour
         persistentEventBus.MusicRequested -= HandleMusicRequested;
         persistentEventBus.MusicStopRequested -= StopMusic;
         subscribedToPersistentEventBus = false;
+    }
+
+    private void SubscribeToWaveEventBus(bool forceResolve = false)
+    {
+        if (subscribedToWaveEventBus && waveEventBus != null && !forceResolve)
+        {
+            return;
+        }
+
+        if (subscribedToWaveEventBus)
+        {
+            UnsubscribeFromWaveEventBus();
+        }
+
+        waveEventBus = null;
+        ServiceLocator.TryResolve(out waveEventBus);
+        if (waveEventBus == null)
+        {
+            waveEventBus = FindAnyObjectByType<WaveEventBus>(FindObjectsInactive.Include);
+        }
+
+        if (waveEventBus == null)
+        {
+            return;
+        }
+
+        waveEventBus.SpecialWave += HandleSpecialWave;
+        waveEventBus.SpecialWaveEnded += HandleSpecialWaveEnded;
+        subscribedToWaveEventBus = true;
+    }
+
+    private void UnsubscribeFromWaveEventBus()
+    {
+        if (!subscribedToWaveEventBus || waveEventBus == null)
+        {
+            subscribedToWaveEventBus = false;
+            return;
+        }
+
+        waveEventBus.SpecialWave -= HandleSpecialWave;
+        waveEventBus.SpecialWaveEnded -= HandleSpecialWaveEnded;
+        subscribedToWaveEventBus = false;
     }
 
     private void ApplyCurrentConfig()

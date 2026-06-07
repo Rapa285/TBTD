@@ -44,6 +44,7 @@ public class WaveEventBus : MonoBehaviour
   public event Action<GraceTimerTickEvent> GraceTimerTick;
   public event Action GraceTimerEnded;
   public event Action SpecialWave;
+  public event Action SpecialWaveEnded;
   public event Action InfiniteRoundTriggered;
 
   private void Awake()
@@ -79,6 +80,11 @@ public class WaveEventBus : MonoBehaviour
     public void RaiseSpecialWave()
     {
         SpecialWave?.Invoke();
+    }
+
+    public void RaiseSpecialWaveEnded()
+    {
+        SpecialWaveEnded?.Invoke();
     }
 
     public void RaiseInfiniteRoundTriggered()

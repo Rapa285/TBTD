@@ -28,9 +28,11 @@ public class EnemySpawner : MonoBehaviour
     public float budgetMultiplier = 1;
     private int budget;
 
-    [SerializeField]
-    private List<EnemyObject> enemyToSpawn = new List<EnemyObject>();
+    private readonly List<EnemySpawnEntry> enemyToSpawn = new List<EnemySpawnEntry>();
     private List<GameObject> enemyGameObjectCache = new List<GameObject>();
+    private readonly List<TrackedSpecialEnemy> activeSpecialEnemies = new List<TrackedSpecialEnemy>();
+    private int pendingSpecialEnemyCount;
+    private bool specialWaveActive;
 
     private bool isInfiniteRound = false;
 
@@ -59,6 +61,11 @@ public class EnemySpawner : MonoBehaviour
         {
             mapSpline = spline;
         }
+    }
+
+    private void OnDestroy()
+    {
+        ClearTrackedSpecialEnemies();
     }
 
     // FixedUpdate for consistency
@@ -155,6 +162,8 @@ public class EnemySpawner : MonoBehaviour
     public void GenerateWave()
     {
         isSpecialWave = false;
+        pendingSpecialEnemyCount = 0;
+        TryRaiseSpecialWaveEnded();
 
         budget = Mathf.RoundToInt(currWave * budgetMultiplier) + baseBudget; // NOTE: Change Total Cost of each wave here
         GenerateEnemies();
@@ -178,6 +187,7 @@ public class EnemySpawner : MonoBehaviour
             if (isSpecialWave) {
                 Debug.Log($"Special Wave triggered on Wave {currWave}!");
                 RaiseSpecialWaveEvent();
+                specialWaveActive = true;
             }
         }
     }
@@ -210,7 +220,7 @@ public class EnemySpawner : MonoBehaviour
             {
                 EnemyObject randEnemyObject = normalEnemyList[randEnemyId];
 
-                enemyToSpawn.Add(randEnemyObject);
+                enemyToSpawn.Add(new EnemySpawnEntry(randEnemyObject, false));
                 budget -= randEnemyCost;
             }
             else if (budget <= 0)
@@ -234,7 +244,8 @@ public class EnemySpawner : MonoBehaviour
                 isSpecialWave = true;
                 EnemyObject specialEnemyObject = specialEnemyList[i];
 
-                enemyToSpawn.Add(specialEnemyObject);
+                enemyToSpawn.Add(new EnemySpawnEntry(specialEnemyObject, true));
+                pendingSpecialEnemyCount++;
 
                 Debug.Log($"Added Special Enemy for Wave {currWave}: {specialEnemyObject.objectPrefab.name}");
             }
@@ -270,11 +281,18 @@ public class EnemySpawner : MonoBehaviour
         {
             spawnTimer = spawnInterval;
             
-            EnemyObject currentEnemyData = enemyToSpawn[0];
-            PooledObject enemyInstance = poolDictionary[currentEnemyData].Get();
+            EnemySpawnEntry currentEnemyData = enemyToSpawn[0];
+            EnemyObject currentEnemy = currentEnemyData.Enemy;
+            PooledObject enemyInstance = poolDictionary[currentEnemy].Get();
             SetupEnemy(enemyInstance.gameObject);
+            if (currentEnemyData.IsSpecial)
+            {
+                pendingSpecialEnemyCount = Mathf.Max(0, pendingSpecialEnemyCount - 1);
+                RegisterActiveSpecialEnemy(enemyInstance);
+            }
 
             enemyToSpawn.RemoveAt(0);  
+            TryRaiseSpecialWaveEnded();
         }
     }
 
@@ -320,7 +338,7 @@ public class EnemySpawner : MonoBehaviour
             enemyGameObjectCache.Clear();
             for (int i = 0; i < enemyToSpawn.Count; i++)
             {
-                enemyGameObjectCache.Add(enemyToSpawn[i].GetPrefabCopy());
+                enemyGameObjectCache.Add(enemyToSpawn[i].Enemy.GetPrefabCopy());
             }
 
             eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyGameObjectCache));
@@ -366,6 +384,127 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    private void RaiseSpecialWaveEndedEvent()
+    {
+        ResolveEventBus();
+        if (eventBus != null)
+        {
+            Debug.Log($"Raising SpecialWaveEndedEvent: Wave {currWave}");
+
+            eventBus.RaiseSpecialWaveEnded();
+        }
+    }
+
+    private void RegisterActiveSpecialEnemy(PooledObject pooledObject)
+    {
+        if (pooledObject == null || IsTrackedSpecialEnemy(pooledObject))
+        {
+            return;
+        }
+
+        pooledObject.EnsureEvents();
+        HealthComponent health = pooledObject.GetComponent<HealthComponent>();
+        TrackedSpecialEnemy trackedEnemy = new TrackedSpecialEnemy(pooledObject, health);
+        activeSpecialEnemies.Add(trackedEnemy);
+
+        if (health != null)
+        {
+            health.OnDeath.AddListener(HandleTrackedSpecialEnemyChanged);
+        }
+
+        pooledObject.OnRelease.AddListener(HandleTrackedSpecialEnemyChanged);
+    }
+
+    private bool IsTrackedSpecialEnemy(PooledObject pooledObject)
+    {
+        for (int i = 0; i < activeSpecialEnemies.Count; i++)
+        {
+            if (activeSpecialEnemies[i].PooledObject == pooledObject)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void HandleTrackedSpecialEnemyChanged()
+    {
+        PruneInactiveSpecialEnemies();
+        TryRaiseSpecialWaveEnded();
+    }
+
+    private void PruneInactiveSpecialEnemies()
+    {
+        for (int i = activeSpecialEnemies.Count - 1; i >= 0; i--)
+        {
+            TrackedSpecialEnemy trackedEnemy = activeSpecialEnemies[i];
+            if (ShouldRemoveTrackedSpecialEnemy(trackedEnemy))
+            {
+                UnsubscribeTrackedSpecialEnemy(trackedEnemy);
+                activeSpecialEnemies.RemoveAt(i);
+            }
+        }
+    }
+
+    private void ClearTrackedSpecialEnemies()
+    {
+        for (int i = activeSpecialEnemies.Count - 1; i >= 0; i--)
+        {
+            UnsubscribeTrackedSpecialEnemy(activeSpecialEnemies[i]);
+        }
+
+        activeSpecialEnemies.Clear();
+    }
+
+    private bool ShouldRemoveTrackedSpecialEnemy(TrackedSpecialEnemy trackedEnemy)
+    {
+        if (trackedEnemy == null || trackedEnemy.PooledObject == null)
+        {
+            return true;
+        }
+
+        GameObject enemyObject = trackedEnemy.PooledObject.gameObject;
+        return enemyObject == null
+            || !enemyObject.activeInHierarchy
+            || (trackedEnemy.Health != null && trackedEnemy.Health.IsDead);
+    }
+
+    private void UnsubscribeTrackedSpecialEnemy(TrackedSpecialEnemy trackedEnemy)
+    {
+        if (trackedEnemy == null)
+        {
+            return;
+        }
+
+        if (trackedEnemy.Health != null)
+        {
+            trackedEnemy.Health.OnDeath.RemoveListener(HandleTrackedSpecialEnemyChanged);
+        }
+
+        if (trackedEnemy.PooledObject != null)
+        {
+            trackedEnemy.PooledObject.OnRelease.RemoveListener(HandleTrackedSpecialEnemyChanged);
+        }
+    }
+
+    private void TryRaiseSpecialWaveEnded()
+    {
+        if (!specialWaveActive)
+        {
+            return;
+        }
+
+        PruneInactiveSpecialEnemies();
+        if (pendingSpecialEnemyCount > 0 || activeSpecialEnemies.Count > 0)
+        {
+            return;
+        }
+
+        specialWaveActive = false;
+        RaiseSpecialWaveEndedEvent();
+    }
+
     private void RaiseInfiniteRoundTriggeredEvent()
     {
         ResolveEventBus();
@@ -398,6 +537,30 @@ public class EnemySpawner : MonoBehaviour
         );
 
         poolDictionary.Add(enemy, pool);
+    }
+}
+
+internal readonly struct EnemySpawnEntry
+{
+    public readonly EnemyObject Enemy;
+    public readonly bool IsSpecial;
+
+    public EnemySpawnEntry(EnemyObject enemy, bool isSpecial)
+    {
+        Enemy = enemy;
+        IsSpecial = isSpecial;
+    }
+}
+
+internal sealed class TrackedSpecialEnemy
+{
+    public readonly PooledObject PooledObject;
+    public readonly HealthComponent Health;
+
+    public TrackedSpecialEnemy(PooledObject pooledObject, HealthComponent health)
+    {
+        PooledObject = pooledObject;
+        Health = health;
     }
 }
 

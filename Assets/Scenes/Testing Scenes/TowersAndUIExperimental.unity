@@ -4591,6 +4591,10 @@ MonoBehaviour:
   playOnStart: 1
   startMusic: 1
   persistAcrossScenes: 1
+  playMusicOnSpecialWave: 1
+  specialWaveMusic: 2
+  playMusicOnSpecialWaveEnded: 1
+  specialWaveEndMusic: 1
   masterBusPath: bus:/
   musicBusPath: bus:/BGM
 --- !u!1001 &1404096726
