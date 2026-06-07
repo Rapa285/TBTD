@@ -144,7 +144,7 @@ public class UnitDetailsUI : MonoBehaviour
     {
         if (IsSelectedUnit(eventData.UnitId))
         {
-            RefreshFromSelection(null, eventData.UnitId);
+            ClearDisplay();
         }
     }
 

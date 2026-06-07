@@ -167,6 +167,8 @@ MonoBehaviour:
     m_Bits: 192
   destroyOnHit: 1
   projectileCollider: {fileID: 2009152706445467217}
+  hitSound: {fileID: 8300000, guid: 3ac4d6e270a42d447b067b69e1b11ab7, type: 3}
+  randomizeHitSoundPitch: 1
   explosionRadius: 2.5
   minArcHeight: 1
   maxArcHeight: 4

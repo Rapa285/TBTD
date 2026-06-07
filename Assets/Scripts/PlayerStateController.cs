@@ -401,7 +401,7 @@ public class PlayerStateController : MonoBehaviour
     {
         if (!string.IsNullOrWhiteSpace(selectedUnitId) && eventData.UnitId == selectedUnitId)
         {
-            SetSelectedRosterUnit(selectedUnitId);
+            ClearSelection();
         }
     }
 

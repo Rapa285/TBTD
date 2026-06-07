@@ -2,29 +2,39 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// Forwards child recall button pointer input to the owning UnitUIRecall.
+/// Receives forwarded recall pointer input from a child button object.
+/// </summary>
+public interface IRecallPointerReceiver
+{
+    void HandleRecallPointerDown(PointerEventData eventData);
+    void HandleRecallPointerUp(PointerEventData eventData);
+    void HandleRecallPointerExit(PointerEventData eventData);
+}
+
+/// <summary>
+/// Forwards child recall button pointer input to the owning recall behavior.
 /// </summary>
 public sealed class RecallPointerForwarder : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
-    private UnitUIRecall owner;
+    private IRecallPointerReceiver owner;
 
-    public void Initialize(UnitUIRecall recallOwner)
+    public void Initialize(IRecallPointerReceiver recallOwner)
     {
         owner = recallOwner;
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        owner?.OnPointerDown(eventData);
+        owner?.HandleRecallPointerDown(eventData);
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        owner?.OnPointerUp(eventData);
+        owner?.HandleRecallPointerUp(eventData);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        owner?.OnPointerExit(eventData);
+        owner?.HandleRecallPointerExit(eventData);
     }
 }
