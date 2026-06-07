@@ -27,6 +27,11 @@ public struct KeyboardInput
     public KeyCode inputKey;
 }
 
+public struct EnemySpawnedEvent
+{
+    public EnemyType EnemyType;
+}
+
 public readonly struct SettingsChangedEvent
 {
     public readonly ConfigData Config;

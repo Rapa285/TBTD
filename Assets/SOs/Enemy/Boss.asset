@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1a22402874c29934f808bcb4d943ecf2, type: 3}
-  m_Name: Tank
+  m_Name: Boss
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDataSO
-  enemyName: Tank
-  enemyType: 9
-  specialAbilityDescription: This enemy have great HP value
+  enemyName: Boss
+  enemyType: 4
+  specialAbilityDescription: This is a boss enemy. It's stats is wayy higher than
+    any enemy
   displayModelPrefab: {fileID: 919132149155446097, guid: 134a63736c49f6043a1a22f8bbd82e33, type: 3}
-  typeColor: {r: 0.5450981, g: 0.2705882, b: 0.07450981, a: 1}
+  typeColor: {r: 1, g: 0, b: 0, a: 1}

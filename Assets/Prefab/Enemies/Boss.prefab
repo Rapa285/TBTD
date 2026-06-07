@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: enemyData
+      value: 
+      objectReference: {fileID: 11400000, guid: 61c0a6ec87b46f348b865ad5e83ae321, type: 2}
     - target: {fileID: 3884178529611578562, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -80,4 +84,3 @@ MonoBehaviour:
   difficultyMultiplier: 8
   sizeMultiplier: 2
   permanentSlowPercentage: 0.3
-  bossSlowEmblem: {fileID: -214298916, guid: 080cb6d98b00c2645b2c41df5f69bc78, type: 3}
