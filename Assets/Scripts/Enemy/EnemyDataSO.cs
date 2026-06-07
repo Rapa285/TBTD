@@ -7,4 +7,5 @@ public class EnemyDataSO : ScriptableObject
     public EnemyType enemyType;
     public string specialAbilityDescription;
     public GameObject displayModelPrefab;
+    public Color typeColor;
 }

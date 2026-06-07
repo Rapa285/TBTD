@@ -24,7 +24,6 @@ public class EnemyEntity : MonoBehaviour
     [SerializeField] private Material enemyMaterial;
     [SerializeField] private MeshRenderer meshRenderer;
     [SerializeField] private Renderer enemyRenderer;
-    [SerializeField] private Color typeColor = Color.white;
 
     private HealthComponent health;
     private EnemyMover mover;
@@ -71,17 +70,9 @@ public class EnemyEntity : MonoBehaviour
             
             enemyRenderer.GetPropertyBlock(propBlock, 1);
             
-            propBlock.SetColor("_BaseColor", typeColor);
+            propBlock.SetColor("_BaseColor", enemyData.typeColor);
             
             enemyRenderer.SetPropertyBlock(propBlock, 1);
-        }
-
-        if (enemyData != null)
-        {
-            GeneralEventBus<EnemySpawnedEvent>.Publish(new EnemySpawnedEvent 
-            { 
-                EnemyType = enemyData.enemyType 
-            });
         }
     }
 

@@ -15,4 +15,5 @@ MonoBehaviour:
   enemyName: Shielder
   enemyType: 8
   specialAbilityDescription: This enemy will give shield to enemy in his radius
-  displayModelPrefab: {fileID: 0}
+  displayModelPrefab: {fileID: 919132149155446097, guid: 134a63736c49f6043a1a22f8bbd82e33, type: 3}
+  typeColor: {r: 0.3333333, g: 0.4196079, b: 0.1843137, a: 1}

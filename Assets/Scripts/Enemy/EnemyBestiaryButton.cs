@@ -20,6 +20,7 @@ public class EnemyBestiaryButton : MonoBehaviour
         {
             BestiaryManager.Instance.BestiaryRevealEnemy(enemyEntity.enemyData.enemyType);
             BestiaryManager.Instance.OpenBestiaryForEnemy(enemyEntity.enemyData.enemyType);
+            gameObject.SetActive(false);
         }
         else
         {
@@ -32,6 +33,19 @@ public class EnemyBestiaryButton : MonoBehaviour
         if (infoButton != null)
         {
             infoButton.onClick.RemoveListener(OnInfoButtonClicked);
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (enemyEntity != null && enemyEntity.enemyData != null)
+        {
+            int isUnlocked = PlayerPrefs.GetInt($"Bestiary_Unlocked_{enemyEntity.enemyData.enemyType}", 0);
+            
+            if (isUnlocked == 1)
+            {
+                gameObject.SetActive(false);
+            }
         }
     }
 }

@@ -16,16 +16,13 @@ public class BestiaryManager : MonoBehaviour
     [Header("Right Panel")]
     [SerializeField] private TextMeshProUGUI detailNameText;
     [SerializeField] private TextMeshProUGUI detailDescriptionText;
-    [SerializeField] private RawImage modelRenderDisplay; 
+    [SerializeField] 
+    private ModelViewer modelViewer; 
 
     [Header("Left Panel")]
     [SerializeField] private GameObject buttonPrefab;
     [SerializeField] private Transform buttonContainer;
 
-    [Header("3D Studio References")]
-    [SerializeField] private Transform modelSpawnPoint; 
-    
-    private GameObject currentDisplayModel; 
     private HashSet<EnemyType> revealedEnemies = new HashSet<EnemyType>();
     private Dictionary<EnemyType, GameObject> spawnedButtons = new Dictionary<EnemyType, GameObject>();
 
@@ -46,9 +43,7 @@ public class BestiaryManager : MonoBehaviour
     public void OpenBestiaryForEnemy(EnemyType type)
     {
         if (bestiaryPanel != null) bestiaryPanel.SetActive(true);
-        
         Time.timeScale = 0f;
-
         BestiaryOpenEntry(type);
     }
 
@@ -56,7 +51,7 @@ public class BestiaryManager : MonoBehaviour
     {
         if (bestiaryPanel != null) bestiaryPanel.SetActive(false);
         
-        SpawnDisplayModel(null);
+        if (modelViewer != null) modelViewer.ClearModel();
 
         Time.timeScale = 1f;
     }
@@ -84,28 +79,15 @@ public class BestiaryManager : MonoBehaviour
                 detailNameText.text = data.enemyName;
                 detailDescriptionText.text = data.specialAbilityDescription;
 
-                if (modelRenderDisplay != null) modelRenderDisplay.gameObject.SetActive(true);
-                
-                SpawnDisplayModel(data.displayModelPrefab);
+                if (modelViewer != null) modelViewer.DisplayModel(data);
             }
             else
             {
                 detailNameText.text = "???";
                 detailDescriptionText.text = "Enemy has not been encountered yet.";
-                if (modelRenderDisplay != null) modelRenderDisplay.gameObject.SetActive(false);
-                SpawnDisplayModel(null);
+                
+                if (modelViewer != null) modelViewer.ClearModel();
             }
-        }
-    }
-
-    private void SpawnDisplayModel(GameObject prefabToSpawn)
-    {
-        if (currentDisplayModel != null) Destroy(currentDisplayModel);
-
-        if (prefabToSpawn != null && modelSpawnPoint != null)
-        {
-            currentDisplayModel = Instantiate(prefabToSpawn, modelSpawnPoint.position, modelSpawnPoint.rotation);
-            currentDisplayModel.transform.SetParent(modelSpawnPoint);
         }
     }
 
@@ -120,7 +102,6 @@ public class BestiaryManager : MonoBehaviour
             }
         }
     }
-    
 
     private void GenerateEnemyList()
     {
@@ -154,20 +135,10 @@ public class BestiaryManager : MonoBehaviour
             TextMeshProUGUI tmpText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             Text legacyText = btnObj.GetComponentInChildren<Text>();
 
-            string displayName = enemyData.enemyName;
+            string displayName = revealedEnemies.Contains(enemyData.enemyType) ? enemyData.enemyName : "???";
 
-            if (tmpText != null)
-            {
-                tmpText.text = displayName;
-            }
-            else if (legacyText != null)
-            {
-                legacyText.text = displayName;
-            }
-            else
-            {
-                Debug.LogWarning($"There's no text component on the button prefab for {enemyData.enemyName}");
-            }
+            if (tmpText != null) tmpText.text = displayName;
+            else if (legacyText != null) legacyText.text = displayName;
         }
     }
 
@@ -183,6 +154,6 @@ public class BestiaryManager : MonoBehaviour
 
     private void HandleEnemySpawned(EnemySpawnedEvent evt)
     {
-        BestiaryRevealEnemy(evt.EnemyType);
+        BestiaryRevealEnemy(evt.EnemyType); 
     }
 }

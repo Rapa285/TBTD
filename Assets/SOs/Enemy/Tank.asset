@@ -15,4 +15,5 @@ MonoBehaviour:
   enemyName: Tank
   enemyType: 9
   specialAbilityDescription: This enemy have great HP value
-  displayModelPrefab: {fileID: 0}
+  displayModelPrefab: {fileID: 919132149155446097, guid: 134a63736c49f6043a1a22f8bbd82e33, type: 3}
+  typeColor: {r: 0.5450981, g: 0.2705882, b: 0.07450981, a: 1}

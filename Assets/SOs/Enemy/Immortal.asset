@@ -15,4 +15,5 @@ MonoBehaviour:
   enemyName: Immortal
   enemyType: 5
   specialAbilityDescription: This enemy will revive one time upon death
-  displayModelPrefab: {fileID: 0}
+  displayModelPrefab: {fileID: 919132149155446097, guid: 134a63736c49f6043a1a22f8bbd82e33, type: 3}
+  typeColor: {r: 1, g: 0.9803922, b: 0.9803922, a: 1}
