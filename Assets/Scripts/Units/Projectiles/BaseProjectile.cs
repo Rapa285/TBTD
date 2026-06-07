@@ -677,8 +677,6 @@ public abstract class BaseProjectile : MonoBehaviour
 
         projectileRigidbody.useGravity = false;
         projectileRigidbody.isKinematic = true;
-        projectileRigidbody.linearVelocity = Vector3.zero;
-        projectileRigidbody.angularVelocity = Vector3.zero;
         projectileRigidbody.position = transform.position;
         projectileRigidbody.rotation = transform.rotation;
     }
