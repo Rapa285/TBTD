@@ -38,13 +38,8 @@ public sealed class ShotgunBehaviour : SplineLeadingAttackBehaviour
 
         Vector3 spawnPosition = firePoint != null ? firePoint.position : transform.position;
         Quaternion spawnRotation = firePoint != null ? firePoint.rotation : transform.rotation;
-        Vector3 aimDirection = GetLeadPosition(target) - spawnPosition;
-        if (aimDirection.sqrMagnitude <= Mathf.Epsilon)
-        {
-            aimDirection = spawnRotation * Vector3.forward;
-        }
-
-        aimDirection.Normalize();
+        Vector3 aimDirection = Vector3.zero;
+        bool hasAimDirection = false;
         bool firedAnyProjectile = false;
 
         for (int i = 0; i < pelletCount; i++)
@@ -55,6 +50,18 @@ public sealed class ShotgunBehaviour : SplineLeadingAttackBehaviour
             }
 
             projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
+            if (!hasAimDirection)
+            {
+                aimDirection = GetLeadPosition(target, projectile.BulletSpeed) - spawnPosition;
+                if (aimDirection.sqrMagnitude <= Mathf.Epsilon)
+                {
+                    aimDirection = spawnRotation * Vector3.forward;
+                }
+
+                aimDirection.Normalize();
+                hasAimDirection = true;
+            }
+
             projectile.SetTravelDirection(GetSpreadDirection(aimDirection));
 
             if (!projectile.ReadyToFire())

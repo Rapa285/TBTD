@@ -31,7 +31,7 @@ public sealed class GrenadeLauncherBehaviour : SplineLeadingAttackBehaviour
         }
 
         projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
-        projectile.SetDestination(GetLeadPosition(target));
+        projectile.SetDestination(GetPredictedGrenadeDestination(projectile, target));
 
         if (!projectile.ReadyToFire())
         {
@@ -41,5 +41,17 @@ public sealed class GrenadeLauncherBehaviour : SplineLeadingAttackBehaviour
 
         projectile.Fire();
         return true;
+    }
+
+    private Vector3 GetPredictedGrenadeDestination(ArchingBullet projectile, Transform target)
+    {
+        Vector3 destination = target.position;
+        for (int i = 0; i < 3; i++)
+        {
+            float flightDuration = projectile.EstimateFlightDuration(destination);
+            destination = GetLeadPositionAtTravelTime(target, flightDuration);
+        }
+
+        return destination;
     }
 }

@@ -84,11 +84,10 @@ public sealed class ArchingBullet : BaseProjectile
         startPosition = transform.position;
         destination = worldDestination;
 
-        Vector3 horizontalOffset = Vector3.ProjectOnPlane(destination - startPosition, Vector3.up);
-        float horizontalDistance = horizontalOffset.magnitude;
+        float horizontalDistance = GetHorizontalDistanceTo(destination);
         float distanceRatio = Mathf.Clamp01(horizontalDistance / distanceForMinHeight);
         arcHeight = Mathf.Lerp(maxArcHeight, minArcHeight, distanceRatio);
-        flightDuration = Mathf.Clamp(horizontalDistance * flightTimePerUnit, minFlightDuration, maxFlightDuration);
+        flightDuration = EstimateFlightDuration(destination);
         elapsedFlightTime = 0f;
         hasDestination = true;
 
@@ -102,6 +101,11 @@ public sealed class ArchingBullet : BaseProjectile
     public override bool ReadyToFire()
     {
         return base.ReadyToFire() && hasDestination && flightDuration > 0f;
+    }
+
+    public float EstimateFlightDuration(Vector3 worldDestination)
+    {
+        return Mathf.Clamp(GetHorizontalDistanceTo(worldDestination) * flightTimePerUnit, minFlightDuration, maxFlightDuration);
     }
 
     public override void Fire()
@@ -174,5 +178,11 @@ public sealed class ArchingBullet : BaseProjectile
 
         defaultsCached = true;
         defaultExplosionRadius = explosionRadius;
+    }
+
+    private float GetHorizontalDistanceTo(Vector3 worldDestination)
+    {
+        Vector3 horizontalOffset = Vector3.ProjectOnPlane(worldDestination - transform.position, Vector3.up);
+        return horizontalOffset.magnitude;
     }
 }

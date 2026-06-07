@@ -8,6 +8,9 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
     [SerializeField, Min(0f), Tooltip("Seconds of lead time added per Unity unit of horizontal distance to the target.")]
     private float distanceFactor = 0.05f;
 
+    [SerializeField, Min(0f), Tooltip("Extra seconds added to projectile travel-time leading to compensate for frame and spawn latency.")]
+    private float leadBiasSeconds;
+
     [SerializeField, Tooltip("When enabled, lead calculations ignore movement along the configured vertical axis.")]
     private bool ignoreVerticalAxis = true;
 
@@ -43,9 +46,16 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
         set => distanceFactor = Mathf.Max(0f, value);
     }
 
+    public float LeadBiasSeconds
+    {
+        get => leadBiasSeconds;
+        set => leadBiasSeconds = Mathf.Max(0f, value);
+    }
+
     protected virtual void OnValidate()
     {
         distanceFactor = Mathf.Max(0f, distanceFactor);
+        leadBiasSeconds = Mathf.Max(0f, leadBiasSeconds);
 
         if (verticalAxis.sqrMagnitude <= Mathf.Epsilon)
         {
@@ -101,6 +111,68 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
         return leadPosition;
     }
 
+    protected virtual Vector3 GetLeadPosition(Transform target, float projectileSpeed)
+    {
+        if (target == null)
+        {
+            return Vector3.zero;
+        }
+
+        if (projectileSpeed <= Mathf.Epsilon)
+        {
+            return GetLeadPosition(target);
+        }
+
+        Vector3 origin = GetAttackOrigin();
+        Vector3 predictedPosition = target.position;
+        float travelTime = 0f;
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 toPredictedTarget = predictedPosition - origin;
+            if (ignoreVerticalAxis)
+            {
+                toPredictedTarget = Vector3.ProjectOnPlane(toPredictedTarget, verticalAxis);
+            }
+
+            float distance = toPredictedTarget.magnitude;
+            if (distance <= Mathf.Epsilon)
+            {
+                break;
+            }
+
+            travelTime = distance / projectileSpeed + leadBiasSeconds;
+            if (!TryPredictTargetPositionAtTravelTime(target, travelTime, out predictedPosition))
+            {
+                return GetLeadPosition(target);
+            }
+        }
+
+        return GetLeadPositionAtTravelTime(target, travelTime);
+    }
+
+    protected virtual Vector3 GetLeadPositionAtTravelTime(Transform target, float travelTime)
+    {
+        if (target == null)
+        {
+            return Vector3.zero;
+        }
+
+        Vector3 origin = GetAttackOrigin();
+        Vector3 enemyPosition = target.position;
+        Vector3 leadPosition = target.position;
+
+        if (travelTime > Mathf.Epsilon
+            && TryPredictTargetPositionAtTravelTime(target, travelTime, out Vector3 predictedPosition))
+        {
+            leadPosition = predictedPosition;
+        }
+
+        leadPosition = ApplyAimModifier(leadPosition);
+        RecordLeadGizmoData(origin, enemyPosition, leadPosition);
+        return leadPosition;
+    }
+
     protected virtual Vector3 GetLeadDirection(Transform target)
     {
         if (target == null)
@@ -151,6 +223,32 @@ public abstract class LeadingAttackBehaviour : AttackBehaviour
         }
 
         return false;
+    }
+
+    protected virtual bool TryPredictTargetPositionAtTravelTime(
+        Transform target,
+        float travelTime,
+        out Vector3 predictedPosition)
+    {
+        predictedPosition = target != null ? target.position : Vector3.zero;
+
+        if (target == null || travelTime <= Mathf.Epsilon)
+        {
+            return target != null;
+        }
+
+        if (!TryGetTargetVelocity(target, out Vector3 targetVelocity))
+        {
+            return false;
+        }
+
+        if (ignoreVerticalAxis)
+        {
+            targetVelocity = Vector3.ProjectOnPlane(targetVelocity, verticalAxis);
+        }
+
+        predictedPosition = target.position + targetVelocity * travelTime;
+        return true;
     }
 
     protected virtual Vector3 GetPerpendicularVelocity(Vector3 velocity, Vector3 toTarget)

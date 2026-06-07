@@ -31,7 +31,7 @@ public sealed class BaseGunBehaviour : SplineLeadingAttackBehaviour
         }
 
         projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
-        Vector3 aimPoint = GetLeadPosition(target);
+        Vector3 aimPoint = GetLeadPosition(target, projectile.BulletSpeed);
         projectile.SetDirection(aimPoint);
 
         if (!projectile.ReadyToFire())

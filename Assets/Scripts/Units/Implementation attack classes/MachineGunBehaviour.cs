@@ -101,7 +101,7 @@ public sealed class MachineGunBehaviour : SplineLeadingAttackBehaviour
         }
 
         projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
-        projectile.SetDirection(GetLeadPosition(target));
+        projectile.SetDirection(GetLeadPosition(target, projectile.BulletSpeed));
 
         if (!projectile.ReadyToFire())
         {

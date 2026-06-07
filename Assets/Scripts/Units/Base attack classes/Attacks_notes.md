@@ -50,6 +50,8 @@ Class implementations in this folder are template/base behaviours for future att
 
 - `LeadingAttackBehaviour` is for simple predictive aim.
 - It calculates an aim point from `GetAttackOrigin()`, target position, target velocity, and `DistanceFactor`.
+- Projectile attacks can call `GetLeadPosition(target, projectileSpeed)` to predict by projectile travel time instead of the serialized distance factor.
+- Fixed-duration attacks can call `GetLeadPositionAtTravelTime(target, travelTime)`.
 - It reads target velocity from `Rigidbody.linearVelocity` by default.
 - Override `GetAttackOrigin()` for guns that fire from a muzzle/socket instead of the tower transform.
 - Override `TryGetTargetVelocity()` when the target movement system is not Rigidbody-based.
@@ -58,10 +60,11 @@ Class implementations in this folder are template/base behaviours for future att
 ## Spline Leading
 
 - `SplineLeadingAttackBehaviour` intentionally derives from `LeadingAttackBehaviour`.
-- It keeps the same distance-factor leading formula and only replaces target velocity lookup.
+- Timed projectile leading evaluates the target's future position along its spline path.
+- The older distance-factor formula still uses spline-derived tangent velocity as a fallback.
 - It calculates target velocity from `SplineAnimate` by finding the nearest point on the spline path, reading the tangent, and multiplying by traversal speed.
 - It falls back to `LeadingAttackBehaviour`'s Rigidbody velocity lookup when no usable `SplineAnimate` data exists.
-- Do not reintroduce a separate projectile-speed intercept solver unless explicitly requested; tune `DistanceFactor` for this version.
+- Straight projectile weapons should initialize the projectile first, then pass the post-modifier `BaseStraightProjectile.BulletSpeed` into `GetLeadPosition(target, projectileSpeed)`.
 
 ## Projectile Attacks
 

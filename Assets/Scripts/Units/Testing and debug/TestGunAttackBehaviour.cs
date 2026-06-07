@@ -35,7 +35,7 @@ public sealed class TestGunAttackBehaviour : SplineLeadingAttackBehaviour
 
         projectile.Initialize(damage, transform, OwnerTower, this, ProjectileModifiers);
         // GetLeadPosition includes the shared Aim Modifier Vector as the final endpoint offset.
-        Vector3 aimPoint = GetLeadPosition(target);
+        Vector3 aimPoint = GetLeadPosition(target, projectile.BulletSpeed);
         projectile.SetDirection(aimPoint);
 
         if (!projectile.ReadyToFire())
