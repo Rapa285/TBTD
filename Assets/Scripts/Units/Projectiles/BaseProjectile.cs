@@ -1,6 +1,6 @@
 // Base runtime component for non-hitscan projectiles.
 // Owns shared projectile lifetime, trigger-hit filtering, owner ignoring, and damage application;
-// derived projectile classes only need to provide movement by overriding TickProjectile.
+// moving derived projectile classes should drive motion through Rigidbody-backed helpers.
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -49,6 +49,7 @@ public abstract class BaseProjectile : MonoBehaviour
     private LayerMask defaultHitLayers;
     private bool defaultDestroyOnHit;
     private ColliderDefaults defaultCollider;
+    private Rigidbody projectileRigidbody;
 
     public float Damage
     {
@@ -81,12 +82,22 @@ public abstract class BaseProjectile : MonoBehaviour
 
     protected Collider ProjectileCollider => projectileCollider;
 
+    protected Rigidbody ProjectileRigidbody => projectileRigidbody;
+
     protected Transform IgnoredRoot => ignoredRoot;
+
+    protected Vector3 ProjectilePosition => projectileRigidbody != null ? projectileRigidbody.position : transform.position;
+
+    protected Quaternion ProjectileRotation => projectileRigidbody != null ? projectileRigidbody.rotation : transform.rotation;
+
+    protected virtual bool UsesRigidbodyMovement => false;
 
     protected virtual void Awake()
     {
         CacheCollider();
+        CacheRigidbody();
         ConfigureCollider();
+        ConfigureRigidbody();
         CacheDefaults();
     }
 
@@ -95,7 +106,9 @@ public abstract class BaseProjectile : MonoBehaviour
         damage = Mathf.Max(0f, damage);
         maxAge = Mathf.Max(0f, maxAge);
         CacheCollider();
+        CacheRigidbody();
         ConfigureCollider();
+        ConfigureRigidbody();
     }
 
     protected virtual void Update()
@@ -105,13 +118,34 @@ public abstract class BaseProjectile : MonoBehaviour
             return;
         }
 
-        if (maxAge > 0f && Time.time >= firedAtTime + maxAge)
+        if (ExpireIfTooOld())
         {
-            Expire();
+            return;
+        }
+
+        if (UsesRigidbodyMovement)
+        {
             return;
         }
 
         float deltaTime = Time.deltaTime;
+        DispatchProjectileTickModifiers(deltaTime);
+        TickProjectile(deltaTime);
+    }
+
+    protected virtual void FixedUpdate()
+    {
+        if (!fired || !UsesRigidbodyMovement)
+        {
+            return;
+        }
+
+        if (ExpireIfTooOld())
+        {
+            return;
+        }
+
+        float deltaTime = Time.fixedDeltaTime;
         DispatchProjectileTickModifiers(deltaTime);
         TickProjectile(deltaTime);
     }
@@ -191,7 +225,9 @@ public abstract class BaseProjectile : MonoBehaviour
     /// </summary>
     public virtual bool ReadyToFire()
     {
-        return projectileCollider != null && maxAge >= 0f;
+        return projectileCollider != null
+            && maxAge >= 0f
+            && (!UsesRigidbodyMovement || projectileRigidbody != null);
     }
 
     /// <summary>
@@ -209,10 +245,38 @@ public abstract class BaseProjectile : MonoBehaviour
     }
 
     /// <summary>
-    /// Per-frame movement hook implemented by concrete projectile types.
+    /// Per-tick movement hook implemented by concrete projectile types.
+    /// Rigidbody-moving projectiles receive this from FixedUpdate.
     /// </summary>
     protected virtual void TickProjectile(float deltaTime)
     {
+    }
+
+    protected void SetProjectilePose(Vector3 position, Quaternion rotation)
+    {
+        if (projectileRigidbody != null)
+        {
+            projectileRigidbody.position = position;
+            projectileRigidbody.rotation = rotation;
+        }
+
+        transform.SetPositionAndRotation(position, rotation);
+    }
+
+    protected void MoveProjectilePosition(Vector3 position)
+    {
+        if (projectileRigidbody != null)
+        {
+            projectileRigidbody.MovePosition(position);
+        }
+    }
+
+    protected void MoveProjectileRotation(Quaternion rotation)
+    {
+        if (projectileRigidbody != null)
+        {
+            projectileRigidbody.MoveRotation(rotation);
+        }
     }
 
     protected virtual void OnHit(Collider other, Transform target)
@@ -433,7 +497,9 @@ public abstract class BaseProjectile : MonoBehaviour
     private void ResetForReuse()
     {
         CacheCollider();
+        CacheRigidbody();
         ConfigureCollider();
+        ConfigureRigidbody();
         CacheDefaults();
         RestoreDefaults();
 
@@ -447,6 +513,17 @@ public abstract class BaseProjectile : MonoBehaviour
         OnBulletHit = null;
         DestroyProjectileModifiers();
         ResetProjectileStateForReuse();
+    }
+
+    private bool ExpireIfTooOld()
+    {
+        if (maxAge > 0f && Time.time >= firedAtTime + maxAge)
+        {
+            Expire();
+            return true;
+        }
+
+        return false;
     }
 
     private void RecycleOrDestroy()
@@ -575,12 +652,35 @@ public abstract class BaseProjectile : MonoBehaviour
         }
     }
 
+    private void CacheRigidbody()
+    {
+        if (projectileRigidbody == null)
+        {
+            projectileRigidbody = GetComponent<Rigidbody>();
+        }
+    }
+
     private void ConfigureCollider()
     {
         if (projectileCollider != null)
         {
             projectileCollider.isTrigger = true;
         }
+    }
+
+    private void ConfigureRigidbody()
+    {
+        if (projectileRigidbody == null)
+        {
+            return;
+        }
+
+        projectileRigidbody.useGravity = false;
+        projectileRigidbody.isKinematic = true;
+        projectileRigidbody.linearVelocity = Vector3.zero;
+        projectileRigidbody.angularVelocity = Vector3.zero;
+        projectileRigidbody.position = transform.position;
+        projectileRigidbody.rotation = transform.rotation;
     }
 
     private void PlayHitSound()

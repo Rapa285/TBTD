@@ -4959,6 +4959,13 @@ MonoBehaviour:
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.25, z: 0}
   attackFX: {fileID: 5085803108366747744}
+  attackSound: {fileID: 8300000, guid: 2e8fa1d8f8801bb4e86d92f564349b2b, type: 3}
+  randomizeAttackSoundPitch: 1
+  chargeStartSound: {fileID: 0}
+  chargeLoopSound: {fileID: 0}
+  chargeStopSound: {fileID: 0}
+  chargeLoopSource: {fileID: 0}
+  randomizeChargeOneShotPitch: 0
 --- !u!114 &8744715735098940308
 MonoBehaviour:
   m_ObjectHideFlags: 0

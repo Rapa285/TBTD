@@ -6,6 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Basic forward-travel projectile that moves in a fixed world direction after firing.
 /// </summary>
+[RequireComponent(typeof(Rigidbody))]
 public class BaseStraightProjectile : BaseProjectile
 {
     [SerializeField, Min(0f), Tooltip("Units per second travelled after the projectile is fired.")]
@@ -21,6 +22,8 @@ public class BaseStraightProjectile : BaseProjectile
         get => bulletSpeed;
         set => bulletSpeed = Mathf.Max(0f, value);
     }
+
+    protected override bool UsesRigidbodyMovement => true;
 
     protected override void OnValidate()
     {
@@ -52,7 +55,7 @@ public class BaseStraightProjectile : BaseProjectile
     /// </summary>
     public void SetDirection(Vector3 endpoint)
     {
-        SetTravelDirection(endpoint - transform.position);
+        SetTravelDirection(endpoint - ProjectilePosition);
     }
 
     /// <summary>
@@ -68,7 +71,7 @@ public class BaseStraightProjectile : BaseProjectile
 
         travelDirection = direction.normalized;
         hasDirection = true;
-        transform.rotation = Quaternion.LookRotation(travelDirection, Vector3.up);
+        SetProjectilePose(ProjectilePosition, Quaternion.LookRotation(travelDirection, Vector3.up));
     }
 
     public override void Fire()
@@ -83,7 +86,7 @@ public class BaseStraightProjectile : BaseProjectile
 
     protected override void TickProjectile(float deltaTime)
     {
-        transform.position += travelDirection * bulletSpeed * deltaTime;
+        MoveProjectilePosition(ProjectilePosition + travelDirection * bulletSpeed * deltaTime);
     }
 
     private void CacheSpeedDefault()

@@ -14,6 +14,23 @@ public static class ColliderTargetUtility
 
         return collider.attachedRigidbody != null
             ? collider.attachedRigidbody.transform
-            : collider.transform;
+            : ResolveRootTarget(collider);
+    }
+
+    private static Transform ResolveRootTarget(Collider collider)
+    {
+        HealthComponent health = collider.GetComponentInParent<HealthComponent>();
+        if (health != null)
+        {
+            return health.transform;
+        }
+
+        EnemyEntity enemy = collider.GetComponentInParent<EnemyEntity>();
+        if (enemy != null)
+        {
+            return enemy.transform;
+        }
+
+        return collider.transform;
     }
 }

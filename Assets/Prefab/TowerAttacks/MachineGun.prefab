@@ -47,11 +47,12 @@ MonoBehaviour:
   baseDamage: 1
   attacksPerAmmo: 1
   infiniteAmmo: 0
-  aimModifierVector: {x: 0, y: 0.5, z: 0}
+  aimModifierVector: {x: 0, y: 1.25, z: 0}
   attackFX: {fileID: 0}
   attackSound: {fileID: 8300000, guid: b31c086e12f3427408b880e1ca23d5bf, type: 3}
   randomizeAttackSoundPitch: 1
   distanceFactor: 0.05
+  leadBiasSeconds: 0
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}
   drawLeadGizmos: 1

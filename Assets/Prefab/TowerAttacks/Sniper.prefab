@@ -161,6 +161,8 @@ MonoBehaviour:
   infiniteAmmo: 0
   aimModifierVector: {x: 0, y: 0.5, z: 0}
   attackFX: {fileID: 680011001100110005}
+  attackSound: {fileID: 8300000, guid: 1c056c21477f5454594df509de6b9fe3, type: 3}
+  randomizeAttackSoundPitch: 1
   firePoint: {fileID: 0}
 --- !u!114 &680011001100110005
 MonoBehaviour:

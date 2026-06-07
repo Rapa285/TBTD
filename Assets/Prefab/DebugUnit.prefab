@@ -146,11 +146,12 @@ MonoBehaviour:
   baseDamage: 1
   attacksPerAmmo: 1
   infiniteAmmo: 0
-  aimModifierVector: {x: 0, y: 0.5, z: 0}
+  aimModifierVector: {x: 0, y: 1.25, z: 0}
   attackFX: {fileID: 0}
   attackSound: {fileID: 8300000, guid: eb8fff5b09d5c8a47885ea304314a66f, type: 3}
   randomizeAttackSoundPitch: 1
   distanceFactor: 0.05
+  leadBiasSeconds: 0
   ignoreVerticalAxis: 1
   verticalAxis: {x: 0, y: 1, z: 0}
   drawLeadGizmos: 1
@@ -1524,6 +1525,7 @@ MonoBehaviour:
   targetLayers:
     serializedVersion: 2
     m_Bits: 192
+  targetScanInterval: 0.1
   visualization: {fileID: 7444403660851936854}
   visualizationVisibleByDefault: 0
 --- !u!1001 &6238058713999963796
