@@ -213,66 +213,73 @@ MonoBehaviour:
   ownedUnits:
   - unitId: 1
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 05d9eddb2675dcf468ea7dca5847ecd6, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
   - unitId: 2
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 51ad420db37d24148a035f892980ecd5, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
   - unitId: 3
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ec2a0d2e43ec7b043b2928321a8fafa6, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
   - unitId: 4
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: c40102fc40a59ac44b6fedbc262014b3, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
   - unitId: 5
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 18f8411d37d59cd47a186edc7d7ec997, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
   - unitId: 6
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: d85b7cb9b95d3f74d8984bdeaa33f320, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
   - unitId: 7
     displayName: Unit A
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 8f676b7b6bf730e47913d8e3386942eb, type: 3}
     unitPrefab: {fileID: 5929984254154990258, guid: 7c65a77409805b942b65a82a2ed96c60, type: 3}
     level: 0
     experience: 0
     upgradePending: 0
     appliedMultiUpgrades: []
+    latestSelectedMultiUpgrade: {fileID: 0}
     selectedEvolution: {fileID: 0}
 --- !u!1 &4525238917225907267
 GameObject:

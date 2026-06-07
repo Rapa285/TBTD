@@ -720,13 +720,33 @@ public class PlayerStateController : MonoBehaviour
         for (int i = 0; i < uiRaycastResults.Count; i++)
         {
             RaycastResult result = uiRaycastResults[i];
-            if (result.gameObject != null && result.module is not PhysicsRaycaster)
+            if (result.gameObject == null)
+            {
+                continue;
+            }
+
+            if (result.module is PhysicsRaycaster)
+            {
+                if (IsBlockingPhysicsInteractionUI(result.gameObject))
+                {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (result.gameObject != null)
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static bool IsBlockingPhysicsInteractionUI(GameObject target)
+    {
+        return target != null && target.GetComponentInParent<TowerRecallButton>() != null;
     }
 
     private ClickRaycastTarget GetClickRaycastTarget(Vector2 screenPosition, out TowerSelectionTarget selectionTarget)

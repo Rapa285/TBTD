@@ -23,6 +23,9 @@ public class UnitDetailsUI : MonoBehaviour
     [SerializeField, Tooltip("Optional visual effect used to animate this panel opening and closing.")]
     private UnitDetailUIFX detailFx;
 
+    [SerializeField, Tooltip("Selected deployed towers with world X greater than this value open the details panel on the left.")]
+    private float leftSideWorldXCutoff;
+
     [SerializeField, Tooltip("TMP text used to display the selected unit name.")]
     private TMP_Text nameText;
 
@@ -595,6 +598,7 @@ public class UnitDetailsUI : MonoBehaviour
             if (isVisible)
             {
                 changingRootVisibility = false;
+                detailFx.SetOpenSide(ShouldOpenDetailsOnLeft());
                 detailFx.Show();
             }
             else if (target.activeSelf)
@@ -621,6 +625,11 @@ public class UnitDetailsUI : MonoBehaviour
     private bool IsRootSelf()
     {
         return (root != null ? root : gameObject) == gameObject;
+    }
+
+    private bool ShouldOpenDetailsOnLeft()
+    {
+        return selectedTower != null && selectedTower.transform.position.x > leftSideWorldXCutoff;
     }
 
     private static string FormatNumber(float value)

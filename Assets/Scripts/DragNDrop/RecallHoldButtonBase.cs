@@ -292,7 +292,7 @@ public abstract class RecallHoldButtonBase : MonoBehaviour, IPointerEnterHandler
         }
     }
 
-    private void TryBeginRecallHold()
+    protected void TryBeginRecallHold()
     {
         if (isHoldingRecall
             || !TryGetRecallTarget(out string unitId, out UnitStateManager stateManager, out TowerEntity tower)
@@ -331,7 +331,7 @@ public abstract class RecallHoldButtonBase : MonoBehaviour, IPointerEnterHandler
         }
     }
 
-    private void CancelRecallHold()
+    protected void CancelRecallHold()
     {
         if (!isHoldingRecall)
         {

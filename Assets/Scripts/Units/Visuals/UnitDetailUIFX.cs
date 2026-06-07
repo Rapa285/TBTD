@@ -25,12 +25,18 @@ public class UnitDetailUIFX : MonoBehaviour
     [SerializeField, Tooltip("Curve used while closing from shown X to hidden X.")]
     private AnimationCurve closeCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [SerializeField, Tooltip("Anchored X used when the right-pivot panel is shown beside the right unit bar.")]
+    private float shownRightX = -400f;
+
+    [SerializeField, Tooltip("Anchored X used when the right-pivot panel is shown on the left side of the screen.")]
+    private float shownLeftX = -1500f;
+
     private Tween positionTween;
     private bool isHidden;
-    private bool isShowing;
+    private bool openLeft;
     private Action pendingHiddenCallback;
 
-    private float ShownX => 0f;
+    private float ShownX => openLeft ? shownLeftX : shownRightX;
     public bool IsHidden => isHidden;
 
     private void Awake()
@@ -71,14 +77,13 @@ public class UnitDetailUIFX : MonoBehaviour
         }
     }
 
+    public void SetOpenSide(bool openLeft)
+    {
+        this.openLeft = openLeft;
+    }
+
     public void Show()
     {
-        if (isShowing)
-        {
-            return;
-        }
-
-        isShowing = true;
         ResolveReferences();
         KillTween();
         bool wasHidden = isHidden || (root != null && !root.activeSelf);
@@ -91,13 +96,12 @@ public class UnitDetailUIFX : MonoBehaviour
         if (target == null)
         {
             isHidden = false;
-            isShowing = false;
             return;
         }
 
-        if (!isHidden && Mathf.Approximately(target.anchoredPosition.x, ShownX))
+        float shownX = ShownX;
+        if (!isHidden && Mathf.Approximately(target.anchoredPosition.x, shownX))
         {
-            isShowing = false;
             return;
         }
 
@@ -107,19 +111,17 @@ public class UnitDetailUIFX : MonoBehaviour
 
         if (openTime <= 0f)
         {
-            SetAnchoredX(ShownX);
-            isShowing = false;
+            SetAnchoredX(shownX);
             return;
         }
 
         positionTween = DOTween.To(
                 () => 0f,
-                progress => SetAnchoredX(Mathf.Lerp(startX, ShownX, Evaluate(openCurve, progress))),
+                progress => SetAnchoredX(Mathf.Lerp(startX, shownX, Evaluate(openCurve, progress))),
                 1f,
                 openTime)
             .SetEase(Ease.Linear)
             .SetUpdate(true)
-            .OnComplete(() => isShowing = false)
             .SetTarget(this);
     }
 
@@ -127,7 +129,6 @@ public class UnitDetailUIFX : MonoBehaviour
     {
         ResolveReferences();
         KillTween();
-        isShowing = false;
         pendingHiddenCallback = onHidden;
 
         if (target == null)
@@ -196,7 +197,8 @@ public class UnitDetailUIFX : MonoBehaviour
             return ShownX;
         }
 
-        return GetTargetWidth();
+        float width = GetTargetWidth();
+        return openLeft ? shownLeftX - width : width;
     }
 
     private float GetTargetWidth()

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Recall button for a deployed tower child UI. It is available only while that tower is selected.
@@ -20,8 +21,19 @@ public sealed class TowerRecallButton : RecallHoldButtonBase
     [SerializeField, Tooltip("Optional sprite-based programmatic visual feedback for hover and hold progress.")]
     private RecallWorldSpriteFX recallSpriteFX;
 
+    [SerializeField, Tooltip("Also poll this collider directly from the pointer camera. This stabilizes world-space input when EventSystem physics pointer events are incomplete.")]
+    private bool pollPointerInput = true;
+
+    [SerializeField, Tooltip("Camera used by direct pointer polling. Falls back to Camera.main, then the first active scene camera.")]
+    private Camera pointerCamera;
+
+    [SerializeField, Min(0.01f), Tooltip("Maximum distance for direct pointer polling rays.")]
+    private float maxPointerRayDistance = 1000f;
+
     private TowerEntity subscribedTower;
     private bool recallAvailable;
+    private bool wasPointerOverRecall;
+    private bool directPointerPressedOnRecall;
 
     protected override void ResolveReferences()
     {
@@ -75,6 +87,25 @@ public sealed class TowerRecallButton : RecallHoldButtonBase
         base.Unsubscribe();
     }
 
+    protected override void Update()
+    {
+        base.Update();
+
+        if (!Application.isPlaying || !pollPointerInput)
+        {
+            return;
+        }
+
+        PollPointerInput();
+    }
+
+    protected override void OnDisable()
+    {
+        wasPointerOverRecall = false;
+        directPointerPressedOnRecall = false;
+        base.OnDisable();
+    }
+
     protected override bool TryGetRecallTarget(out string unitId, out UnitStateManager stateManager, out TowerEntity targetTower)
     {
         ResolveReferences();
@@ -106,6 +137,11 @@ public sealed class TowerRecallButton : RecallHoldButtonBase
         base.SetRecallAvailable(isAvailable);
 
         recallAvailable = isAvailable;
+        if (!recallAvailable)
+        {
+            wasPointerOverRecall = false;
+            directPointerPressedOnRecall = false;
+        }
 
         if (recallRoot != null && recallRoot != gameObject && recallRoot.activeSelf != isAvailable)
         {
@@ -206,5 +242,117 @@ public sealed class TowerRecallButton : RecallHoldButtonBase
     private void HandleTowerSelectionChanged()
     {
         RefreshState();
+    }
+
+    private void PollPointerInput()
+    {
+        if (!TryGetPointerState(
+            out Vector2 screenPosition,
+            out bool pressedThisFrame,
+            out bool releasedThisFrame))
+        {
+            if (wasPointerOverRecall)
+            {
+                wasPointerOverRecall = false;
+                HandlePointerHoverChanged(false);
+            }
+
+            return;
+        }
+
+        bool pointerOverRecall = IsRecallVisible()
+            && IsRecallInteractable()
+            && IsPointerOverRecall(screenPosition);
+
+        if (pointerOverRecall != wasPointerOverRecall)
+        {
+            wasPointerOverRecall = pointerOverRecall;
+            HandlePointerHoverChanged(pointerOverRecall);
+        }
+
+        if (pressedThisFrame && pointerOverRecall)
+        {
+            directPointerPressedOnRecall = true;
+            TryBeginRecallHold();
+        }
+
+        if (directPointerPressedOnRecall && !pointerOverRecall)
+        {
+            directPointerPressedOnRecall = false;
+            CancelRecallHold();
+        }
+
+        if (releasedThisFrame && directPointerPressedOnRecall)
+        {
+            directPointerPressedOnRecall = false;
+            CancelRecallHold();
+        }
+    }
+
+    private bool IsPointerOverRecall(Vector2 screenPosition)
+    {
+        Camera cameraToUse = ResolvePointerCamera();
+        if (cameraToUse == null || recallCollider == null)
+        {
+            return false;
+        }
+
+        Ray ray = cameraToUse.ScreenPointToRay(screenPosition);
+        return recallCollider.Raycast(ray, out _, maxPointerRayDistance);
+    }
+
+    private Camera ResolvePointerCamera()
+    {
+        if (pointerCamera != null && pointerCamera.isActiveAndEnabled)
+        {
+            return pointerCamera;
+        }
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null && mainCamera.isActiveAndEnabled)
+        {
+            pointerCamera = mainCamera;
+            return pointerCamera;
+        }
+
+        Camera[] sceneCameras = Camera.allCameras;
+        for (int i = 0; i < sceneCameras.Length; i++)
+        {
+            Camera sceneCamera = sceneCameras[i];
+            if (sceneCamera != null && sceneCamera.isActiveAndEnabled)
+            {
+                pointerCamera = sceneCamera;
+                return pointerCamera;
+            }
+        }
+
+        return pointerCamera;
+    }
+
+    private static bool TryGetPointerState(
+        out Vector2 screenPosition,
+        out bool pressedThisFrame,
+        out bool releasedThisFrame)
+    {
+        if (Mouse.current != null)
+        {
+            screenPosition = Mouse.current.position.ReadValue();
+            pressedThisFrame = Mouse.current.leftButton.wasPressedThisFrame;
+            releasedThisFrame = Mouse.current.leftButton.wasReleasedThisFrame;
+            return true;
+        }
+
+        if (Touchscreen.current != null)
+        {
+            screenPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+            pressedThisFrame = Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+            releasedThisFrame = Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
+            return true;
+        }
+
+        screenPosition = default;
+        pressedThisFrame = false;
+        releasedThisFrame = false;
+        return false;
     }
 }
