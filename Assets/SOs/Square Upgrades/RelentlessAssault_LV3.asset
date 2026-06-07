@@ -25,3 +25,6 @@ MonoBehaviour:
   - stat: 3
     type: 1
     value: 2
+  - stat: 7
+    type: 0
+    value: 1.5

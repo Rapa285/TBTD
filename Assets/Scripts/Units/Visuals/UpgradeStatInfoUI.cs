@@ -161,6 +161,8 @@ public class UpgradeStatInfoUI : MonoBehaviour
                 return "SET";
             case ENTITY_STATS.BulletSize:
                 return "BUL";
+            case ENTITY_STATS.DeploymentCost:
+                return "COST";
             default:
                 return stat.ToString();
         }
