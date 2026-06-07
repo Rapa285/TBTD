@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -17,8 +18,14 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource enemySfxSource;
     [SerializeField] private AudioSource uiSfxSource;
 
+    [Header("Gameplay SFX Limits")]
+    [SerializeField, Min(1)] private int maxGameplaySfxInstancesPerClipPerFrame = 3;
+
     [Header("Music Service")]
     [SerializeField] private MusicService musicService;
+
+    private readonly Dictionary<AudioClip, int> gameplaySfxCountsByClip = new Dictionary<AudioClip, int>();
+    private int trackedGameplaySfxFrame = -1;
 
     private void Awake()
     {
@@ -101,10 +108,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayTowerSFX(AudioClip clip, bool randomizePitch = true)
     {
-        if (clip == null || towerSfxSource == null) return;
-
-        towerSfxSource.pitch = randomizePitch ? Random.Range(0.85f, 1.15f) : 1f;
-        towerSfxSource.PlayOneShot(clip);
+        PlayLimitedGameplaySFX(clip, towerSfxSource, randomizePitch, 0.85f, 1.15f);
     }
 
     public void ConfigureTowerSFXSource(AudioSource source)
@@ -120,10 +124,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayEnemySFX(AudioClip clip, bool randomizePitch = false)
     {
-        if (clip == null || enemySfxSource == null) return;
-
-        enemySfxSource.pitch = randomizePitch ? Random.Range(0.9f, 1.1f) : 1f;
-        enemySfxSource.PlayOneShot(clip);
+        PlayLimitedGameplaySFX(clip, enemySfxSource, randomizePitch, 0.9f, 1.1f);
     }
 
     public void PlayUISFX(AudioClip clip, bool randomizePitch = false)
@@ -155,6 +156,47 @@ public class AudioManager : MonoBehaviour
         }
 
         musicService.ConfigureAudioSource(bgmSource, bgmGroup);
+    }
+
+    private void PlayLimitedGameplaySFX(
+        AudioClip clip,
+        AudioSource source,
+        bool randomizePitch,
+        float minPitch,
+        float maxPitch)
+    {
+        if (clip == null || source == null)
+        {
+            return;
+        }
+
+        if (!TryAcceptGameplaySFXRequest(clip))
+        {
+            return;
+        }
+
+        source.pitch = randomizePitch ? Random.Range(minPitch, maxPitch) : 1f;
+        source.PlayOneShot(clip);
+    }
+
+    private bool TryAcceptGameplaySFXRequest(AudioClip clip)
+    {
+        int currentFrame = Time.frameCount;
+        if (trackedGameplaySfxFrame != currentFrame)
+        {
+            trackedGameplaySfxFrame = currentFrame;
+            gameplaySfxCountsByClip.Clear();
+        }
+
+        int maxInstances = Mathf.Max(1, maxGameplaySfxInstancesPerClipPerFrame);
+        gameplaySfxCountsByClip.TryGetValue(clip, out int currentCount);
+        if (currentCount >= maxInstances)
+        {
+            return false;
+        }
+
+        gameplaySfxCountsByClip[clip] = currentCount + 1;
+        return true;
     }
 
     private void EnsureUISfxSource()
