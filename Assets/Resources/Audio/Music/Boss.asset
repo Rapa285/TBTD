@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Boss
   m_EditorClassIdentifier: Assembly-CSharp::MusicClipData
   audioClip: {fileID: 8300000, guid: e56f2faa5d836224db7d24a0e81ae23e, type: 3}
-  clipVolume: 0.75
+  clipVolume: 0.5
   musicNameEnum: 2
   loop: 1
   delay: 1

@@ -167,6 +167,109 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1550578972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1550578975}
+  - component: {fileID: 1550578974}
+  - component: {fileID: 1550578973}
+  - component: {fileID: 1550578976}
+  m_Layer: 0
+  m_Name: PersistenceServices
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1550578973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1550578972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d686a47d0c859e84f95e14a28474468f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MusicService
+  musicSource: {fileID: 0}
+  bgmGroup: {fileID: -4520886444779092331, guid: e1f85d8f71a89e74b94fe8392f322c48, type: 2}
+  musicTracks:
+  - {fileID: 11400000, guid: f5d598712cc21e7498a9d97063ee4f51, type: 2}
+  - {fileID: 11400000, guid: 3522f15ce6f300c40958406e556a0461, type: 2}
+  loadResourcesOnAwake: 1
+  playOnStart: 1
+  startMusic: 1
+  persistAcrossScenes: 1
+  playMusicOnSpecialWave: 1
+  specialWaveMusic: 2
+  playMusicOnSpecialWaveEnded: 1
+  specialWaveEndMusic: 1
+  masterBusPath: bus:/
+  musicBusPath: bus:/BGM
+--- !u!114 &1550578974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1550578972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82ebb9ae689a3e44c8fd7eb51500e20f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PersistentServicesInitializer
+  initializeOnAwake: 1
+  ensurePersistentEventBus: 1
+  ensureMusicService: 1
+  ensureUISFXService: 1
+  persistCreatedRoot: 1
+  persistentEventBus: {fileID: 0}
+  musicService: {fileID: 1550578973}
+  uiSfxService: {fileID: 1550578976}
+--- !u!4 &1550578975
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1550578972}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 32, y: 68.39, z: -101.39}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1550578976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1550578972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fafaef4849dafe4aa129f80603c1524, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UISFXService
+  uiSfxSource: {fileID: 0}
+  uiSfxGroup: {fileID: 0}
+  uiSfxDefinitions:
+  - {fileID: 0}
+  loadResourcesOnAwake: 1
+  resourcesPath: Audio/UISFX
+  enableBuiltInResourceFallbacks: 1
+  waveAlertFallbackResourcePath: Audio/UISFX/wave_alert
+  masterBusPath: bus:/
+  sfxBusPath: bus:/SFX
 --- !u!1 &2093832406
 GameObject:
   m_ObjectHideFlags: 0
@@ -201,6 +304,7 @@ MonoBehaviour:
   keepBootstrapSceneLoaded: 1
   configWorker: {fileID: 0}
   sceneLoader: {fileID: 488497683}
+  persistentServicesInitializer: {fileID: 1550578974}
 --- !u!4 &2093832408
 Transform:
   m_ObjectHideFlags: 0
@@ -222,3 +326,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 2093832408}
   - {fileID: 488497684}
+  - {fileID: 1550578975}
