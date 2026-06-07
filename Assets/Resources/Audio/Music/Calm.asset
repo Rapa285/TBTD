@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Calm
   m_EditorClassIdentifier: Assembly-CSharp::MusicClipData
   audioClip: {fileID: 8300000, guid: c43ed4a8695d7dc458aabdaa85ba1b6d, type: 3}
-  clipVolume: 0.5
+  clipVolume: 0.75
   musicNameEnum: 1
   loop: 1
   delay: 2

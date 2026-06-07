@@ -49,6 +49,7 @@ MonoBehaviour:
   warningCanvasGroup: {fileID: 2801714102133608260}
   displayDuration: 3
   eventBus: {fileID: 0}
+  warningSfx: 1
   fadeDuration: 0.5
 --- !u!1 &213129888183079569
 GameObject:
@@ -169,8 +170,8 @@ CanvasGroup:
   m_GameObject: {fileID: 213129888183079569}
   m_Enabled: 1
   m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!95 &8363077774480777386
 Animator:

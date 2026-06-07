@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: UIWaveAlert
   m_EditorClassIdentifier: Assembly-CSharp::UISFXDefSO
   audioClip: {fileID: 8300000, guid: a40bb1735a8d8514a8088f4d7b2a0c14, type: 3}
-  clipVolume: 1
+  clipVolume: 0.5
   sfxId: 1

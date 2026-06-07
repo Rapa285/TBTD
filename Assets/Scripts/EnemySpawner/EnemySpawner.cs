@@ -235,8 +235,8 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // Check for Special Enemies 
-        // NOTE: Special enemies are spawned last
+                // Check for Special Enemies 
+        // NOTE: EXPERIMENTAL special enemies are spawned in the middle
         for (int i = 0; i < specialEnemyList.Count; i++)
         {
             if (currWave == specialEnemyList[i].waveToSpawn)
@@ -244,12 +244,13 @@ public class EnemySpawner : MonoBehaviour
                 isSpecialWave = true;
                 EnemyObject specialEnemyObject = specialEnemyList[i];
 
-                enemyToSpawn.Add(new EnemySpawnEntry(specialEnemyObject, true));
+                enemyToSpawn.Insert(Mathf.FloorToInt(enemyToSpawn.Count), new EnemySpawnEntry(specialEnemyObject, true));
                 pendingSpecialEnemyCount++;
 
                 Debug.Log($"Added Special Enemy for Wave {currWave}: {specialEnemyObject.objectPrefab.name}");
             }
         }
+
     }
 
     private void SetupEnemy(GameObject enemyPrefab)
@@ -272,7 +273,7 @@ public class EnemySpawner : MonoBehaviour
             Debug.LogError("Missing mapSpline on Spawner or SplineAnimate on enemyPrefab!");
         }
 
-        enemyPrefab.GetComponent<EnemyEntity>()?.Initialize();
+        enemyPrefab.GetComponent<EnemyEntity>()?.Initialize();        
     }
 
     public void SpawnEnemies()
@@ -285,9 +286,26 @@ public class EnemySpawner : MonoBehaviour
             EnemyObject currentEnemy = currentEnemyData.Enemy;
             PooledObject enemyInstance = poolDictionary[currentEnemy].Get();
             SetupEnemy(enemyInstance.gameObject);
+
+            // Setup difficulty multiplier if any
+            if (currentEnemyData.DifficultyMultiplier != 1)
+            {
+                if (enemyInstance.gameObject.TryGetComponent<DifficultyScaler>(out var dscaler))
+                {
+                    dscaler.ApplyDifficulty(currentEnemyData.DifficultyMultiplier);
+                }
+            }
+
             if (currentEnemyData.IsSpecial)
             {
                 pendingSpecialEnemyCount = Mathf.Max(0, pendingSpecialEnemyCount - 1);
+
+                // enable outline for enemy
+                if (enemyInstance.gameObject.TryGetComponent<Outline>(out var outline))
+                {
+                    outline.enabled = true;
+                }
+
                 RegisterActiveSpecialEnemy(enemyInstance);
             }
 
@@ -404,7 +422,8 @@ public class EnemySpawner : MonoBehaviour
 
         pooledObject.EnsureEvents();
         HealthComponent health = pooledObject.GetComponent<HealthComponent>();
-        TrackedSpecialEnemy trackedEnemy = new TrackedSpecialEnemy(pooledObject, health);
+        Outline outline = pooledObject.GetComponent<Outline>();
+        TrackedSpecialEnemy trackedEnemy = new TrackedSpecialEnemy(pooledObject, health, outline);
         activeSpecialEnemies.Add(trackedEnemy);
 
         if (health != null)
@@ -545,10 +564,13 @@ internal readonly struct EnemySpawnEntry
     public readonly EnemyObject Enemy;
     public readonly bool IsSpecial;
 
-    public EnemySpawnEntry(EnemyObject enemy, bool isSpecial)
+    public readonly float DifficultyMultiplier;
+
+    public EnemySpawnEntry(EnemyObject enemy, bool isSpecial, float difficultyMultiplier = 1)
     {
         Enemy = enemy;
         IsSpecial = isSpecial;
+        DifficultyMultiplier = difficultyMultiplier;
     }
 }
 
@@ -557,10 +579,14 @@ internal sealed class TrackedSpecialEnemy
     public readonly PooledObject PooledObject;
     public readonly HealthComponent Health;
 
-    public TrackedSpecialEnemy(PooledObject pooledObject, HealthComponent health)
+    // Outline of tracked enemy
+    public readonly Outline Outline;
+
+    public TrackedSpecialEnemy(PooledObject pooledObject, HealthComponent health, Outline outline = null)
     {
         PooledObject = pooledObject;
         Health = health;
+        Outline = outline;
     }
 }
 
@@ -594,4 +620,7 @@ public class SpecialEnemyObject: EnemyObject
 
     public int waveToSpawn = 50;
     // public int cost; #NOTE: Special enemies are not affected by budget
+    
+    // Difficulty modifier applied to special enemies to make them elites
+    public float difficultyMultiplier = 1;
 }
