@@ -11,6 +11,11 @@ public class BaseHealthManager : MonoBehaviour
     [SerializeField]
     private bool infinitHealth = false;
 
+    private void Start()
+    {
+        healthValueText.text = baseHealth.ToString();
+    }
+    
     private void OnEnable()
     {
         // Mulai mendengarkan event BaseDamagedEvent

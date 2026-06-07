@@ -63,7 +63,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8034767580569033080
 Transform:
   m_ObjectHideFlags: 0
@@ -342,6 +342,68 @@ MonoBehaviour:
   upgradeChoiceCount: 3
   baseRerollCost: 10
   rerollCostIncrement: 10
+--- !u!1 &5143893295268051320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2940667556592014239}
+  - component: {fileID: 2891526876352156890}
+  m_Layer: 0
+  m_Name: BestiaryManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2940667556592014239
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5143893295268051320}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 348.02283, y: 222.56593, z: -12.25969}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8307966977157461595}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2891526876352156890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5143893295268051320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b938b9c6373bc9f4ab975c330e5da789, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BestiaryManager
+  enemyDatabase:
+  - {fileID: 11400000, guid: 3835ce203ca58c24fa92f255e0b8c8dd, type: 2}
+  - {fileID: 11400000, guid: 56cb14b5b586f094fa7b82ddf406c5e9, type: 2}
+  - {fileID: 11400000, guid: 4a5b68a83e5995744a5b9acc98ea7616, type: 2}
+  - {fileID: 11400000, guid: cf1604e5fda95f84fb5da92ead202bbc, type: 2}
+  - {fileID: 11400000, guid: 678bbeca6e9d3c047af299f564d072ee, type: 2}
+  - {fileID: 11400000, guid: e791efdcc210e5f4c9aeb14153147baf, type: 2}
+  - {fileID: 11400000, guid: d08377400d8ec514da985b7acb4d6877, type: 2}
+  - {fileID: 11400000, guid: 080763304fe53614887143edccfb433b, type: 2}
+  - {fileID: 11400000, guid: 61c0a6ec87b46f348b865ad5e83ae321, type: 2}
+  - {fileID: 11400000, guid: 8e6a0b3c8aec5464e9efe9ef52defd2e, type: 2}
+  bestiaryPanel: {fileID: 0}
+  detailNameText: {fileID: 0}
+  detailDescriptionText: {fileID: 0}
+  modelViewer: {fileID: 0}
+  buttonPrefab: {fileID: 3045486346428353231, guid: 15e9c35a3b9e9b1479a1803c2ef1cf03, type: 3}
+  buttonContainer: {fileID: 0}
+  resetBestiaryOnStart: 1
 --- !u!1 &5721399580527466079
 GameObject:
   m_ObjectHideFlags: 0
@@ -496,6 +558,7 @@ Transform:
   - {fileID: 6880960285280355613}
   - {fileID: 2264674564426266507}
   - {fileID: 3655871201601108752}
+  - {fileID: 2940667556592014239}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2502235434475985850
@@ -566,9 +629,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94dea5fc21f6ca243a22dc67955a7ecc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BaseHealthManager
-  baseHealth: 100
+  baseHealth: 1000
   healthValueText: {fileID: 0}
-  infinitHealth: 1
+  infinitHealth: 0
 --- !u!1 &7327238952189734977
 GameObject:
   m_ObjectHideFlags: 0
@@ -764,8 +827,12 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
-      propertyPath: normalEnemyList.Array.size
+      propertyPath: budgetMultiplier
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
+      propertyPath: normalEnemyList.Array.size
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: specialEnemyList.Array.size
@@ -777,7 +844,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[1].cost
-      value: 3
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[2].cost
@@ -785,7 +852,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[3].cost
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[4].cost
@@ -793,7 +860,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[5].cost
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[6].cost
@@ -801,11 +868,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[7].cost
-      value: 8
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[8].cost
-      value: 6
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[9].cost
@@ -878,19 +945,27 @@ PrefabInstance:
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[6].objectPrefab
       value: 
-      objectReference: {fileID: 3300713959934866968, guid: 2ba058cc54d35a24096900532f701b72, type: 3}
+      objectReference: {fileID: 4235199249589780513, guid: e7bcf7e72d5d6dd4f8858a3dead49cee, type: 3}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[7].objectPrefab
       value: 
-      objectReference: {fileID: 4235199249589780513, guid: e7bcf7e72d5d6dd4f8858a3dead49cee, type: 3}
+      objectReference: {fileID: 7611734589660493741, guid: 8ae8c74e1422d3e408e5d1486a6a11ca, type: 3}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[8].objectPrefab
       value: 
-      objectReference: {fileID: 7611734589660493741, guid: 8ae8c74e1422d3e408e5d1486a6a11ca, type: 3}
+      objectReference: {fileID: 2932124660387912478, guid: 446bb3e96987a7c46a13cb51aeca9c6c, type: 3}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[9].objectPrefab
       value: 
       objectReference: {fileID: 2932124660387912478, guid: 446bb3e96987a7c46a13cb51aeca9c6c, type: 3}
+    - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
+      propertyPath: specialEnemyList.Array.data[0].waveToSpawn
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
+      propertyPath: specialEnemyList.Array.data[0].objectPrefab
+      value: 
+      objectReference: {fileID: 4954060884826875654, guid: 8642bb4571413224ab2a5ec19a61e434, type: 3}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[0].attribute.maxWave
       value: 25
@@ -901,7 +976,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[1].attribute.minWave
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[2].attribute.maxWave
@@ -909,7 +984,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[2].attribute.minWave
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[3].attribute.maxWave
@@ -925,7 +1000,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[4].attribute.minWave
-      value: 10
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[5].attribute.maxWave
@@ -941,7 +1016,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[6].attribute.minWave
-      value: 12
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[7].attribute.maxWave
@@ -957,7 +1032,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[8].attribute.minWave
-      value: 15
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[9].attribute.maxWave

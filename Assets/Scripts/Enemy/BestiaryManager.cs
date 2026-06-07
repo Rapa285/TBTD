@@ -23,6 +23,9 @@ public class BestiaryManager : MonoBehaviour
     [SerializeField] private GameObject buttonPrefab;
     [SerializeField] private Transform buttonContainer;
 
+    [SerializeField] private bool resetBestiaryOnStart = false;
+
+
     private HashSet<EnemyType> revealedEnemies = new HashSet<EnemyType>();
     private Dictionary<EnemyType, GameObject> spawnedButtons = new Dictionary<EnemyType, GameObject>();
 
@@ -34,6 +37,7 @@ public class BestiaryManager : MonoBehaviour
 
     private void Start()
     {
+        if (resetBestiaryOnStart) ClearRevealedEnemies();
         LoadRevealedEnemies();
         GenerateEnemyList();
         
@@ -101,6 +105,16 @@ public class BestiaryManager : MonoBehaviour
                 revealedEnemies.Add(data.enemyType);
             }
         }
+    }
+
+    private void ClearRevealedEnemies()
+    {
+        revealedEnemies.Clear();
+        foreach (EnemyDataSO data in enemyDatabase)
+        {
+            PlayerPrefs.SetInt($"Bestiary_Unlocked_{data.enemyType}", 0);
+        }
+        PlayerPrefs.Save();
     }
 
     private void GenerateEnemyList()
