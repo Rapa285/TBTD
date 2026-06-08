@@ -397,7 +397,7 @@ public class EnemySpawner : MonoBehaviour
                 enemyGameObjectCache.Add(enemyToSpawn[i].Enemy.GetPrefabCopy());
             }
 
-            eventBus.RaiseNewWave(new NewWaveEvent(isSpecialWave, currWave, enemyToSpawn.Count, enemyGameObjectCache));
+            eventBus.RaiseNewWave(new NewWaveEvent(currWave, enemyToSpawn.Count, enemyGameObjectCache));
         }
     }
 
