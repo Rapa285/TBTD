@@ -260,8 +260,9 @@ public class UnitDeploymentController : MonoBehaviour
             return;
         }
 
-        deploymentChecker.TryGetPlacement(screenPosition, out currentPlacementResult);
+        deploymentChecker.TryGetPlacement(screenPosition, currentDraggedRoot.transform, out currentPlacementResult);
         hasCurrentPlacement = currentPlacementResult.hasGround;
+        currentDraggedTower.SetDeploymentPreviewPlacementValid(currentPlacementResult.isValid);
 
         if (currentPlacementResult.hasGround)
         {

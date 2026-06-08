@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// Roster-item upgrade button that opens a stored pending upgrade offer for one managed unit.
@@ -16,10 +17,16 @@ public class UnitUIUpgrade : MonoBehaviour
     [SerializeField, Tooltip("Optional root shown only while this unit has a pending upgrade. Defaults to the upgrade button object.")]
     private GameObject upgradeButtonRoot;
 
+    [SerializeField, Tooltip("Optional TMP text used to display unspent upgrade credits.")]
+    private TMP_Text upgradeCountText;
+
+    [SerializeField, Tooltip("Composite format used to display unspent upgrade credits. {0} is the credit count.")]
+    private string upgradeCountFormat = "x{0}";
+
     private UnitEventBus eventBus;
     private bool subscribedToButton;
     private bool subscribedToEventBus;
-    private bool wasUpgradePending;
+    private int lastUpgradeCount = -1;
 
     private void Awake()
     {
@@ -63,8 +70,8 @@ public class UnitUIUpgrade : MonoBehaviour
             SubscribeToEventBus();
         }
 
-        bool upgradePending = HasPendingUpgrade();
-        if (upgradePending != wasUpgradePending)
+        int upgradeCount = GetUnspentUpgradeCount();
+        if (upgradeCount != lastUpgradeCount)
         {
             RefreshState();
         }
@@ -75,6 +82,7 @@ public class UnitUIUpgrade : MonoBehaviour
         if (Application.isPlaying)
         {
             SetUpgradeVisible(false);
+            SetUpgradeCount(0);
         }
 
         Unsubscribe();
@@ -109,6 +117,14 @@ public class UnitUIUpgrade : MonoBehaviour
     }
 
     private void HandleUpgradeSelected(UnitUpgradeSelectedEvent eventData)
+    {
+        if (IsMatchingUnit(eventData.UnitId))
+        {
+            RefreshState();
+        }
+    }
+
+    private void HandleUnitLevelChanged(UnitLevelChangedEvent eventData)
     {
         if (IsMatchingUnit(eventData.UnitId))
         {
@@ -200,6 +216,7 @@ public class UnitUIUpgrade : MonoBehaviour
 
         eventBus.UnitUpgradeChoicesOffered += HandleUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected += HandleUpgradeSelected;
+        eventBus.UnitLevelChanged += HandleUnitLevelChanged;
         subscribedToEventBus = true;
     }
 
@@ -212,6 +229,7 @@ public class UnitUIUpgrade : MonoBehaviour
 
         eventBus.UnitUpgradeChoicesOffered -= HandleUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected -= HandleUpgradeSelected;
+        eventBus.UnitLevelChanged -= HandleUnitLevelChanged;
         subscribedToEventBus = false;
     }
 
@@ -219,10 +237,12 @@ public class UnitUIUpgrade : MonoBehaviour
     {
         ResolveReferences();
 
-        bool upgradePending = HasPendingUpgrade();
-        wasUpgradePending = upgradePending;
+        int upgradeCount = GetUnspentUpgradeCount();
+        bool upgradePending = upgradeCount > 0;
+        lastUpgradeCount = upgradeCount;
 
         SetUpgradeVisible(upgradePending);
+        SetUpgradeCount(upgradeCount);
         if (upgradeButton != null)
         {
             upgradeButton.interactable = upgradePending;
@@ -238,6 +258,17 @@ public class UnitUIUpgrade : MonoBehaviour
 
         UnitStateManager stateManager = uiUnitItem.UnitStateManager;
         return stateManager != null && stateManager.HasPendingUpgradeSelection(uiUnitItem.UnitId);
+    }
+
+    private int GetUnspentUpgradeCount()
+    {
+        if (uiUnitItem == null || !uiUnitItem.IsManagedUnitConfigured)
+        {
+            return 0;
+        }
+
+        UnitStateManager stateManager = uiUnitItem.UnitStateManager;
+        return stateManager != null ? stateManager.GetUnspentUpgradeCount(uiUnitItem.UnitId) : 0;
     }
 
     private bool IsMatchingUnit(string unitId)
@@ -257,5 +288,20 @@ public class UnitUIUpgrade : MonoBehaviour
         {
             target.SetActive(isVisible);
         }
+    }
+
+    private void SetUpgradeCount(int count)
+    {
+        if (upgradeCountText == null)
+        {
+            return;
+        }
+
+        bool isVisible = count > 0;
+        string format = string.IsNullOrWhiteSpace(upgradeCountFormat) ? "{0}" : upgradeCountFormat;
+        upgradeCountText.text = isVisible
+            ? string.Format(format, count)
+            : string.Empty;
+        upgradeCountText.enabled = isVisible;
     }
 }

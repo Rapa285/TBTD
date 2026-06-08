@@ -74,14 +74,17 @@ public class UnitStateManager : MonoBehaviour
         [SerializeField, Tooltip("Plain tower prefab deployed for this owned unit.")]
         private TowerEntity unitPrefab;
 
-        [SerializeField, Tooltip("Current persistent level for this owned unit.")]
-        private int level = 1;
+        [SerializeField, Min(0), Tooltip("Current persistent level for this owned unit.")]
+        private int level;
 
         [SerializeField, Tooltip("Current persistent XP stored for this owned unit.")]
         private float experience;
 
         [SerializeField, Tooltip("Whether this unit is waiting for an upgrade selection.")]
         private bool upgradePending;
+
+        [SerializeField, Min(0), Tooltip("Unspent upgrade credits earned from level-ups.")]
+        private int unspentUpgradeCount;
 
         [SerializeField, Tooltip("Selected multi-upgrade lines for this owned unit. Runtime stat and weapon composition still happens inside TowerEntity.")]
         private List<AppliedMultiUpgradeState> appliedMultiUpgrades = new List<AppliedMultiUpgradeState>();
@@ -105,9 +108,10 @@ public class UnitStateManager : MonoBehaviour
         public string DisplayName => displayName;
         public Sprite Icon => icon;
         public TowerEntity UnitPrefab => unitPrefab;
-        public int Level => Mathf.Max(1, level);
+        public int Level => Mathf.Max(0, level);
         public float Experience => Mathf.Max(0f, experience);
-        public bool UpgradePending => upgradePending;
+        public bool UpgradePending => UnspentUpgradeCount > 0;
+        public int UnspentUpgradeCount => Mathf.Max(0, unspentUpgradeCount);
         public IReadOnlyList<AppliedMultiUpgradeState> AppliedMultiUpgrades => appliedMultiUpgrades;
         public MultiUpgradeSO LatestSelectedMultiUpgrade => latestSelectedMultiUpgrade;
         public EvolutionSO SelectedEvolution => selectedEvolution;
@@ -218,9 +222,33 @@ public class UnitStateManager : MonoBehaviour
             experience = Mathf.Max(0f, value);
         }
 
-        internal void SetUpgradePending(bool value)
+        internal void NormalizeUpgradeCreditMigration()
         {
-            upgradePending = value;
+            if (upgradePending)
+            {
+                unspentUpgradeCount = Mathf.Max(1, unspentUpgradeCount);
+                upgradePending = false;
+            }
+
+            unspentUpgradeCount = Mathf.Max(0, unspentUpgradeCount);
+        }
+
+        internal void AddUnspentUpgradeCredits(int amount)
+        {
+            NormalizeUpgradeCreditMigration();
+            unspentUpgradeCount = UnspentUpgradeCount + Mathf.Max(0, amount);
+        }
+
+        internal bool ConsumeUnspentUpgradeCredit()
+        {
+            NormalizeUpgradeCreditMigration();
+            if (unspentUpgradeCount <= 0)
+            {
+                return false;
+            }
+
+            unspentUpgradeCount--;
+            return true;
         }
 
         internal void AdvanceLevel()
@@ -455,7 +483,7 @@ public class UnitStateManager : MonoBehaviour
     [SerializeField, Tooltip("Event bus used to mirror runtime progression changes back into roster state.")]
     private UnitEventBus eventBus;
 
-    [SerializeField, Tooltip("Shared XP thresholds by level; index 0 is the threshold from level 1 to 2.")]
+    [SerializeField, Tooltip("Shared XP costs by level; index 0 is the XP consumed when leveling from 0 to 1.")]
     private List<float> xpThresholds = new List<float> { 5f, 10f, 15f, 20f };
 
     [SerializeField, Tooltip("Inspector-authored roster of player-owned units.")]
@@ -470,6 +498,7 @@ public class UnitStateManager : MonoBehaviour
         RegisterWithServiceLocator();
         ResolveEventBus();
         ValidateUnitIds();
+        NormalizeOwnedUnitProgression();
         Precompile();
     }
 
@@ -498,6 +527,7 @@ public class UnitStateManager : MonoBehaviour
     private void OnValidate()
     {
         ValidateUnitIds();
+        NormalizeOwnedUnitProgression();
     }
 
     private void Update()
@@ -721,26 +751,28 @@ public class UnitStateManager : MonoBehaviour
             return false;
         }
 
+        unit.NormalizeUpgradeCreditMigration();
         unit.SetExperience(currentExperience);
+        ProcessExperienceLevelUps(unit);
         return true;
     }
 
     /// <summary>
-    /// Marks a unit as waiting for an upgrade offer selection.
+    /// Grants one upgrade credit when legacy callers request a pending upgrade selection.
     /// </summary>
     public bool TryBeginUpgradeSelection(string unitId)
     {
-        if (!TryGetUnit(unitId, out OwnedUnitState unit) || unit.UpgradePending)
+        if (!TryGetUnit(unitId, out OwnedUnitState unit))
         {
             return false;
         }
 
-        unit.SetUpgradePending(true);
+        unit.AddUnspentUpgradeCredits(1);
         return true;
     }
 
     /// <summary>
-    /// Returns whether the roster unit is waiting for the player to choose an upgrade.
+    /// Returns whether the roster unit has at least one unspent upgrade credit.
     /// </summary>
     public bool HasPendingUpgradeSelection(string unitId)
     {
@@ -748,7 +780,15 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Records the selected multi-upgrade, advances level, and applies its active level to the deployed tower when present.
+    /// Reads the number of unspent upgrade credits currently banked by this roster unit.
+    /// </summary>
+    public int GetUnspentUpgradeCount(string unitId)
+    {
+        return TryGetUnit(unitId, out OwnedUnitState unit) ? unit.UnspentUpgradeCount : 0;
+    }
+
+    /// <summary>
+    /// Records the selected multi-upgrade, spends one upgrade credit, and applies its active level to the deployed tower when present.
     /// </summary>
     public bool RecordSelectedUpgrade(string unitId, MultiUpgradeSO multiUpgrade)
     {
@@ -781,7 +821,7 @@ public class UnitStateManager : MonoBehaviour
         selectedUpgradeLevel = 0;
 
         if (!TryGetUnit(unitId, out OwnedUnitState unit)
-            || !unit.UpgradePending
+            || unit.UnspentUpgradeCount <= 0
             || (multiUpgrade != null && evolution != null))
         {
             return false;
@@ -804,8 +844,10 @@ public class UnitStateManager : MonoBehaviour
             selectedUpgradeLevel = 1;
         }
 
-        unit.SetUpgradePending(false);
-        unit.AdvanceLevel();
+        if (!unit.ConsumeUnspentUpgradeCredit())
+        {
+            return false;
+        }
 
         if (multiUpgrade != null
             && unit.ApplyNextMultiUpgradeLevel(
@@ -826,7 +868,7 @@ public class UnitStateManager : MonoBehaviour
         }
 
         RefreshCompiledDeploymentCost(unit);
-        RefreshRuntimeProgression(unit, true);
+        RefreshRuntimeProgression(unit, false);
         return true;
     }
 
@@ -872,7 +914,6 @@ public class UnitStateManager : MonoBehaviour
     {
         if (!TryGetUnit(unitId, out OwnedUnitState unit)
             || unit.CurrentRuntimeInstance == null
-            || unit.UpgradePending
             || !TryGetNextExperienceThreshold(unit, out float threshold))
         {
             return false;
@@ -911,7 +952,7 @@ public class UnitStateManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Reads the next XP threshold for a roster unit.
+    /// Reads the next XP cost for a roster unit.
     /// </summary>
     public bool TryGetNextExperienceThreshold(string unitId, out float threshold)
     {
@@ -926,7 +967,7 @@ public class UnitStateManager : MonoBehaviour
 
     private bool TryGetNextExperienceThreshold(OwnedUnitState unit, out float threshold)
     {
-        int thresholdIndex = unit != null ? unit.Level - 1 : -1;
+        int thresholdIndex = unit != null ? unit.Level : -1;
         if (xpThresholds != null
             && thresholdIndex >= 0
             && thresholdIndex < xpThresholds.Count)
@@ -937,6 +978,37 @@ public class UnitStateManager : MonoBehaviour
 
         threshold = 0f;
         return false;
+    }
+
+    private void ProcessExperienceLevelUps(OwnedUnitState unit)
+    {
+        if (unit == null)
+        {
+            return;
+        }
+
+        int previousLevel = unit.Level;
+        int levelsGained = 0;
+        int guard = xpThresholds != null ? xpThresholds.Count + 1 : 1;
+
+        while (guard > 0
+            && TryGetNextExperienceThreshold(unit, out float threshold)
+            && unit.Experience >= threshold)
+        {
+            unit.SetExperience(unit.Experience - threshold);
+            unit.AdvanceLevel();
+            unit.AddUnspentUpgradeCredits(1);
+            levelsGained++;
+            guard--;
+        }
+
+        if (levelsGained <= 0)
+        {
+            return;
+        }
+
+        RefreshRuntimeProgression(unit, false);
+        RaiseUnitLevelChanged(unit, previousLevel, levelsGained);
     }
 
     private void HandleUnitExperienceChanged(UnitExperienceChangedEvent eventData)
@@ -979,6 +1051,34 @@ public class UnitStateManager : MonoBehaviour
         }
     }
 
+    private void RaiseUnitLevelChanged(OwnedUnitState unit, int previousLevel, int levelsGained)
+    {
+        if (unit == null || string.IsNullOrWhiteSpace(unit.UnitId))
+        {
+            return;
+        }
+
+        ResolveEventBus();
+        if (eventBus == null)
+        {
+            return;
+        }
+
+        bool hasNextExperienceThreshold = TryGetNextExperienceThreshold(
+            unit,
+            out float nextExperienceThreshold);
+
+        eventBus.RaiseUnitLevelChanged(new UnitLevelChangedEvent(
+            unit.UnitId,
+            previousLevel,
+            unit.Level,
+            levelsGained,
+            unit.Experience,
+            hasNextExperienceThreshold,
+            nextExperienceThreshold,
+            unit.UnspentUpgradeCount));
+    }
+
     private void RaiseDebugUpgradeSelected(
         OwnedUnitState unit,
         MultiUpgradeSO selectedMultiUpgrade,
@@ -1010,7 +1110,8 @@ public class UnitStateManager : MonoBehaviour
             unit.Experience,
             hasNextExperienceThreshold,
             nextExperienceThreshold,
-            selectedEvolution));
+            selectedEvolution,
+            unit.UnspentUpgradeCount));
     }
 
     private static void ReconcileRuntimeUpgrades(
@@ -1103,9 +1204,7 @@ public class UnitStateManager : MonoBehaviour
             unit.Experience,
             threshold,
             hasThreshold,
-            unit.UpgradePending,
-            eventBus,
-            evaluateThreshold);
+            eventBus);
     }
 
     private bool TryGetRuntimeState(
@@ -1248,6 +1347,19 @@ public class UnitStateManager : MonoBehaviour
             {
                 Debug.LogError($"{nameof(UnitStateManager)} has duplicate unitId '{unit.UnitId}'.", this);
             }
+        }
+    }
+
+    private void NormalizeOwnedUnitProgression()
+    {
+        if (ownedUnits == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < ownedUnits.Count; i++)
+        {
+            ownedUnits[i]?.NormalizeUpgradeCreditMigration();
         }
     }
 }

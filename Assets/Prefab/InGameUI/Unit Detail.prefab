@@ -3154,7 +3154,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 949304483761837212}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.565445
+  m_Size: 0.53731346
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3297,7 +3297,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 200, y: -510}
+  m_AnchoredPosition: {x: 200, y: -610}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &4164102263652033841
@@ -3449,7 +3449,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.121568635, g: 0.6431373, b: 0.62352943, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3487,9 +3487,9 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.1254902, g: 0.6431373, b: 0.627451, a: 1}
-    m_HighlightedColor: {r: 0.35831252, g: 0.690566, b: 0.6804977, a: 1}
-    m_PressedColor: {r: 0.17441793, g: 0.4943396, b: 0.48532775, a: 1}
+    m_NormalColor: {r: 0.24613024, g: 0.78113204, b: 0.76854384, a: 1}
+    m_HighlightedColor: {r: 0.41491634, g: 0.8490566, b: 0.83947986, a: 1}
+    m_PressedColor: {r: 0.32640085, g: 0.6679245, b: 0.6595947, a: 1}
     m_SelectedColor: {r: 0.35686275, g: 0.6901961, b: 0.68235296, a: 1}
     m_DisabledColor: {r: 0.10032752, g: 0.2905661, b: 0.28592613, a: 0.5294118}
     m_ColorMultiplier: 1
@@ -5831,7 +5831,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7386952062242577081}
-  - component: {fileID: 5240037613224052034}
+  - component: {fileID: 7562141914957149922}
   m_Layer: 5
   m_Name: Upgrade
   m_TagString: Untagged
@@ -5859,7 +5859,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5240037613224052034
+--- !u!114 &7562141914957149922
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5877,6 +5877,7 @@ MonoBehaviour:
   unitStateManager: {fileID: 0}
   eventBus: {fileID: 0}
   unavailableAlpha: 0.35
+  availabilityMaterialToggle: {fileID: 0}
 --- !u!1 &6553205401166649679
 GameObject:
   m_ObjectHideFlags: 0

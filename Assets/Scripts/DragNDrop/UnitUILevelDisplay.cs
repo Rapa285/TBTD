@@ -58,15 +58,15 @@ public class UnitUILevelDisplay : UnitUIBehaviour
 
     protected override void SubscribeToEvents(UnitEventBus eventBus)
     {
-        eventBus.UnitUpgradeSelected += HandleUnitUpgradeSelected;
+        eventBus.UnitLevelChanged += HandleUnitLevelChanged;
     }
 
     protected override void UnsubscribeFromEvents(UnitEventBus eventBus)
     {
-        eventBus.UnitUpgradeSelected -= HandleUnitUpgradeSelected;
+        eventBus.UnitLevelChanged -= HandleUnitLevelChanged;
     }
 
-    private void HandleUnitUpgradeSelected(UnitUpgradeSelectedEvent eventData)
+    private void HandleUnitLevelChanged(UnitLevelChangedEvent eventData)
     {
         if (IsMatchingUnit(eventData.UnitId))
         {

@@ -30,6 +30,11 @@ public class UnitDeploymentChecker : MonoBehaviour
 
     public bool TryGetPlacement(Vector2 screenPosition, out PlacementResult result)
     {
+        return TryGetPlacement(screenPosition, null, out result);
+    }
+
+    public bool TryGetPlacement(Vector2 screenPosition, Transform ignoredRoot, out PlacementResult result)
+    {
         result = new PlacementResult
         {
             hasGround = false,
@@ -53,7 +58,7 @@ public class UnitDeploymentChecker : MonoBehaviour
             return false;
         }
 
-        bool isBlocked = IsPlacementBlocked(hit.point);
+        bool isBlocked = IsPlacementBlocked(hit.point, ignoredRoot);
         result = new PlacementResult
         {
             hasGround = true,
@@ -67,7 +72,7 @@ public class UnitDeploymentChecker : MonoBehaviour
         return result.isValid;
     }
 
-    private bool IsPlacementBlocked(Vector3 position)
+    private bool IsPlacementBlocked(Vector3 position, Transform ignoredRoot)
     {
         float radius = Mathf.Max(0.01f, placementRadius);
         float height = Mathf.Max(placementHeight, radius * 2f);
@@ -75,7 +80,36 @@ public class UnitDeploymentChecker : MonoBehaviour
         Vector3 bottom = basePosition + Vector3.up * radius;
         Vector3 top = basePosition + Vector3.up * (height - radius);
 
-        return Physics.CheckCapsule(bottom, top, radius, blockingLayers, QueryTriggerInteraction.Ignore);
+        if (ignoredRoot == null)
+        {
+            return Physics.CheckCapsule(bottom, top, radius, blockingLayers, QueryTriggerInteraction.Ignore);
+        }
+
+        Collider[] blockingColliders = Physics.OverlapCapsule(
+            bottom,
+            top,
+            radius,
+            blockingLayers,
+            QueryTriggerInteraction.Ignore);
+
+        for (int i = 0; i < blockingColliders.Length; i++)
+        {
+            Collider blockingCollider = blockingColliders[i];
+            if (blockingCollider == null || IsIgnoredCollider(blockingCollider, ignoredRoot))
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool IsIgnoredCollider(Collider candidate, Transform ignoredRoot)
+    {
+        Transform candidateTransform = candidate.transform;
+        return candidateTransform == ignoredRoot || candidateTransform.IsChildOf(ignoredRoot);
     }
 
     private void NotifyPlacementState(bool isValid)

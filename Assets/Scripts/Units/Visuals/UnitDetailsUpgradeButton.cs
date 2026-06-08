@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +14,12 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
     [SerializeField, Tooltip("Optional root hidden when no roster-managed unit is selected. Defaults to the upgrade button object.")]
     private GameObject upgradeButtonRoot;
 
+    [SerializeField, Tooltip("Optional TMP text used to display unspent upgrade credits.")]
+    private TMP_Text upgradeCountText;
+
+    [SerializeField, Tooltip("Composite format used to display unspent upgrade credits. {0} is the credit count.")]
+    private string upgradeCountFormat = "x{0}";
+
     [SerializeField, Tooltip("Player state source used to read the selected unit. Uses the scene service locator when empty.")]
     private PlayerStateController playerStateController;
 
@@ -24,6 +31,9 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
 
     [SerializeField, Range(0f, 1f), Tooltip("Alpha used while the selected roster unit has no pending upgrade.")]
     private float unavailableAlpha = 0.35f;
+
+    [SerializeField, Tooltip("Optional material property toggle driven by whether the selected unit has a pending upgrade.")]
+    private UIMaterialBoolPropertyToggle availabilityMaterialToggle;
 
     private CanvasGroup selfVisibilityGroup;
     private Coroutine delayedRefreshCoroutine;
@@ -68,12 +78,16 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
     {
         StopDelayedRefresh();
         Unsubscribe();
+        SetAvailabilityMaterialEnabled(false);
+        SetUpgradeCount(0);
     }
 
     private void OnDestroy()
     {
         StopDelayedRefresh();
         Unsubscribe();
+        SetAvailabilityMaterialEnabled(false);
+        SetUpgradeCount(0);
     }
 
     private void OnValidate()
@@ -106,7 +120,7 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         RefreshState();
     }
 
-    private void HandleUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
+    private void HandleUnitLevelChanged(UnitLevelChangedEvent eventData)
     {
         if (IsSelectedUnit(eventData.UnitId))
         {
@@ -151,9 +165,12 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         ResolveReferences();
 
         bool hasManagedSelection = TryGetSelectedManagedUnitId(out string unitId);
-        bool hasPendingUpgrade = hasManagedSelection && HasPendingUpgrade(unitId);
+        int upgradeCount = hasManagedSelection ? GetUnspentUpgradeCount(unitId) : 0;
+        bool hasPendingUpgrade = upgradeCount > 0;
 
         SetUpgradeVisible(hasManagedSelection);
+        SetUpgradeCount(upgradeCount);
+        SetAvailabilityMaterialEnabled(hasPendingUpgrade);
 
         if (upgradeButton != null)
         {
@@ -210,9 +227,14 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
 
     private bool HasPendingUpgrade(string unitId)
     {
-        return unitStateManager != null
-            && !string.IsNullOrWhiteSpace(unitId)
-            && unitStateManager.HasPendingUpgradeSelection(unitId);
+        return GetUnspentUpgradeCount(unitId) > 0;
+    }
+
+    private int GetUnspentUpgradeCount(string unitId)
+    {
+        return unitStateManager != null && !string.IsNullOrWhiteSpace(unitId)
+            ? unitStateManager.GetUnspentUpgradeCount(unitId)
+            : 0;
     }
 
     private bool IsSelectedUnit(string unitId)
@@ -232,6 +254,11 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         if (upgradeButtonRoot == null && upgradeButton != null)
         {
             upgradeButtonRoot = upgradeButton.gameObject;
+        }
+
+        if (availabilityMaterialToggle == null)
+        {
+            availabilityMaterialToggle = GetComponentInChildren<UIMaterialBoolPropertyToggle>(true);
         }
 
         if (playerStateController == null)
@@ -335,7 +362,7 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
             return;
         }
 
-        eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
+        eventBus.UnitLevelChanged += HandleUnitLevelChanged;
         eventBus.UnitUpgradeChoicesOffered += HandleUnitUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected += HandleUnitUpgradeSelected;
         eventBus.UnitDeployed += HandleUnitDeployed;
@@ -350,7 +377,7 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
             return;
         }
 
-        eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
+        eventBus.UnitLevelChanged -= HandleUnitLevelChanged;
         eventBus.UnitUpgradeChoicesOffered -= HandleUnitUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected -= HandleUnitUpgradeSelected;
         eventBus.UnitDeployed -= HandleUnitDeployed;
@@ -429,6 +456,31 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         }
 
         upgradeButton.colors = colors;
+    }
+
+    private void SetAvailabilityMaterialEnabled(bool isEnabled)
+    {
+        if (availabilityMaterialToggle == null)
+        {
+            return;
+        }
+
+        availabilityMaterialToggle.SetValue(isEnabled);
+    }
+
+    private void SetUpgradeCount(int count)
+    {
+        if (upgradeCountText == null)
+        {
+            return;
+        }
+
+        bool isVisible = count > 0;
+        string format = string.IsNullOrWhiteSpace(upgradeCountFormat) ? "{0}" : upgradeCountFormat;
+        upgradeCountText.text = isVisible
+            ? string.Format(format, count)
+            : string.Empty;
+        upgradeCountText.enabled = isVisible;
     }
 
     private void CacheOriginalButtonColors()

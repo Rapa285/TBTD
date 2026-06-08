@@ -40,19 +40,28 @@ public class UpgradesManager : MonoBehaviour
     [SerializeField, Min(0), Tooltip("Amount added to the shared reroll cost after each successful reroll.")]
     private int rerollCostIncrement = 5;
 
+    [SerializeField, Min(0), Tooltip("Shared free upgrade rerolls available when this manager initializes.")]
+    private int startingFreeRerolls = 3;
+
     private readonly Dictionary<string, PendingUpgradeOffer> pendingOffers = new Dictionary<string, PendingUpgradeOffer>();
     private readonly System.Random seedGenerator = new System.Random();
     private CurrencyManager currencyManager;
     private string activeMenuUnitId;
-    private int successfulRerollCount;
+    private int freeRerollsRemaining;
+    private int paidRerollCount;
     private bool eventBusSubscribed;
 
     public IReadOnlyList<EvolutionSO> EvolutionPool => evolutionPool;
-    public int CurrentRerollCost => Mathf.Max(0, baseRerollCost)
-        + Mathf.Max(0, successfulRerollCount) * Mathf.Max(0, rerollCostIncrement);
+    public int FreeRerollsRemaining => Mathf.Max(0, freeRerollsRemaining);
+    public bool HasFreeRerolls => FreeRerollsRemaining > 0;
+    public int CurrentRerollCost => HasFreeRerolls ? 0 : CurrentPaidRerollCost;
+
+    private int CurrentPaidRerollCost => Mathf.Max(0, baseRerollCost)
+        + Mathf.Max(0, paidRerollCount) * Mathf.Max(0, rerollCostIncrement);
 
     private void Awake()
     {
+        freeRerollsRemaining = Mathf.Max(0, startingFreeRerolls);
         RegisterWithServiceLocator();
         ResolveReferences();
     }
@@ -83,7 +92,23 @@ public class UpgradesManager : MonoBehaviour
     {
         baseRerollCost = Mathf.Max(0, baseRerollCost);
         rerollCostIncrement = Mathf.Max(0, rerollCostIncrement);
+        startingFreeRerolls = Mathf.Max(0, startingFreeRerolls);
         upgradeChoiceCount = Mathf.Max(0, upgradeChoiceCount);
+    }
+
+    /// <summary>
+    /// Grants shared free upgrade reroll credits for future reward systems.
+    /// </summary>
+    public void GrantFreeRerolls(int amount)
+    {
+        amount = Mathf.Max(0, amount);
+        if (amount == 0)
+        {
+            return;
+        }
+
+        freeRerollsRemaining = FreeRerollsRemaining + amount;
+        RaiseRerollStateChanged();
     }
 
     /// <summary>
@@ -195,23 +220,6 @@ public class UpgradesManager : MonoBehaviour
         return false;
     }
 
-    private void HandleUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
-    {
-        ResolveReferences();
-
-        string unitId = eventData.UnitId;
-        if (string.IsNullOrWhiteSpace(unitId)
-            || unitStateManager == null
-            || pendingOffers.ContainsKey(unitId)
-            || !unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit)
-            || !unitStateManager.TryBeginUpgradeSelection(unitId))
-        {
-            return;
-        }
-
-        CreateStoredOfferOrAdvance(unitId, unit);
-    }
-
     private void HandleUnitUpgradeOfferRequested(UnitUpgradeOfferRequestedEvent eventData)
     {
         if (string.IsNullOrWhiteSpace(eventData.UnitId))
@@ -262,26 +270,30 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
-        int rerollCost = CurrentRerollCost;
-        if (currencyManager != null && !currencyManager.TrySpend(rerollCost))
+        if (HasFreeRerolls)
         {
-            return false;
+            freeRerollsRemaining = FreeRerollsRemaining - 1;
+        }
+        else
+        {
+            int rerollCost = CurrentPaidRerollCost;
+            if (currencyManager != null && !currencyManager.TrySpend(rerollCost))
+            {
+                return false;
+            }
+
+            paidRerollCount++;
         }
 
-        successfulRerollCount++;
         pendingOffers[unitId] = rerolledOffer;
         RaisePendingOffer(unitId);
+        RaiseRerollStateChanged();
         return true;
     }
 
     private void CreateStoredOfferOrAdvance(string unitId, UnitStateManager.OwnedUnitState unit)
     {
-        if (CreatePendingOffer(unitId, unit))
-        {
-            return;
-        }
-
-        RecordSelection(unitId, default);
+        CreateStoredOfferOrConsumeInvalidCredits(unitId, true);
     }
 
     private bool EnsurePendingOffer(string unitId)
@@ -299,7 +311,7 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
-        CreateStoredOfferOrAdvance(unitId, unit);
+        CreateStoredOfferOrConsumeInvalidCredits(unitId, true);
         return pendingOffers.ContainsKey(unitId);
     }
 
@@ -455,6 +467,8 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
+        CreateStoredOfferOrConsumeInvalidCredits(unitId, false);
+
         ResolveReferences();
         if (eventBus != null && unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
         {
@@ -471,10 +485,78 @@ public class UpgradesManager : MonoBehaviour
                 unit.Experience,
                 hasNextExperienceThreshold,
                 nextExperienceThreshold,
-                selectedEvolution));
+                selectedEvolution,
+                unit.UnspentUpgradeCount));
         }
 
         return true;
+    }
+
+    private bool CreateStoredOfferOrConsumeInvalidCredits(string unitId, bool raiseConsumedCreditEvents)
+    {
+        ResolveReferences();
+        if (unitStateManager == null || string.IsNullOrWhiteSpace(unitId))
+        {
+            return false;
+        }
+
+        while (unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit)
+            && unit.UnspentUpgradeCount > 0)
+        {
+            if (pendingOffers.ContainsKey(unitId) || CreatePendingOffer(unitId, unit))
+            {
+                return true;
+            }
+
+            if (!unitStateManager.RecordSelectedUpgrade(
+                unitId,
+                null,
+                null,
+                out UpgradeSO selectedUpgrade,
+                out int selectedUpgradeLevel))
+            {
+                return false;
+            }
+
+            if (raiseConsumedCreditEvents)
+            {
+                RaiseUpgradeSelectedEvent(unitId, null, null, selectedUpgrade, selectedUpgradeLevel);
+            }
+        }
+
+        return false;
+    }
+
+    private void RaiseUpgradeSelectedEvent(
+        string unitId,
+        MultiUpgradeSO selectedMultiUpgrade,
+        EvolutionSO selectedEvolution,
+        UpgradeSO selectedUpgrade,
+        int selectedUpgradeLevel)
+    {
+        ResolveReferences();
+        if (eventBus == null
+            || unitStateManager == null
+            || !unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
+        {
+            return;
+        }
+
+        bool hasNextExperienceThreshold = unitStateManager.TryGetNextExperienceThreshold(
+            unitId,
+            out float nextExperienceThreshold);
+
+        eventBus.RaiseUnitUpgradeSelected(new UnitUpgradeSelectedEvent(
+            unitId,
+            selectedMultiUpgrade,
+            selectedUpgrade,
+            selectedUpgradeLevel,
+            unit.Level,
+            unit.Experience,
+            hasNextExperienceThreshold,
+            nextExperienceThreshold,
+            selectedEvolution,
+            unit.UnspentUpgradeCount));
     }
 
     private bool RaisePendingOffer(string unitId)
@@ -490,6 +572,17 @@ public class UpgradesManager : MonoBehaviour
         activeMenuUnitId = unitId;
         eventBus.RaiseUnitUpgradeChoicesOffered(new UnitUpgradeChoicesOfferedEvent(unitId, offer.Choices.ToArray()));
         return true;
+    }
+
+    private void RaiseRerollStateChanged()
+    {
+        ResolveReferences();
+        if (eventBus != null)
+        {
+            eventBus.RaiseUpgradeRerollStateChanged(new UpgradeRerollStateChangedEvent(
+                FreeRerollsRemaining,
+                CurrentRerollCost));
+        }
     }
 
     private int NextOfferSeed()
@@ -595,7 +688,6 @@ public class UpgradesManager : MonoBehaviour
             return;
         }
 
-        eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
         eventBus.UnitUpgradeOfferRequested += HandleUnitUpgradeOfferRequested;
         eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
         eventBus.UnitUpgradeRerollRequested += HandleUnitUpgradeRerollRequested;
@@ -610,7 +702,6 @@ public class UpgradesManager : MonoBehaviour
             return;
         }
 
-        eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
         eventBus.UnitUpgradeOfferRequested -= HandleUnitUpgradeOfferRequested;
         eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
         eventBus.UnitUpgradeRerollRequested -= HandleUnitUpgradeRerollRequested;
