@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 675718946006888270}
   - component: {fileID: 6370946634570658038}
   - component: {fileID: 1222550691386430895}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface16
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6978498592887771855}
   - component: {fileID: 1545320161845531726}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: CornerSandBags
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -142,7 +142,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -159,7 +159,7 @@ GameObject:
   - component: {fileID: 953554339604037741}
   - component: {fileID: 216903939825247218}
   - component: {fileID: 4279938471292680372}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1023,7 +1023,7 @@ GameObject:
   - component: {fileID: 3337011516696455482}
   - component: {fileID: 5488603756667566270}
   - component: {fileID: 4036213170001244669}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1113,7 +1113,7 @@ GameObject:
   - component: {fileID: 2912541305504483651}
   - component: {fileID: 3100370285818731412}
   - component: {fileID: 5015230729924284775}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1203,7 +1203,7 @@ GameObject:
   - component: {fileID: 7724430323760309417}
   - component: {fileID: 6384633663586793084}
   - component: {fileID: 2114681343547440148}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1569,7 +1569,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1586,7 +1586,7 @@ GameObject:
   - component: {fileID: 486604907409643692}
   - component: {fileID: 4393900716361992695}
   - component: {fileID: 8211151929272656326}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1766,7 +1766,7 @@ GameObject:
   - component: {fileID: 1100995674803247376}
   - component: {fileID: 4021164311654233895}
   - component: {fileID: 6411399315529528483}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1856,7 +1856,7 @@ GameObject:
   - component: {fileID: 822943970148169593}
   - component: {fileID: 3957763699095397109}
   - component: {fileID: 3116667637914618458}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2126,7 +2126,7 @@ GameObject:
   - component: {fileID: 5079945312003091846}
   - component: {fileID: 8379421212494281280}
   - component: {fileID: 6982729019460305995}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2306,7 +2306,7 @@ GameObject:
   - component: {fileID: 2526855818667818065}
   - component: {fileID: 7371814137817054847}
   - component: {fileID: 3494180047658680343}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2394,7 +2394,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 559479231227148589}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: bag_low3 (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2446,7 +2446,7 @@ GameObject:
   - component: {fileID: 992757826844247418}
   - component: {fileID: 4626279129820060605}
   - component: {fileID: 4474732992148521694}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2536,7 +2536,7 @@ GameObject:
   - component: {fileID: 8714435627543382800}
   - component: {fileID: 4617290106737822121}
   - component: {fileID: 8811544068762686263}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface17
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2626,7 +2626,7 @@ GameObject:
   - component: {fileID: 7382206582531217735}
   - component: {fileID: 385926976915805387}
   - component: {fileID: 45858334948889179}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2716,7 +2716,7 @@ GameObject:
   - component: {fileID: 3361828030034847644}
   - component: {fileID: 6651138617536859605}
   - component: {fileID: 5258334665438336064}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2861,7 +2861,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -2878,7 +2878,7 @@ GameObject:
   - component: {fileID: 5765932293937733910}
   - component: {fileID: 4601892192556585787}
   - component: {fileID: 4804631992746337797}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3008,7 +3008,7 @@ GameObject:
   - component: {fileID: 8404634792068527307}
   - component: {fileID: 7146549845625516884}
   - component: {fileID: 1763944867416715562}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3098,7 +3098,7 @@ GameObject:
   - component: {fileID: 3765330383826690397}
   - component: {fileID: 8917938845965358484}
   - component: {fileID: 3400220698161687879}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3188,7 +3188,7 @@ GameObject:
   - component: {fileID: 2937148195639047028}
   - component: {fileID: 604012814119097039}
   - component: {fileID: 8602794773789965519}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3278,7 +3278,7 @@ GameObject:
   - component: {fileID: 1028169380142893144}
   - component: {fileID: 3780453036700247097}
   - component: {fileID: 9090714220045904126}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: set3 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3369,7 +3369,7 @@ GameObject:
   - component: {fileID: 5042717501097284835}
   - component: {fileID: 8919747620915179256}
   - component: {fileID: 5839539673165110058}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3459,7 +3459,7 @@ GameObject:
   - component: {fileID: 7111205500596353643}
   - component: {fileID: 7231787796535840768}
   - component: {fileID: 993584205610074722}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface19
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3549,7 +3549,7 @@ GameObject:
   - component: {fileID: 1443487258034177169}
   - component: {fileID: 6964020929010577716}
   - component: {fileID: 338200029551382953}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3729,7 +3729,7 @@ GameObject:
   - component: {fileID: 8713954278372168041}
   - component: {fileID: 5810883624639998142}
   - component: {fileID: 924215319010194693}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3819,7 +3819,7 @@ GameObject:
   - component: {fileID: 4326127141601354696}
   - component: {fileID: 6975697165127652544}
   - component: {fileID: 1418951915865972194}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4005,7 +4005,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -4022,7 +4022,7 @@ GameObject:
   - component: {fileID: 8125783929738566433}
   - component: {fileID: 129384921710295062}
   - component: {fileID: 5615673894501848872}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4292,7 +4292,7 @@ GameObject:
   - component: {fileID: 8016245355811367673}
   - component: {fileID: 3400493596044655023}
   - component: {fileID: 2446916543726404164}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4472,7 +4472,7 @@ GameObject:
   - component: {fileID: 2253667775256588697}
   - component: {fileID: 1143721385745393809}
   - component: {fileID: 5558821890413277706}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4745,7 +4745,7 @@ GameObject:
   - component: {fileID: 5074244664279031858}
   - component: {fileID: 4926823762864995885}
   - component: {fileID: 8955393363219142938}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface18
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4835,7 +4835,7 @@ GameObject:
   - component: {fileID: 9025592480299257972}
   - component: {fileID: 70424685078166157}
   - component: {fileID: 3959278973685479077}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5049,7 +5049,7 @@ GameObject:
   - component: {fileID: 3666735557607884603}
   - component: {fileID: 3865409111041126343}
   - component: {fileID: 7748588333346258076}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5229,7 +5229,7 @@ GameObject:
   - component: {fileID: 8427114359320521546}
   - component: {fileID: 1155669602391732795}
   - component: {fileID: 875752285321300005}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface16
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5409,7 +5409,7 @@ GameObject:
   - component: {fileID: 8909823080646425262}
   - component: {fileID: 2786586180892304273}
   - component: {fileID: 5986406971815721322}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5499,7 +5499,7 @@ GameObject:
   - component: {fileID: 3579006229907603045}
   - component: {fileID: 7972144309749013712}
   - component: {fileID: 1767556735128876127}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5589,7 +5589,7 @@ GameObject:
   - component: {fileID: 3045691028042831833}
   - component: {fileID: 2063398992264202498}
   - component: {fileID: 8231976515643499015}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5769,7 +5769,7 @@ GameObject:
   - component: {fileID: 6817116668236826685}
   - component: {fileID: 6354146938416163841}
   - component: {fileID: 1038737814768042010}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface19
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5859,7 +5859,7 @@ GameObject:
   - component: {fileID: 1113176483520045617}
   - component: {fileID: 1174742794913466131}
   - component: {fileID: 598823728424324688}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface17
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6039,7 +6039,7 @@ GameObject:
   - component: {fileID: 7103610544145515326}
   - component: {fileID: 4544535979585184647}
   - component: {fileID: 8554112527568758622}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6129,7 +6129,7 @@ GameObject:
   - component: {fileID: 4532410193555703744}
   - component: {fileID: 2602542253202361914}
   - component: {fileID: 9196426843051265038}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface18
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6219,7 +6219,7 @@ GameObject:
   - component: {fileID: 4839895886348571181}
   - component: {fileID: 7487744770954568833}
   - component: {fileID: 2065904873849325323}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6399,7 +6399,7 @@ GameObject:
   - component: {fileID: 6541848145354501547}
   - component: {fileID: 7507860430101682359}
   - component: {fileID: 8589733244207476184}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6489,7 +6489,7 @@ GameObject:
   - component: {fileID: 9136606095664994879}
   - component: {fileID: 6372606939388268148}
   - component: {fileID: 5833133219415547330}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6579,7 +6579,7 @@ GameObject:
   - component: {fileID: 494382277674357254}
   - component: {fileID: 1409489019156695868}
   - component: {fileID: 7507474848724943096}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6669,7 +6669,7 @@ GameObject:
   - component: {fileID: 5646890908765875187}
   - component: {fileID: 4449584615857719769}
   - component: {fileID: 4181931913702588586}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6757,7 +6757,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2949696294633466957}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: bag_low3 (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6809,7 +6809,7 @@ GameObject:
   - component: {fileID: 1164737043294256110}
   - component: {fileID: 7291809362641303962}
   - component: {fileID: 1242266516972725906}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6899,7 +6899,7 @@ GameObject:
   - component: {fileID: 1646224804199278252}
   - component: {fileID: 4099759112111836004}
   - component: {fileID: 3789772949313893139}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6989,7 +6989,7 @@ GameObject:
   - component: {fileID: 1913213480347675083}
   - component: {fileID: 7419396508117973526}
   - component: {fileID: 8112745435408527317}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface17
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7079,7 +7079,7 @@ GameObject:
   - component: {fileID: 4667574098418207261}
   - component: {fileID: 7025369104389429271}
   - component: {fileID: 1116817251132248143}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7169,7 +7169,7 @@ GameObject:
   - component: {fileID: 2532902581163858752}
   - component: {fileID: 5104679183864114998}
   - component: {fileID: 1213192200049733025}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface18
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7259,7 +7259,7 @@ GameObject:
   - component: {fileID: 1617082969565170876}
   - component: {fileID: 8246582267083044785}
   - component: {fileID: 3326238097427788664}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7349,7 +7349,7 @@ GameObject:
   - component: {fileID: 1269437282593687248}
   - component: {fileID: 3079387103455430943}
   - component: {fileID: 2671028352940388502}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7535,7 +7535,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -7552,7 +7552,7 @@ GameObject:
   - component: {fileID: 2638165186656529252}
   - component: {fileID: 1057654959813029441}
   - component: {fileID: 5720394393127551783}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface16
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7642,7 +7642,7 @@ GameObject:
   - component: {fileID: 677369722725865980}
   - component: {fileID: 786960418382137750}
   - component: {fileID: 49356958728638964}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7732,7 +7732,7 @@ GameObject:
   - component: {fileID: 9065044112695848672}
   - component: {fileID: 3933380877008869148}
   - component: {fileID: 5025284080957656838}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7820,7 +7820,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4682089092567261195}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: bag_low3 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7872,7 +7872,7 @@ GameObject:
   - component: {fileID: 7675606254421477455}
   - component: {fileID: 4168666664691801749}
   - component: {fileID: 8388006707438787610}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8052,7 +8052,7 @@ GameObject:
   - component: {fileID: 1817303416067598108}
   - component: {fileID: 3583626129675744430}
   - component: {fileID: 4079247399579962669}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8142,7 +8142,7 @@ GameObject:
   - component: {fileID: 7686050084071808656}
   - component: {fileID: 2466497898899444480}
   - component: {fileID: 7429507571604683048}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8232,7 +8232,7 @@ GameObject:
   - component: {fileID: 7421226204025560388}
   - component: {fileID: 9198772266964407446}
   - component: {fileID: 3728950318902441472}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface19
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8465,7 +8465,7 @@ GameObject:
   - component: {fileID: 1869343532877351825}
   - component: {fileID: 5427197719718877116}
   - component: {fileID: 4735019299006491091}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: polySurface2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8673,7 +8673,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -8799,7 +8799,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -8865,6 +8865,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 21d01045217ed97469ec0df0085adf72, type: 3}
       propertyPath: m_Name
       value: ww2box (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 21d01045217ed97469ec0df0085adf72, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -8964,7 +8968,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
