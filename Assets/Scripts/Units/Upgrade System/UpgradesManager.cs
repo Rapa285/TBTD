@@ -220,23 +220,6 @@ public class UpgradesManager : MonoBehaviour
         return false;
     }
 
-    private void HandleUnitUpgradeThresholdReached(UnitUpgradeThresholdReachedEvent eventData)
-    {
-        ResolveReferences();
-
-        string unitId = eventData.UnitId;
-        if (string.IsNullOrWhiteSpace(unitId)
-            || unitStateManager == null
-            || pendingOffers.ContainsKey(unitId)
-            || !unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit)
-            || !unitStateManager.TryBeginUpgradeSelection(unitId))
-        {
-            return;
-        }
-
-        CreateStoredOfferOrAdvance(unitId, unit);
-    }
-
     private void HandleUnitUpgradeOfferRequested(UnitUpgradeOfferRequestedEvent eventData)
     {
         if (string.IsNullOrWhiteSpace(eventData.UnitId))
@@ -310,12 +293,7 @@ public class UpgradesManager : MonoBehaviour
 
     private void CreateStoredOfferOrAdvance(string unitId, UnitStateManager.OwnedUnitState unit)
     {
-        if (CreatePendingOffer(unitId, unit))
-        {
-            return;
-        }
-
-        RecordSelection(unitId, default);
+        CreateStoredOfferOrConsumeInvalidCredits(unitId, true);
     }
 
     private bool EnsurePendingOffer(string unitId)
@@ -333,7 +311,7 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
-        CreateStoredOfferOrAdvance(unitId, unit);
+        CreateStoredOfferOrConsumeInvalidCredits(unitId, true);
         return pendingOffers.ContainsKey(unitId);
     }
 
@@ -489,6 +467,8 @@ public class UpgradesManager : MonoBehaviour
             return false;
         }
 
+        CreateStoredOfferOrConsumeInvalidCredits(unitId, false);
+
         ResolveReferences();
         if (eventBus != null && unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
         {
@@ -505,10 +485,78 @@ public class UpgradesManager : MonoBehaviour
                 unit.Experience,
                 hasNextExperienceThreshold,
                 nextExperienceThreshold,
-                selectedEvolution));
+                selectedEvolution,
+                unit.UnspentUpgradeCount));
         }
 
         return true;
+    }
+
+    private bool CreateStoredOfferOrConsumeInvalidCredits(string unitId, bool raiseConsumedCreditEvents)
+    {
+        ResolveReferences();
+        if (unitStateManager == null || string.IsNullOrWhiteSpace(unitId))
+        {
+            return false;
+        }
+
+        while (unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit)
+            && unit.UnspentUpgradeCount > 0)
+        {
+            if (pendingOffers.ContainsKey(unitId) || CreatePendingOffer(unitId, unit))
+            {
+                return true;
+            }
+
+            if (!unitStateManager.RecordSelectedUpgrade(
+                unitId,
+                null,
+                null,
+                out UpgradeSO selectedUpgrade,
+                out int selectedUpgradeLevel))
+            {
+                return false;
+            }
+
+            if (raiseConsumedCreditEvents)
+            {
+                RaiseUpgradeSelectedEvent(unitId, null, null, selectedUpgrade, selectedUpgradeLevel);
+            }
+        }
+
+        return false;
+    }
+
+    private void RaiseUpgradeSelectedEvent(
+        string unitId,
+        MultiUpgradeSO selectedMultiUpgrade,
+        EvolutionSO selectedEvolution,
+        UpgradeSO selectedUpgrade,
+        int selectedUpgradeLevel)
+    {
+        ResolveReferences();
+        if (eventBus == null
+            || unitStateManager == null
+            || !unitStateManager.TryGetUnit(unitId, out UnitStateManager.OwnedUnitState unit))
+        {
+            return;
+        }
+
+        bool hasNextExperienceThreshold = unitStateManager.TryGetNextExperienceThreshold(
+            unitId,
+            out float nextExperienceThreshold);
+
+        eventBus.RaiseUnitUpgradeSelected(new UnitUpgradeSelectedEvent(
+            unitId,
+            selectedMultiUpgrade,
+            selectedUpgrade,
+            selectedUpgradeLevel,
+            unit.Level,
+            unit.Experience,
+            hasNextExperienceThreshold,
+            nextExperienceThreshold,
+            selectedEvolution,
+            unit.UnspentUpgradeCount));
     }
 
     private bool RaisePendingOffer(string unitId)
@@ -640,7 +688,6 @@ public class UpgradesManager : MonoBehaviour
             return;
         }
 
-        eventBus.UnitUpgradeThresholdReached += HandleUnitUpgradeThresholdReached;
         eventBus.UnitUpgradeOfferRequested += HandleUnitUpgradeOfferRequested;
         eventBus.UnitUpgradeChoiceRequested += HandleUnitUpgradeChoiceRequested;
         eventBus.UnitUpgradeRerollRequested += HandleUnitUpgradeRerollRequested;
@@ -655,7 +702,6 @@ public class UpgradesManager : MonoBehaviour
             return;
         }
 
-        eventBus.UnitUpgradeThresholdReached -= HandleUnitUpgradeThresholdReached;
         eventBus.UnitUpgradeOfferRequested -= HandleUnitUpgradeOfferRequested;
         eventBus.UnitUpgradeChoiceRequested -= HandleUnitUpgradeChoiceRequested;
         eventBus.UnitUpgradeRerollRequested -= HandleUnitUpgradeRerollRequested;

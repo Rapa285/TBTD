@@ -70,6 +70,41 @@ public struct UnitExperienceChangedEvent
 }
 
 /// <summary>
+/// Raised after roster XP processing immediately advances one or more unit levels.
+/// </summary>
+public readonly struct UnitLevelChangedEvent
+{
+    public string UnitId { get; }
+    public int PreviousLevel { get; }
+    public int NewLevel { get; }
+    public int LevelsGained { get; }
+    public float CurrentExperience { get; }
+    public bool HasNextExperienceThreshold { get; }
+    public float NextExperienceThreshold { get; }
+    public int UnspentUpgradeCount { get; }
+
+    public UnitLevelChangedEvent(
+        string unitId,
+        int previousLevel,
+        int newLevel,
+        int levelsGained,
+        float currentExperience,
+        bool hasNextExperienceThreshold,
+        float nextExperienceThreshold,
+        int unspentUpgradeCount)
+    {
+        UnitId = unitId;
+        PreviousLevel = Mathf.Max(0, previousLevel);
+        NewLevel = Mathf.Max(0, newLevel);
+        LevelsGained = Mathf.Max(0, levelsGained);
+        CurrentExperience = Mathf.Max(0f, currentExperience);
+        HasNextExperienceThreshold = hasNextExperienceThreshold;
+        NextExperienceThreshold = Mathf.Max(0f, nextExperienceThreshold);
+        UnspentUpgradeCount = Mathf.Max(0, unspentUpgradeCount);
+    }
+}
+
+/// <summary>
 /// Raised when a deployed unit reaches its next upgrade threshold.
 /// </summary>
 public struct UnitUpgradeThresholdReachedEvent
@@ -229,6 +264,7 @@ public struct UnitUpgradeSelectedEvent
     public float CurrentExperience { get; }
     public bool HasNextExperienceThreshold { get; }
     public float NextExperienceThreshold { get; }
+    public int RemainingUpgradeCount { get; }
 
     public UnitUpgradeSelectedEvent(
         string unitId,
@@ -239,17 +275,19 @@ public struct UnitUpgradeSelectedEvent
         float currentExperience,
         bool hasNextExperienceThreshold,
         float nextExperienceThreshold,
-        EvolutionSO selectedEvolution = null)
+        EvolutionSO selectedEvolution = null,
+        int remainingUpgradeCount = 0)
     {
         UnitId = unitId;
         SelectedMultiUpgrade = selectedMultiUpgrade;
         SelectedEvolution = selectedEvolution;
         SelectedUpgrade = selectedUpgrade;
         SelectedUpgradeLevel = Mathf.Max(0, selectedUpgradeLevel);
-        NewLevel = newLevel;
+        NewLevel = Mathf.Max(0, newLevel);
         CurrentExperience = currentExperience;
         HasNextExperienceThreshold = hasNextExperienceThreshold;
         NextExperienceThreshold = nextExperienceThreshold;
+        RemainingUpgradeCount = Mathf.Max(0, remainingUpgradeCount);
     }
 }
 
@@ -433,6 +471,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<TowerDeployedEvent> TowerDeployed;
     public event Action<TowerSetupCompletedEvent> TowerSetupCompleted;
     public event Action<UnitExperienceChangedEvent> UnitExperienceChanged;
+    public event Action<UnitLevelChangedEvent> UnitLevelChanged;
     public event Action<UnitUpgradeThresholdReachedEvent> UnitUpgradeThresholdReached;
     public event Action<UnitUpgradeChoicesOfferedEvent> UnitUpgradeChoicesOffered;
     public event Action<UnitUpgradeOfferRequestedEvent> UnitUpgradeOfferRequested;
@@ -491,6 +530,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitExperienceChanged(UnitExperienceChangedEvent eventData)
     {
         UnitExperienceChanged?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that roster XP processing advanced a unit level.
+    /// </summary>
+    public void RaiseUnitLevelChanged(UnitLevelChangedEvent eventData)
+    {
+        UnitLevelChanged?.Invoke(eventData);
     }
 
     /// <summary>

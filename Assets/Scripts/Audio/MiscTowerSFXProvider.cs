@@ -24,7 +24,7 @@ public sealed class MiscTowerSFXProvider : MonoBehaviour
     [SerializeField, Tooltip("Played after a deployed roster unit has been successfully recalled.")]
     private AudioClip recallCompleteSound;
 
-    [SerializeField, Tooltip("Played after an upgrade selection advances a roster unit's level.")]
+    [SerializeField, Tooltip("Played after roster XP advances a unit level.")]
     private AudioClip levelUpSound;
 
     [Header("Pitch Randomization")]
@@ -89,7 +89,7 @@ public sealed class MiscTowerSFXProvider : MonoBehaviour
         PlayTowerSound(recallCompleteSound, randomizeRecallCompletePitch);
     }
 
-    private void HandleUnitUpgradeSelected(UnitUpgradeSelectedEvent eventData)
+    private void HandleUnitLevelChanged(UnitLevelChangedEvent eventData)
     {
         PlayTowerSound(levelUpSound, randomizeLevelUpPitch);
     }
@@ -154,7 +154,7 @@ public sealed class MiscTowerSFXProvider : MonoBehaviour
         eventBus.TowerSetupCompleted += HandleTowerSetupCompleted;
         eventBus.UnitRecallStarted += HandleUnitRecallStarted;
         eventBus.UnitRecalled += HandleUnitRecalled;
-        eventBus.UnitUpgradeSelected += HandleUnitUpgradeSelected;
+        eventBus.UnitLevelChanged += HandleUnitLevelChanged;
         subscribedToEventBus = true;
     }
 
@@ -169,7 +169,7 @@ public sealed class MiscTowerSFXProvider : MonoBehaviour
         eventBus.TowerSetupCompleted -= HandleTowerSetupCompleted;
         eventBus.UnitRecallStarted -= HandleUnitRecallStarted;
         eventBus.UnitRecalled -= HandleUnitRecalled;
-        eventBus.UnitUpgradeSelected -= HandleUnitUpgradeSelected;
+        eventBus.UnitLevelChanged -= HandleUnitLevelChanged;
         subscribedToEventBus = false;
     }
 }

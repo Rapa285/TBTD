@@ -111,6 +111,14 @@ public class UnitDetailsUI : MonoBehaviour
         }
     }
 
+    private void HandleUnitLevelChanged(UnitLevelChangedEvent eventData)
+    {
+        if (IsSelectedUnit(eventData.UnitId))
+        {
+            RefreshSelectedProgressionDisplay();
+        }
+    }
+
     private void HandleUnitAmmoConsumed(UnitAmmoConsumedEvent eventData)
     {
         if (IsSelectedTower(eventData.UnitId, eventData.Tower))
@@ -522,6 +530,7 @@ public class UnitDetailsUI : MonoBehaviour
         }
 
         eventBus.UnitExperienceChanged += HandleUnitExperienceChanged;
+        eventBus.UnitLevelChanged += HandleUnitLevelChanged;
         eventBus.UnitAmmoConsumed += HandleUnitAmmoConsumed;
         eventBus.TowerModified += HandleTowerModified;
         eventBus.UnitUpgradeSelected += HandleUnitUpgradeSelected;
@@ -538,6 +547,7 @@ public class UnitDetailsUI : MonoBehaviour
         }
 
         eventBus.UnitExperienceChanged -= HandleUnitExperienceChanged;
+        eventBus.UnitLevelChanged -= HandleUnitLevelChanged;
         eventBus.UnitAmmoConsumed -= HandleUnitAmmoConsumed;
         eventBus.TowerModified -= HandleTowerModified;
         eventBus.UnitUpgradeSelected -= HandleUnitUpgradeSelected;

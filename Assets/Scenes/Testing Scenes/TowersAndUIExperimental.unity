@@ -2568,14 +2568,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -460
       objectReference: {fileID: 0}
-    - target: {fileID: 3156270984756102213, guid: 46dcc3d88d846a645af2095b6f7c6f51, type: 3}
-      propertyPath: hintShowDelay
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3156270984756102213, guid: 46dcc3d88d846a645af2095b6f7c6f51, type: 3}
-      propertyPath: hintFadeDuration
-      value: 0.15
-      objectReference: {fileID: 0}
     - target: {fileID: 3167879807873506086, guid: 46dcc3d88d846a645af2095b6f7c6f51, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -3182,7 +3174,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6539167304767726588, guid: 46dcc3d88d846a645af2095b6f7c6f51, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.001059929
+      value: -0.0010111021
       objectReference: {fileID: 0}
     - target: {fileID: 6587816525597705711, guid: 46dcc3d88d846a645af2095b6f7c6f51, type: 3}
       propertyPath: m_AnchorMax.y
@@ -8079,7 +8071,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00037171243}
+  m_AnchoredPosition: {x: 0, y: 0.000040505827}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!1001 &1420594608940256798

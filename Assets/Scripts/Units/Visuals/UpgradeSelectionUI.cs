@@ -38,6 +38,24 @@ public class UpgradeSelectionUI : MonoBehaviour
     [SerializeField, Tooltip("Optional TMP text used to display the current reroll cost.")]
     private TMP_Text rerollCostText;
 
+    [SerializeField, Tooltip("Roster manager used to resolve the active offer unit icon and upgrade-credit count.")]
+    private UnitStateManager unitStateManager;
+
+    [SerializeField, Tooltip("Optional image used to display the active roster unit icon.")]
+    private Image unitIconImage;
+
+    [SerializeField, Tooltip("Optional root shown while the active roster unit has an icon. Leave empty to toggle only the icon Image.")]
+    private GameObject unitIconRoot;
+
+    [SerializeField, Tooltip("Optional TMP text used to display the active unit's remaining upgrade credits.")]
+    private TMP_Text remainingUpgradesText;
+
+    [SerializeField, Tooltip("Optional root shown while an active roster unit is bound. Defaults to the remaining-upgrades text object.")]
+    private GameObject remainingUpgradesRoot;
+
+    [SerializeField, Tooltip("Composite format used to display remaining upgrade credits. {0} is the credit count.")]
+    private string remainingUpgradesFormat = "Remaining upgrades : {0}";
+
     [SerializeField, Min(0f), Tooltip("Delay in seconds between each active upgrade choice reveal animation.")]
     private float choiceRevealDelay = 0.08f;
 
@@ -200,6 +218,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         activeUnitId = eventData.UnitId;
         ClearChoices();
+        RefreshActiveUnitDisplay();
         RefreshExistingUpgrades();
 
         for (int i = 0; i < eventData.Choices.Length; i++)
@@ -227,9 +246,12 @@ public class UpgradeSelectionUI : MonoBehaviour
             ResolveReferences();
         }
 
+        RefreshActiveUnitDisplay();
+
         if (upgradesManager != null && upgradesManager.HasPendingOffer(activeUnitId))
         {
             ClearChoices();
+            RefreshActiveUnitDisplay();
             RefreshExistingUpgrades();
             RefreshRerollState();
             return;
@@ -268,6 +290,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
     private void Hide()
     {
+        ClearActiveUnitDisplay();
         SetVisible(false);
     }
 
@@ -304,6 +327,8 @@ public class UpgradeSelectionUI : MonoBehaviour
         {
             existingUpgradesUI.Clear();
         }
+
+        ClearActiveUnitDisplay();
     }
 
     private void BindFirstChoiceDetails()
@@ -393,6 +418,11 @@ public class UpgradeSelectionUI : MonoBehaviour
             ServiceLocator.TryResolve(out currencyManager);
         }
 
+        if (unitStateManager == null)
+        {
+            ServiceLocator.TryResolve(out unitStateManager);
+        }
+
         if (canvasGroup == null)
         {
             canvasGroup = GetComponent<CanvasGroup>();
@@ -422,6 +452,8 @@ public class UpgradeSelectionUI : MonoBehaviour
         {
             rerollButtonRoot = rerollButton.gameObject;
         }
+
+        ResolveActiveUnitDisplayReferences();
     }
 
     private void CollectChoicePool()
@@ -603,6 +635,116 @@ public class UpgradeSelectionUI : MonoBehaviour
         existingUpgradesUI.Bind(activeUnitId);
     }
 
+    private void RefreshActiveUnitDisplay()
+    {
+        ResolveReferences();
+
+        if (string.IsNullOrWhiteSpace(activeUnitId)
+            || unitStateManager == null
+            || !unitStateManager.TryGetUnit(activeUnitId, out UnitStateManager.OwnedUnitState unit))
+        {
+            ClearActiveUnitDisplay();
+            return;
+        }
+
+        BindUnitIcon(unit.Icon);
+        BindRemainingUpgrades(unit.UnspentUpgradeCount);
+    }
+
+    private void BindUnitIcon(Sprite icon)
+    {
+        ResolveActiveUnitDisplayReferences();
+
+        bool hasIcon = icon != null && unitIconImage != null;
+        if (unitIconImage != null)
+        {
+            unitIconImage.sprite = icon;
+            unitIconImage.enabled = hasIcon;
+        }
+
+        SetRootVisible(GetUnitIconRootTarget(), hasIcon);
+    }
+
+    private void BindRemainingUpgrades(int count)
+    {
+        ResolveActiveUnitDisplayReferences();
+
+        if (remainingUpgradesText == null)
+        {
+            SetRootVisible(GetRemainingUpgradesRootTarget(), false);
+            return;
+        }
+
+        string format = string.IsNullOrWhiteSpace(remainingUpgradesFormat)
+            ? "{0}"
+            : remainingUpgradesFormat;
+
+        remainingUpgradesText.text = string.Format(format, Mathf.Max(0, count));
+        remainingUpgradesText.enabled = true;
+        SetRootVisible(GetRemainingUpgradesRootTarget(), true);
+    }
+
+    private void ClearActiveUnitDisplay()
+    {
+        if (unitIconImage != null)
+        {
+            unitIconImage.sprite = null;
+            unitIconImage.enabled = false;
+        }
+
+        SetRootVisible(GetUnitIconRootTarget(), false);
+
+        if (remainingUpgradesText != null)
+        {
+            remainingUpgradesText.text = string.Empty;
+            remainingUpgradesText.enabled = false;
+        }
+
+        SetRootVisible(GetRemainingUpgradesRootTarget(), false);
+    }
+
+    private void ResolveActiveUnitDisplayReferences()
+    {
+        if (unitIconImage == null)
+        {
+            Transform characterSprite = FindChildByName(transform, "CharacterSprite");
+            if (characterSprite != null)
+            {
+                unitIconImage = characterSprite.GetComponent<Image>();
+            }
+        }
+
+        if (remainingUpgradesText == null)
+        {
+            remainingUpgradesText = FindRemainingUpgradesText(transform);
+        }
+
+        if (remainingUpgradesRoot == null && remainingUpgradesText != null)
+        {
+            remainingUpgradesRoot = remainingUpgradesText.gameObject;
+        }
+    }
+
+    private GameObject GetUnitIconRootTarget()
+    {
+        return unitIconRoot;
+    }
+
+    private GameObject GetRemainingUpgradesRootTarget()
+    {
+        return remainingUpgradesRoot != null
+            ? remainingUpgradesRoot
+            : remainingUpgradesText != null ? remainingUpgradesText.gameObject : null;
+    }
+
+    private static void SetRootVisible(GameObject target, bool isVisible)
+    {
+        if (target != null && target.activeSelf != isVisible)
+        {
+            target.SetActive(isVisible);
+        }
+    }
+
     private UpgradeSelectionExistingUpgradesUI ResolveRuntimeExistingUpgradesUI()
     {
         Transform stripRoot = FindChildByName(transform, "PurchasedUpgrades");
@@ -649,6 +791,26 @@ public class UpgradeSelectionUI : MonoBehaviour
             if (match != null)
             {
                 return match;
+            }
+        }
+
+        return null;
+    }
+
+    private static TMP_Text FindRemainingUpgradesText(Transform parent)
+    {
+        if (parent == null)
+        {
+            return null;
+        }
+
+        TMP_Text[] texts = parent.GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < texts.Length; i++)
+        {
+            TMP_Text text = texts[i];
+            if (text != null && text.text.Contains("Remaining upgrades"))
+            {
+                return text;
             }
         }
 
