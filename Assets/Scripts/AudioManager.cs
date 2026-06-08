@@ -21,11 +21,18 @@ public class AudioManager : MonoBehaviour
     [Header("Gameplay SFX Limits")]
     [SerializeField, Min(1)] private int maxGameplaySfxInstancesPerClipPerFrame = 3;
 
+    [Header("Config Bus Paths")]
+    [SerializeField] private string masterBusPath = "bus:/";
+    [SerializeField] private string sfxBusPath = "bus:/SFX";
+
     [Header("Music Service")]
     [SerializeField] private MusicService musicService;
 
     private readonly Dictionary<AudioClip, int> gameplaySfxCountsByClip = new Dictionary<AudioClip, int>();
+    private readonly HashSet<AudioSource> configuredTowerSfxSources = new HashSet<AudioSource>();
     private int trackedGameplaySfxFrame = -1;
+    private float masterVolume = 1f;
+    private float sfxVolume = 1f;
 
     private void Awake()
     {
@@ -45,7 +52,18 @@ public class AudioManager : MonoBehaviour
         EnsureUISfxSource();
 
         ResolveMusicService();
+        ApplyCurrentConfig();
         ServiceLocator.Register<AudioManager>(this);
+    }
+
+    private void OnEnable()
+    {
+        GeneralEventBus<SettingsChangedEvent>.Subscribe(HandleSettingsChanged);
+    }
+
+    private void OnDisable()
+    {
+        GeneralEventBus<SettingsChangedEvent>.Unsubscribe(HandleSettingsChanged);
     }
 
     private void OnDestroy()
@@ -120,6 +138,9 @@ public class AudioManager : MonoBehaviour
         {
             source.outputAudioMixerGroup = towerSfxGroup;
         }
+
+        configuredTowerSfxSources.Add(source);
+        ApplySfxVolume(source);
     }
 
     public void PlayEnemySFX(AudioClip clip, bool randomizePitch = false)
@@ -179,6 +200,68 @@ public class AudioManager : MonoBehaviour
         source.PlayOneShot(clip);
     }
 
+    private void HandleSettingsChanged(SettingsChangedEvent e)
+    {
+        ApplyConfig(e.Config);
+    }
+
+    private void ApplyCurrentConfig()
+    {
+        ConfigData config = ConfigWorker.Instance != null ? ConfigWorker.Instance.CurrentConfig : null;
+        ApplyConfig(config);
+    }
+
+    private void ApplyConfig(ConfigData config)
+    {
+        masterVolume = GetBusVolume(config, masterBusPath);
+        sfxVolume = GetBusVolume(config, sfxBusPath);
+
+        ApplySfxVolume(towerSfxSource);
+        ApplySfxVolume(enemySfxSource);
+        ApplySfxVolume(uiSfxSource);
+
+        configuredTowerSfxSources.RemoveWhere(source => source == null);
+        foreach (AudioSource source in configuredTowerSfxSources)
+        {
+            ApplySfxVolume(source);
+        }
+    }
+
+    private void ApplySfxVolume(AudioSource source)
+    {
+        if (source == null)
+        {
+            return;
+        }
+
+        source.volume = Mathf.Clamp01(masterVolume * sfxVolume);
+    }
+
+    private static float GetBusVolume(ConfigData config, string busPath)
+    {
+        if (config == null || config.mixerBuses == null || string.IsNullOrWhiteSpace(busPath))
+        {
+            return 1f;
+        }
+
+        for (int i = 0; i < config.mixerBuses.Count; i++)
+        {
+            MixerBusConfig bus = config.mixerBuses[i];
+            if (bus == null)
+            {
+                continue;
+            }
+
+            if (string.Equals(bus.busPath, busPath, System.StringComparison.OrdinalIgnoreCase))
+            {
+                bus.ClampVolume();
+                return bus.volume;
+            }
+        }
+
+        return 1f;
+    }
+
     private bool TryAcceptGameplaySFXRequest(AudioClip clip)
     {
         int currentFrame = Time.frameCount;
@@ -212,5 +295,7 @@ public class AudioManager : MonoBehaviour
         {
             uiSfxSource.outputAudioMixerGroup = targetGroup;
         }
+
+        ApplySfxVolume(uiSfxSource);
     }
 }
