@@ -978,31 +978,32 @@ MonoBehaviour:
   gracePeriod: 5
   waveCount: 100
   waveDuration: 30
+  waveSpawnDuration: 30
   waveTimer: 0
   spawnInterval: 0
   spawnTimer: 0
   normalEnemyList:
-  - enemyPrefab: {fileID: 8371444609426255717, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+  - objectPrefab: {fileID: 0}
     cost: 3
     attribute:
       minWave: 0
       maxWave: 0
-  - enemyPrefab: {fileID: 7020939155529680203, guid: 446bb3e96987a7c46a13cb51aeca9c6c, type: 3}
+  - objectPrefab: {fileID: 0}
     cost: 10
     attribute:
       minWave: 0
       maxWave: 0
-  - enemyPrefab: {fileID: 2794783114083989168, guid: 97665cb029ca6a94d9eb14144ad7de0e, type: 3}
+  - objectPrefab: {fileID: 0}
     cost: 5
     attribute:
       minWave: 0
       maxWave: 0
-  - enemyPrefab: {fileID: 6615277949804604673, guid: 625b7c72d6bda2d498e06fb29feca740, type: 3}
+  - objectPrefab: {fileID: 0}
     cost: 5
     attribute:
       minWave: 0
       maxWave: 0
-  - enemyPrefab: {fileID: 7552550619158113866, guid: 57a75c117713ad343a21eed83207f910, type: 3}
+  - objectPrefab: {fileID: 0}
     cost: 8
     attribute:
       minWave: 0
@@ -1010,7 +1011,6 @@ MonoBehaviour:
   specialEnemyList: []
   baseBudget: 12
   budgetMultiplier: 20
-  enemyToSpawn: []
   eventBus: {fileID: 0}
 --- !u!1 &424244367478263858
 GameObject:
@@ -2994,6 +2994,7 @@ Transform:
   - {fileID: 5562497458021421200}
   - {fileID: 7868731952475336365}
   - {fileID: 6978498592887771855}
+  - {fileID: 916933252439020807}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2774964835421864858
@@ -8310,6 +8311,59 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &9006494147338162143
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 916933252439020807}
+  - component: {fileID: 5566660451286792559}
+  m_Layer: 10
+  m_Name: SpawnBlock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &916933252439020807
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9006494147338162143}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 15.5, y: 0, z: -12.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7242850382993489020}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5566660451286792559
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9006494147338162143}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 16, y: 12.5, z: 40}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &9110628317710427630
 GameObject:
   m_ObjectHideFlags: 0

@@ -697,7 +697,7 @@ MonoBehaviour:
     m_Bits: 2048
   blockingLayers:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 5120
   placementRadius: 0.5
   placementHeight: 1
   verticalOffset: 0
