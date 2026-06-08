@@ -89,10 +89,12 @@ public class SummonerComponent : MonoBehaviour, IDifficultyScalable
             if (prefabsToSummon[i] != null)
             {
                 GameObject summoned=Instantiate(prefabsToSummon[i],transform.position,transform.rotation);
+
                 EnemyEntity childEntity=summoned.GetComponent<EnemyEntity>();
                 if (childEntity != null)
                 {
                     childEntity.BaseTarget=entity.BaseTarget;
+                    childEntity.Initialize();
                 }
 
                 SplineAnimate childSpline=summoned.GetComponent<SplineAnimate>();

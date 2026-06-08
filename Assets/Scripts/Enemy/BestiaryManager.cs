@@ -75,7 +75,8 @@ public class BestiaryManager : MonoBehaviour
     public void OpenBestiary()
     {
         openedFromSettings = true;
-        OpenBestiaryForEnemy(EnemyType.Normal);
+        if (bestiaryPanel != null) bestiaryPanel.SetActive(true);
+        BestiaryOpenEntry(EnemyType.Normal);
     }
 
     public void CloseBestiary()
@@ -107,6 +108,7 @@ public class BestiaryManager : MonoBehaviour
         if (!revealedEnemies.Contains(type))
         {
             revealedEnemies.Add(type);
+            revealedEnemyCount++;
             RefreshEnemyListUI(); 
         }
     }
