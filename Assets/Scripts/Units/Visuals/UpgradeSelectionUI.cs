@@ -246,6 +246,11 @@ public class UpgradeSelectionUI : MonoBehaviour
         RefreshRerollState();
     }
 
+    private void HandleUpgradeRerollStateChanged(UpgradeRerollStateChangedEvent eventData)
+    {
+        RefreshRerollState();
+    }
+
     private void HandleCloseClicked()
     {
         Close();
@@ -513,6 +518,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         eventBus.UnitUpgradeChoicesOffered += HandleUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected += HandleUpgradeSelected;
+        eventBus.UpgradeRerollStateChanged += HandleUpgradeRerollStateChanged;
         eventBus.CurrencyChanged += HandleCurrencyChanged;
         eventBusSubscribed = true;
     }
@@ -526,6 +532,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         eventBus.UnitUpgradeChoicesOffered -= HandleUpgradeChoicesOffered;
         eventBus.UnitUpgradeSelected -= HandleUpgradeSelected;
+        eventBus.UpgradeRerollStateChanged -= HandleUpgradeRerollStateChanged;
         eventBus.CurrencyChanged -= HandleCurrencyChanged;
         eventBusSubscribed = false;
     }
@@ -555,7 +562,14 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         if (rerollCostText != null)
         {
-            rerollCostText.text = currencyManager == null ? "Free" : rerollCost.ToString();
+            if (upgradesManager != null && upgradesManager.HasFreeRerolls)
+            {
+                rerollCostText.text = $"Free x{upgradesManager.FreeRerollsRemaining}";
+            }
+            else
+            {
+                rerollCostText.text = currencyManager == null ? "Free" : rerollCost.ToString();
+            }
         }
 
         GameObject target = rerollButtonRoot != null

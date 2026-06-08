@@ -188,6 +188,21 @@ public readonly struct UnitUpgradeRerollRequestedEvent
 }
 
 /// <summary>
+/// Raised after shared upgrade reroll credits or pricing state changes.
+/// </summary>
+public readonly struct UpgradeRerollStateChangedEvent
+{
+    public int FreeRerollsRemaining { get; }
+    public int CurrentRerollCost { get; }
+
+    public UpgradeRerollStateChangedEvent(int freeRerollsRemaining, int currentRerollCost)
+    {
+        FreeRerollsRemaining = Mathf.Max(0, freeRerollsRemaining);
+        CurrentRerollCost = Mathf.Max(0, currentRerollCost);
+    }
+}
+
+/// <summary>
 /// Raised by upgrade UI when the player closes the menu without selecting an upgrade.
 /// </summary>
 public readonly struct UnitUpgradeMenuClosedEvent
@@ -423,6 +438,7 @@ public class UnitEventBus : MonoBehaviour
     public event Action<UnitUpgradeOfferRequestedEvent> UnitUpgradeOfferRequested;
     public event Action<UnitUpgradeChoiceRequestedEvent> UnitUpgradeChoiceRequested;
     public event Action<UnitUpgradeRerollRequestedEvent> UnitUpgradeRerollRequested;
+    public event Action<UpgradeRerollStateChangedEvent> UpgradeRerollStateChanged;
     public event Action<UnitUpgradeMenuClosedEvent> UnitUpgradeMenuClosed;
     public event Action<UnitUpgradeSelectedEvent> UnitUpgradeSelected;
     public event Action<UnitRecalledEvent> UnitRecalled;
@@ -515,6 +531,14 @@ public class UnitEventBus : MonoBehaviour
     public void RaiseUnitUpgradeRerollRequested(UnitUpgradeRerollRequestedEvent eventData)
     {
         UnitUpgradeRerollRequested?.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Publishes that shared upgrade reroll credits or pricing state changed.
+    /// </summary>
+    public void RaiseUpgradeRerollStateChanged(UpgradeRerollStateChangedEvent eventData)
+    {
+        UpgradeRerollStateChanged?.Invoke(eventData);
     }
 
     /// <summary>
