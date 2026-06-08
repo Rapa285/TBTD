@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,10 @@ public sealed class SettingsWorker : MonoBehaviour
     [SerializeField] string musicBusPath = "bus:/BGM";
     [SerializeField] bool enforceVolumeRange = true;
 
+    [SerializeField] TextMeshProUGUI masterVolumeValueText;
+    [SerializeField] TextMeshProUGUI sfxVolumeValueText;
+    [SerializeField] TextMeshProUGUI musicVolumeValueText;
+
     [Header("Mouse Sensitivity")]
     [SerializeField] Slider mouseSensitivitySlider;
     [SerializeField] InputField mouseSensitivityInput;
@@ -23,13 +28,20 @@ public sealed class SettingsWorker : MonoBehaviour
 
     [Header("Buttons")]
     [SerializeField] Button cancelButton;
-    [SerializeField] Button saveButton;
+    [SerializeField] Button[] saveButtons;
 
     ConfigData workingConfig;
     ConfigData savedSnapshot;
     bool suppressEvents;
 
     void OnEnable()
+    {
+        EnsureConfigLoaded();
+        BindUI();
+        LoadFromConfig();
+    }
+
+    private void Start()
     {
         EnsureConfigLoaded();
         BindUI();
@@ -54,16 +66,21 @@ public sealed class SettingsWorker : MonoBehaviour
         if (masterVolumeSlider != null)
         {
             masterVolumeSlider.onValueChanged.AddListener(HandleMasterVolumeChanged);
+            masterVolumeSlider.onValueChanged.AddListener(UpdateMasterVolumeValueText);
         }
 
         if (sfxVolumeSlider != null)
         {
             sfxVolumeSlider.onValueChanged.AddListener(HandleSfxVolumeChanged);
+            sfxVolumeSlider.onValueChanged.AddListener(UpdateSFXVolumeValueText);
+
         }
 
         if (musicVolumeSlider != null)
         {
             musicVolumeSlider.onValueChanged.AddListener(HandleMusicVolumeChanged);
+            musicVolumeSlider.onValueChanged.AddListener(UpdateMusicVolumeValueText);
+
         }
 
         if (mouseSensitivitySlider != null)
@@ -81,9 +98,19 @@ public sealed class SettingsWorker : MonoBehaviour
             cancelButton.onClick.AddListener(CancelChanges);
         }
 
-        if (saveButton != null)
+        // if (saveButton != null)
+        // {
+        //     saveButton.onClick.AddListener(SaveChanges);
+        // }
+        if (saveButtons != null)
         {
-            saveButton.onClick.AddListener(SaveChanges);
+            foreach (Button btn in saveButtons)
+            {
+                if (btn != null)
+                {
+                    btn.onClick.AddListener(SaveChanges);
+                }
+            }
         }
     }
 
@@ -92,16 +119,21 @@ public sealed class SettingsWorker : MonoBehaviour
         if (masterVolumeSlider != null)
         {
             masterVolumeSlider.onValueChanged.RemoveListener(HandleMasterVolumeChanged);
+            masterVolumeSlider.onValueChanged.RemoveListener(UpdateMasterVolumeValueText);
         }
 
         if (sfxVolumeSlider != null)
         {
             sfxVolumeSlider.onValueChanged.RemoveListener(HandleSfxVolumeChanged);
+            sfxVolumeSlider.onValueChanged.RemoveListener(UpdateSFXVolumeValueText);
+
         }
 
         if (musicVolumeSlider != null)
         {
             musicVolumeSlider.onValueChanged.RemoveListener(HandleMusicVolumeChanged);
+            musicVolumeSlider.onValueChanged.RemoveListener(UpdateMusicVolumeValueText);
+
         }
 
         if (mouseSensitivitySlider != null)
@@ -119,10 +151,21 @@ public sealed class SettingsWorker : MonoBehaviour
             cancelButton.onClick.RemoveListener(CancelChanges);
         }
 
-        if (saveButton != null)
+        // if (saveButton != null)
+        // {
+        //     saveButton.onClick.RemoveListener(SaveChanges);
+        // }
+        if (saveButtons != null)
         {
-            saveButton.onClick.RemoveListener(SaveChanges);
+            foreach (Button btn in saveButtons)
+            {
+                if (btn != null)
+                {
+                    btn.onClick.RemoveListener(SaveChanges);
+                }
+            }
         }
+
     }
 
     void LoadFromConfig()
@@ -201,6 +244,30 @@ public sealed class SettingsWorker : MonoBehaviour
     {
         return Mathf.Clamp(value, minMouseSensitivity, maxMouseSensitivity);
     }
+    void UpdateVolumeValueText(TextMeshProUGUI textElement, float volume)
+    {
+        if (textElement != null)
+        {
+            int percentage = Mathf.RoundToInt(volume * 100);
+            textElement.text = $"{percentage}%";
+        }
+    }
+    
+    void UpdateMasterVolumeValueText(float value)
+    {
+        UpdateVolumeValueText(masterVolumeValueText,value);
+    }
+
+    void UpdateMusicVolumeValueText(float value)
+    {
+        UpdateVolumeValueText(musicVolumeValueText,value);
+    }
+
+    void UpdateSFXVolumeValueText(float value)
+    {
+        UpdateVolumeValueText(sfxVolumeValueText,value);
+    }
+
 
     void HandleMasterVolumeChanged(float value)
     {

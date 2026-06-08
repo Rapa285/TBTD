@@ -179,6 +179,7 @@ GameObject:
   - component: {fileID: 1550578974}
   - component: {fileID: 1550578973}
   - component: {fileID: 1550578976}
+  - component: {fileID: 1550578977}
   m_Layer: 0
   m_Name: PersistenceServices
   m_TagString: Untagged
@@ -270,6 +271,23 @@ MonoBehaviour:
   waveAlertFallbackResourcePath: Audio/UISFX/wave_alert
   masterBusPath: bus:/
   sfxBusPath: bus:/SFX
+--- !u!114 &1550578977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1550578972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21a1fa2ec9dae2f46b45c992505ffaba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConfigWorker
+  fileName: config.json
+  writeDefaultsIfMissing: 1
+  defaultMouseSensitivity: 0.15
+  defaultMixerBuses: []
+  applyOnSceneLoad: 1
 --- !u!1 &2093832406
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,7 +320,7 @@ MonoBehaviour:
   nextScene: {fileID: 11400000, guid: 2893e7945d37db34f8f9398d98478de1, type: 2}
   loadAdditive: 0
   keepBootstrapSceneLoaded: 1
-  configWorker: {fileID: 0}
+  configWorker: {fileID: 1550578977}
   sceneLoader: {fileID: 488497683}
   persistentServicesInitializer: {fileID: 1550578974}
 --- !u!4 &2093832408

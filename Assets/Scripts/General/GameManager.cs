@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField]
-    private float baseHealth = 100f;
 
     [SerializeField]
     private SceneLoader sceneLoader;
