@@ -5,12 +5,18 @@ using UnityEngine.Pool;
 
 public class EnemySpawner : MonoBehaviour
 {
+    [Tooltip("Path followed by spawned enemies. If this GameObject has a SplineContainer, Awake assigns it automatically.")]
     public SplineContainer mapSpline;
 
+    [Tooltip("Seconds before the first wave starts. The spawner only raises grace-period timer events during this time.")]
     public float gracePeriod = 60;
     private int currWave = 1;
+    [Tooltip("Number of authored waves before the spawner switches to infinite-round generation.")]
     public int waveCount = 3;
+    [Tooltip("Seconds allocated for one wave's full spawn queue.")]
     public int waveDuration = 30;
+    [Tooltip("Seconds used to spread out enemy spawning within a wave. Clamped to be between 1 and waveDuration.")]
+    public int waveSpawnDuration = 30;
 
     [SerializeField]
     private float waveTimer;
@@ -19,17 +25,23 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField]
     private float spawnTimer;
 
-    // Add enemy types here
+    // Configure normal enemies here. Each normal enemy consumes wave budget and can be gated by wave range.
     public List<NormalEnemyObject> normalEnemyList = new List<NormalEnemyObject>();
+    // Configure boss/elite-style enemies here. Special enemies are injected on exact waves and ignore budget.
     public List<SpecialEnemyObject> specialEnemyList = new List<SpecialEnemyObject>();
     private Dictionary<EnemyObject, ObjectPool<PooledObject>> poolDictionary = new Dictionary<EnemyObject, ObjectPool<PooledObject>>();
 
+    [Tooltip("Base enemy budget added to every generated wave.")]
     public int baseBudget = 10;
+    [Tooltip("Wave-scaled budget contribution. Final budget is round(currWave * budgetMultiplier) + baseBudget.")]
     public float budgetMultiplier = 1;
     private int budget;
 
+    // Spawn queue for the current wave. Entries are removed from the front as each enemy is spawned.
     private readonly List<EnemySpawnEntry> enemyToSpawn = new List<EnemySpawnEntry>();
+    // Reused list passed to wave UI so it can preview upcoming enemy prefabs without allocating each event.
     private List<GameObject> enemyGameObjectCache = new List<GameObject>();
+    // Special waves end only after every special enemy has spawned and every active special enemy is gone.
     private readonly List<TrackedSpecialEnemy> activeSpecialEnemies = new List<TrackedSpecialEnemy>();
     private int pendingSpecialEnemyCount;
     private bool specialWaveActive;
@@ -63,12 +75,17 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    private void OnValidate()
+    {
+        ClampWaveDurations();
+    }
+
     private void OnDestroy()
     {
         ClearTrackedSpecialEnemies();
     }
 
-    // FixedUpdate for consistency
+    // FixedUpdate keeps wave countdown and spawn cadence tied to Unity's fixed timestep.
     void FixedUpdate()
     {
         if (isPaused)
@@ -78,6 +95,7 @@ public class EnemySpawner : MonoBehaviour
 
         if (gracePeriod > 0)
         {
+            // During grace period, do not advance waves or spawn enemies.
             HandleGracePeriodTick();
             return;
         }
@@ -87,7 +105,7 @@ public class EnemySpawner : MonoBehaviour
             HandleGracePeriodOver();
         }
 
-        // Pre Infinite Round Handling
+        // Authored wave handling. When all configured waves are consumed, infinite mode takes over.
         if (currWave <= waveCount)
         {
             if (waveTimer <= 0)
@@ -116,7 +134,7 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // Infinite Round Handling
+        // Infinite round reuses normal wave generation but keeps currWave fixed for enemy min/max constraints.
         if (isInfiniteRound)
         {
             if (waveTimer <= 0)
@@ -161,6 +179,7 @@ public class EnemySpawner : MonoBehaviour
 
     public void GenerateWave()
     {
+        // Reset special-wave bookkeeping before building this wave's queue.
         isSpecialWave = false;
         pendingSpecialEnemyCount = 0;
         TryRaiseSpecialWaveEnded();
@@ -170,7 +189,9 @@ public class EnemySpawner : MonoBehaviour
 
         if (enemyToSpawn.Count > 0)
         {
-            spawnInterval = (float) waveDuration / enemyToSpawn.Count;    
+            // Spread queued enemies across the spawn window, leaving the rest of waveDuration as downtime.
+            int effectiveWaveSpawnDuration = GetEffectiveWaveSpawnDuration();
+            spawnInterval = (float) effectiveWaveSpawnDuration / enemyToSpawn.Count;    
         }
         else
         {
@@ -201,7 +222,8 @@ public class EnemySpawner : MonoBehaviour
 
         enemyToSpawn.Clear();
 
-        // Generate Normal Enemies based on budget
+        // Generate normal enemies by spending the wave budget on random valid entries.
+        // The attempt cap prevents an infinite loop when the remaining budget cannot buy a valid enemy.
         int attempts = 0;
         while(budget > 0 && attempts < 100)
         {
@@ -234,9 +256,8 @@ public class EnemySpawner : MonoBehaviour
                 attempts++;
             }
         }
-
-                // Check for Special Enemies 
-        // NOTE: EXPERIMENTAL special enemies are spawned in the middle
+        // Inject special enemies after budget generation.
+        // NOTE: Current insertion appends to the end of the queue because FloorToInt(enemyToSpawn.Count) == Count.
         for (int i = 0; i < specialEnemyList.Count; i++)
         {
             if (currWave == specialEnemyList[i].waveToSpawn)
@@ -244,7 +265,9 @@ public class EnemySpawner : MonoBehaviour
                 isSpecialWave = true;
                 EnemyObject specialEnemyObject = specialEnemyList[i];
 
-                enemyToSpawn.Insert(Mathf.FloorToInt(enemyToSpawn.Count), new EnemySpawnEntry(specialEnemyObject, true));
+                enemyToSpawn.Insert(
+                    Mathf.FloorToInt(enemyToSpawn.Count),
+                    new EnemySpawnEntry(specialEnemyObject, true, specialEnemyList[i].difficultyMultiplier));
                 pendingSpecialEnemyCount++;
 
                 Debug.Log($"Added Special Enemy for Wave {currWave}: {specialEnemyObject.objectPrefab.name}");
@@ -255,6 +278,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void SetupEnemy(GameObject enemyPrefab)
     {
+        // Pooled enemies keep their components; reset transform and spline playback every time they are reused.
         enemyPrefab.transform.SetPositionAndRotation(transform.position, transform.rotation);
 
         // Setup Spline
@@ -282,6 +306,7 @@ public class EnemySpawner : MonoBehaviour
         {
             spawnTimer = spawnInterval;
             
+            // ObjectPool returns an inactive/reused instance and actionOnGet activates it before setup.
             EnemySpawnEntry currentEnemyData = enemyToSpawn[0];
             EnemyObject currentEnemy = currentEnemyData.Enemy;
             PooledObject enemyInstance = poolDictionary[currentEnemy].Get();
@@ -300,7 +325,7 @@ public class EnemySpawner : MonoBehaviour
             {
                 pendingSpecialEnemyCount = Mathf.Max(0, pendingSpecialEnemyCount - 1);
 
-                // enable outline for enemy
+                // Special enemies use outline while active so warning UI can point players to the threat.
                 if (enemyInstance.gameObject.TryGetComponent<Outline>(out var outline))
                 {
                     outline.enabled = true;
@@ -316,6 +341,7 @@ public class EnemySpawner : MonoBehaviour
 
     public void TriggerInfiniteRound()
     {
+        // Infinite mode starts with a budget jump, then each generated infinite wave doubles it again.
         baseBudget *= 2;
 
         isInfiniteRound = true;
@@ -327,6 +353,18 @@ public class EnemySpawner : MonoBehaviour
     public void InfiniteRoundAddDifficulty()
     {
         baseBudget *= 2;
+    }
+
+    private int GetEffectiveWaveSpawnDuration()
+    {
+        ClampWaveDurations();
+        return waveSpawnDuration;
+    }
+
+    private void ClampWaveDurations()
+    {
+        waveDuration = Mathf.Max(1, waveDuration);
+        waveSpawnDuration = Mathf.Clamp(waveSpawnDuration, 1, waveDuration);
     }
 
     public void SetPauseSpawner(bool isPause)
@@ -426,6 +464,7 @@ public class EnemySpawner : MonoBehaviour
         TrackedSpecialEnemy trackedEnemy = new TrackedSpecialEnemy(pooledObject, health, outline);
         activeSpecialEnemies.Add(trackedEnemy);
 
+        // Listen to both death and pool release because pooled enemies may disappear without being killed.
         if (health != null)
         {
             health.OnDeath.AddListener(HandleTrackedSpecialEnemyChanged);
@@ -514,6 +553,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
+        // Do not end the warning while special enemies are still waiting in the queue or alive in the scene.
         PruneInactiveSpecialEnemies();
         if (pendingSpecialEnemyCount > 0 || activeSpecialEnemies.Count > 0)
         {
@@ -538,6 +578,7 @@ public class EnemySpawner : MonoBehaviour
     {
         if (enemy.objectPrefab == null || poolDictionary.ContainsKey(enemy)) return;
 
+        // Pools are keyed by the EnemyObject data entry, so each configured enemy prefab gets its own pool.
         var pool = new ObjectPool<PooledObject>(
             createFunc: () => {
                 PooledObject instance = Instantiate(enemy.objectPrefab, this.transform);

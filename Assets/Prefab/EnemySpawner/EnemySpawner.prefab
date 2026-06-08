@@ -46,13 +46,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
   mapSpline: {fileID: 0}
   gracePeriod: 5
-  enemyList:
-  - enemyPrefab: {fileID: 812546137916035668, guid: 376eb24b6c588144c9ec60aa2a9e09c6, type: 3}
-    cost: 1
-  - enemyPrefab: {fileID: 0}
-    cost: 3
-  budgetMultiplier: 10
   waveCount: 3
-  waveDuration: 30
-  enemyToSpawn:
-  - {fileID: 0}
+  waveDuration: 35
+  waveSpawnDuration: 25
+  waveTimer: 0
+  spawnInterval: 0
+  spawnTimer: 0
+  normalEnemyList: []
+  specialEnemyList:
+  - objectPrefab: {fileID: 0}
+    waveToSpawn: 4
+    difficultyMultiplier: 2
+  - objectPrefab: {fileID: 6627460043982769033, guid: 871a31aacae4d464583a4f2183ac9f55, type: 3}
+    waveToSpawn: 8
+    difficultyMultiplier: 4
+  - objectPrefab: {fileID: 2382283139335368735, guid: 57a75c117713ad343a21eed83207f910, type: 3}
+    waveToSpawn: 12
+    difficultyMultiplier: 6
+  - objectPrefab: {fileID: 7611734589660493741, guid: 8ae8c74e1422d3e408e5d1486a6a11ca, type: 3}
+    waveToSpawn: 16
+    difficultyMultiplier: 6
+  - objectPrefab: {fileID: 4235199249589780513, guid: e7bcf7e72d5d6dd4f8858a3dead49cee, type: 3}
+    waveToSpawn: 20
+    difficultyMultiplier: 8
+  - objectPrefab: {fileID: 1257964433619873752, guid: bc9fbee6af784ff45a51b68c493960b6, type: 3}
+    waveToSpawn: 24
+    difficultyMultiplier: 1
+  baseBudget: 10
+  budgetMultiplier: 10
+  eventBus: {fileID: 0}

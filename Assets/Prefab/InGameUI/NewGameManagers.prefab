@@ -823,6 +823,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7864705542202899331}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
+      propertyPath: mapSpline
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: waveCount
       value: 25
       objectReference: {fileID: 0}
@@ -833,10 +837,6 @@ PrefabInstance:
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.size
       value: 9
-      objectReference: {fileID: 0}
-    - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
-      propertyPath: specialEnemyList.Array.size
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: normalEnemyList.Array.data[0].cost
@@ -958,10 +958,6 @@ PrefabInstance:
       propertyPath: normalEnemyList.Array.data[9].objectPrefab
       value: 
       objectReference: {fileID: 2932124660387912478, guid: 446bb3e96987a7c46a13cb51aeca9c6c, type: 3}
-    - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
-      propertyPath: specialEnemyList.Array.data[0].waveToSpawn
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 4383554748298216789, guid: 0725abfb4de0dfb44813edc03503971d, type: 3}
       propertyPath: specialEnemyList.Array.data[0].objectPrefab
       value: 

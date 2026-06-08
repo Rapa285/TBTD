@@ -21,8 +21,12 @@ PrefabInstance:
       value: 55
       objectReference: {fileID: 0}
     - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
+      propertyPath: experienceReward
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 506166491940111436, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: stats.movementSpeed
-      value: 2.8
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1912898708648870082, guid: 0d38f62857c80c84f96512a0737d517b, type: 3}
       propertyPath: m_PlayOnAwake
