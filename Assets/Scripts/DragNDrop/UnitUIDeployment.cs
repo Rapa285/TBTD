@@ -27,6 +27,15 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     [SerializeField, Tooltip("Optional root shown while this UI item can currently start deployment.")]
     private GameObject deployableIndicatorRoot;
 
+    [SerializeField, Tooltip("Optional root shown while the player is holding this deployable item before preview starts.")]
+    private GameObject holdHintOverlayRoot;
+
+    [SerializeField, Min(0f), Tooltip("Delay before the hold hint overlay begins fading in.")]
+    private float hintShowDelay = 0.5f;
+
+    [SerializeField, Min(0f), Tooltip("Duration used when fading the hold hint overlay in or out.")]
+    private float hintFadeDuration = 0.5f;
+
     [SerializeField, Tooltip("Start deployment when Unity begins a drag gesture from this UI item.")]
     private bool beginDeploymentOnBeginDrag = true;
 
@@ -40,9 +49,9 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     private bool isHeldDown;
     private UnitEventBus eventBus;
     private CurrencyManager currencyManager;
+    private readonly DelayedOverlayFader holdHintOverlayFader = new DelayedOverlayFader();
     private bool subscribedToEventBus;
     private bool isInDeployPreview;
-    private bool previewStartedFromThisItem;
     private DeploymentUIState currentState = DeploymentUIState.CannotDeploy;
 
     public bool IsHovered => isHovered;
@@ -53,6 +62,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     private void Awake()
     {
         ResolveReferences();
+        ForceHideHoldHintOverlay();
         ResetPointerState();
     }
 
@@ -100,6 +110,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         if (Application.isPlaying)
         {
             SetDeployableIndicatorVisible(false);
+            ForceHideHoldHintOverlay();
         }
 
         UnsubscribeFromEventBus();
@@ -107,6 +118,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
 
     private void OnDestroy()
     {
+        ForceHideHoldHintOverlay();
         UnsubscribeFromEventBus();
     }
 
@@ -119,6 +131,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     {
         if (!CanBeginDeployment())
         {
+            RefreshHoldHintOverlay();
             return false;
         }
 
@@ -134,7 +147,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
 
         if (didBeginDeployment)
         {
-            previewStartedFromThisItem = true;
+            SetHoldHintOverlayVisible(false);
         }
 
         return didBeginDeployment;
@@ -143,18 +156,12 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
     public void OnPointerEnter(PointerEventData eventData)
     {
         isHovered = true;
-
-        if (ShouldCancelDeploymentOnPointerReturn())
-        {
-            deploymentController.CancelDeployment();
-            ResetPointerState();
-            RefreshDeployableIndicator();
-        }
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
         isHeldDown = false;
+        RefreshHoldHintOverlay();
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -165,6 +172,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         }
 
         isHeldDown = true;
+        RefreshHoldHintOverlay();
 
         if (beginDeploymentOnPointerDown && TryBeginDeployment())
         {
@@ -350,7 +358,6 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         }
 
         isInDeployPreview = false;
-        previewStartedFromThisItem = false;
         RefreshDeployableIndicator();
     }
 
@@ -402,6 +409,7 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         currentState = EvaluateDisplayState();
         SetDeployableIndicatorVisible(currentState == DeploymentUIState.CanDeploy
             || currentState == DeploymentUIState.InDeployPreview);
+        RefreshHoldHintOverlay();
     }
 
     private DeploymentUIState EvaluateDisplayState()
@@ -427,16 +435,6 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
             && HasAffordableDeploymentCost();
     }
 
-    private bool ShouldCancelDeploymentOnPointerReturn()
-    {
-        ResolveReferences();
-
-        return previewStartedFromThisItem
-            && isInDeployPreview
-            && deploymentController != null
-            && deploymentController.IsDragging;
-    }
-
     private void SetDeployableIndicatorVisible(bool isVisible)
     {
         if (deployableIndicatorRoot != null && deployableIndicatorRoot.activeSelf != isVisible)
@@ -445,9 +443,25 @@ public class UnitUIDeployment : MonoBehaviour, IPointerUpHandler, IPointerDownHa
         }
     }
 
+    private void RefreshHoldHintOverlay()
+    {
+        SetHoldHintOverlayVisible(isHeldDown && CanBeginDeployment());
+    }
+
+    private void SetHoldHintOverlayVisible(bool isVisible)
+    {
+        holdHintOverlayFader.RequestVisible(holdHintOverlayRoot, isVisible, hintShowDelay, hintFadeDuration);
+    }
+
+    private void ForceHideHoldHintOverlay()
+    {
+        holdHintOverlayFader.ForceHide(holdHintOverlayRoot);
+    }
+
     private void ResetPointerState()
     {
         isHovered = false;
         isHeldDown = false;
+        SetHoldHintOverlayVisible(false);
     }
 }

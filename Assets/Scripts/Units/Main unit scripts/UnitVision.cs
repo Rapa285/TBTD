@@ -9,6 +9,9 @@ using UnityEngine.Splines;
 [RequireComponent(typeof(SphereCollider))]
 public sealed class UnitVision : MonoBehaviour
 {
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
+
     [SerializeField, Min(0f), Tooltip("Vision radius used to size the trigger sphere and overlap scans.")]
     private float range = 5f;
 
@@ -30,12 +33,19 @@ public sealed class UnitVision : MonoBehaviour
     [SerializeField, Tooltip("Whether the range visualization starts visible at runtime.")]
     private bool visualizationVisibleByDefault;
 
+    [SerializeField, Tooltip("Tint used for the range visualization while deployment placement is invalid.")]
+    private Color invalidPlacementVisualizationColor = Color.red;
+
     private readonly List<Transform> validTargets = new List<Transform>();
     private readonly HashSet<Transform> scannedTargets = new HashSet<Transform>();
     private readonly Dictionary<Transform, HealthComponent> targetHealthComponents = new Dictionary<Transform, HealthComponent>();
     private readonly Dictionary<HealthComponent, int> trackedHealthCounts = new Dictionary<HealthComponent, int>();
+    private readonly List<Renderer> visualizationRenderers = new List<Renderer>();
     private SphereCollider visionCollider;
+    private MaterialPropertyBlock visualizationPropertyBlock;
+    private GameObject cachedVisualization;
     private bool isVisualizationVisible;
+    private bool isVisualizationInvalidPlacement;
     private float nextTargetScanTime;
 
     public IReadOnlyList<Transform> ValidTargets => validTargets;
@@ -240,6 +250,20 @@ public sealed class UnitVision : MonoBehaviour
     {
         isVisualizationVisible = visible;
         SyncVisualization();
+    }
+
+    /// <summary>
+    /// Tints the optional range visualization for invalid deployment placement, or restores its authored material color.
+    /// </summary>
+    public void SetVisualizationInvalidPlacement(bool invalidPlacement)
+    {
+        if (isVisualizationInvalidPlacement == invalidPlacement)
+        {
+            return;
+        }
+
+        isVisualizationInvalidPlacement = invalidPlacement;
+        SyncVisualizationTint();
     }
 
     private bool TryAddTarget(Transform target)
@@ -472,6 +496,60 @@ public sealed class UnitVision : MonoBehaviour
         {
             visualization.SetActive(isVisualizationVisible);
         }
+
+        SyncVisualizationTint();
+    }
+
+    private void SyncVisualizationTint()
+    {
+        CacheVisualizationRenderers();
+
+        if (visualizationRenderers.Count == 0)
+        {
+            return;
+        }
+
+        if (isVisualizationInvalidPlacement)
+        {
+            if (visualizationPropertyBlock == null)
+            {
+                visualizationPropertyBlock = new MaterialPropertyBlock();
+            }
+
+            visualizationPropertyBlock.Clear();
+            visualizationPropertyBlock.SetColor(BaseColorId, invalidPlacementVisualizationColor);
+            visualizationPropertyBlock.SetColor(ColorId, invalidPlacementVisualizationColor);
+        }
+
+        for (int i = 0; i < visualizationRenderers.Count; i++)
+        {
+            Renderer visualizationRenderer = visualizationRenderers[i];
+            if (visualizationRenderer == null)
+            {
+                continue;
+            }
+
+            visualizationRenderer.SetPropertyBlock(
+                isVisualizationInvalidPlacement ? visualizationPropertyBlock : null);
+        }
+    }
+
+    private void CacheVisualizationRenderers()
+    {
+        if (cachedVisualization == visualization)
+        {
+            return;
+        }
+
+        visualizationRenderers.Clear();
+        cachedVisualization = visualization;
+
+        if (visualization == null)
+        {
+            return;
+        }
+
+        visualization.GetComponentsInChildren(true, visualizationRenderers);
     }
 
     private Vector3 GetWorldCenter()

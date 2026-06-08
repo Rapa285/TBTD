@@ -3154,7 +3154,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 949304483761837212}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.565445
+  m_Size: 0.53731346
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3297,7 +3297,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 200, y: -510}
+  m_AnchoredPosition: {x: 200, y: -610}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &4164102263652033841
@@ -3401,7 +3401,6 @@ GameObject:
   - component: {fileID: 4669952678492718852}
   - component: {fileID: 5125919597033429690}
   - component: {fileID: 2313273753023175768}
-  - component: {fileID: 5351584168547069250}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -3449,7 +3448,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: -876546973899608171, guid: 676ebcd32ae90b5468b37a9554de87d4, type: 3}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -3511,20 +3510,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &5351584168547069250
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4202176333712080893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 165802cdefe338b4bb16641a7aae5470, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIMaterialBoolPropertyToggle
-  targetGraphic: {fileID: 5125919597033429690}
-  propertyName: _Enabled
 --- !u!1 &4346198175471667881
 GameObject:
   m_ObjectHideFlags: 0
@@ -5846,7 +5831,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7386952062242577081}
-  - component: {fileID: 5240037613224052034}
   m_Layer: 5
   m_Name: Upgrade
   m_TagString: Untagged
@@ -5874,25 +5858,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5240037613224052034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6546833008015829111}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8545c61d74d6ff0498163edb59559400, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UnitDetailsUpgradeButton
-  upgradeButton: {fileID: 2313273753023175768}
-  upgradeButtonRoot: {fileID: 4202176333712080893}
-  playerStateController: {fileID: 0}
-  unitStateManager: {fileID: 0}
-  eventBus: {fileID: 0}
-  unavailableAlpha: 0.35
-  availabilityMaterialToggle: {fileID: 5351584168547069250}
 --- !u!1 &6553205401166649679
 GameObject:
   m_ObjectHideFlags: 0

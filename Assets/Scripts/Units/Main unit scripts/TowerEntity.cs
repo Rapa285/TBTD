@@ -120,6 +120,7 @@ public partial class TowerEntity : MonoBehaviour
         ReleaseResolvedUnitIdForPreview();
         ResolveTowerCoreState();
         SetSelected(false);
+        ResetDeploymentPreviewRangeTint();
         SetDeploymentPreviewRangeVisible(true);
     }
 
@@ -128,9 +129,26 @@ public partial class TowerEntity : MonoBehaviour
     /// </summary>
     public void Deploy()
     {
+        ResetDeploymentPreviewRangeTint();
         deployed = true;
         SetDeploymentPreviewRangeVisible(false);
         RunDeploymentActivation();
+    }
+
+    /// <summary>
+    /// Updates the deployment preview range visualization to reflect current placement validity.
+    /// </summary>
+    public void SetDeploymentPreviewPlacementValid(bool isValid)
+    {
+        if (vision == null)
+        {
+            CacheComponentReferences();
+        }
+
+        if (vision != null)
+        {
+            vision.SetVisualizationInvalidPlacement(!deployed && !isValid);
+        }
     }
 
     public void SetSelected(bool selected)
@@ -426,6 +444,19 @@ public partial class TowerEntity : MonoBehaviour
 
         isDeploymentPreviewRangeVisible = visible;
         RefreshRangeVisualization();
+    }
+
+    private void ResetDeploymentPreviewRangeTint()
+    {
+        if (vision == null)
+        {
+            CacheComponentReferences();
+        }
+
+        if (vision != null)
+        {
+            vision.SetVisualizationInvalidPlacement(false);
+        }
     }
 
     private void RefreshRangeVisualization()
