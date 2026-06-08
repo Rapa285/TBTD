@@ -1,22 +1,20 @@
 using System.Collections;
 using UnityEngine;
 
-public abstract class UIWarningDisplayer : MonoBehaviour
+public class UIWarningDisplayer : MonoBehaviour
 {
     [SerializeField]
     private GameObject warningUI;
     [SerializeField]
     private CanvasGroup warningCanvasGroup;
     [SerializeField] private float displayDuration = 5f;
-
+    [SerializeField]
+    private WaveEventBus eventBus;
     [SerializeField] private UISFXID warningSfx = UISFXID.WaveAlert;
+    private bool eventBusSubscribed;
 
     private Coroutine fadeCoroutine;
     [SerializeField] private float fadeDuration = 0.5f;
-
-    protected abstract void SubscribeToEventBus();
-
-    protected abstract void UnsubscribeFromEventBus();
 
     void Start()
     {
@@ -35,7 +33,17 @@ public abstract class UIWarningDisplayer : MonoBehaviour
         }
     }
 
-    protected IEnumerator ShowWarningRoutine()
+    public void TriggerBossWarning()
+    {
+        if (!gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
+        StartCoroutine(ShowWarningRoutine());
+    }
+
+    private IEnumerator ShowWarningRoutine()
     {
         ResolveReferences();
 
@@ -85,6 +93,11 @@ public abstract class UIWarningDisplayer : MonoBehaviour
         ResolveReferences();
     }
 
+    private void HandleSpecialWave()
+    {
+        TriggerBossWarning();
+    }
+
     private void ResolveReferences()
     {
         if (warningUI == null)
@@ -95,6 +108,11 @@ public abstract class UIWarningDisplayer : MonoBehaviour
         if (warningCanvasGroup == null && warningUI != null)
         {
             warningCanvasGroup = warningUI.GetComponent<CanvasGroup>();
+        }
+
+        if (eventBus == null)
+        {
+            ServiceLocator.TryResolve(out eventBus);
         }
     }
 
@@ -115,6 +133,38 @@ public abstract class UIWarningDisplayer : MonoBehaviour
         {
             uiSfxService.PlayUISFX(warningSfx);
         }
+    }
+
+    private void SubscribeToEventBus()
+    {
+        if (eventBusSubscribed)
+        {
+            return;
+        }
+
+        if (eventBus == null)
+        {
+            ResolveReferences();
+        }
+
+        if (eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.SpecialWave += HandleSpecialWave;
+        eventBusSubscribed = true;
+    }
+
+    private void UnsubscribeFromEventBus()
+    {
+        if (!eventBusSubscribed || eventBus == null)
+        {
+            return;
+        }
+
+        eventBus.SpecialWave -= HandleSpecialWave;
+        eventBusSubscribed = false;
     }
 
     private IEnumerator Fade(float startAlpha, float endAlpha)

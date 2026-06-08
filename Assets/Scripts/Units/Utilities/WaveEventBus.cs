@@ -4,14 +4,12 @@ using UnityEngine;
 
 public struct NewWaveEvent
 {
-    public bool isSpecialWave;
     public int waveNumber;
     public int enemyCount;
     public List<GameObject> enemyToSpawn;
 
-    public NewWaveEvent(bool isSpecialWave, int waveNumber, int enemyCount, List<GameObject> enemyToSpawn)
+    public NewWaveEvent(int waveNumber, int enemyCount, List<GameObject> enemyToSpawn)
     {
-        this.isSpecialWave = isSpecialWave;
         this.waveNumber = waveNumber;
         this.enemyCount = enemyCount;
         this.enemyToSpawn = enemyToSpawn;
