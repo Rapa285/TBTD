@@ -3401,6 +3401,7 @@ GameObject:
   - component: {fileID: 4669952678492718852}
   - component: {fileID: 5125919597033429690}
   - component: {fileID: 2313273753023175768}
+  - component: {fileID: 5351584168547069250}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -3448,8 +3449,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.121568635, g: 0.6431373, b: 0.62352943, a: 1}
+  m_Material: {fileID: -876546973899608171, guid: 676ebcd32ae90b5468b37a9554de87d4, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3487,9 +3488,9 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.1254902, g: 0.6431373, b: 0.627451, a: 1}
-    m_HighlightedColor: {r: 0.35831252, g: 0.690566, b: 0.6804977, a: 1}
-    m_PressedColor: {r: 0.17441793, g: 0.4943396, b: 0.48532775, a: 1}
+    m_NormalColor: {r: 0.24613024, g: 0.78113204, b: 0.76854384, a: 1}
+    m_HighlightedColor: {r: 0.41491634, g: 0.8490566, b: 0.83947986, a: 1}
+    m_PressedColor: {r: 0.32640085, g: 0.6679245, b: 0.6595947, a: 1}
     m_SelectedColor: {r: 0.35686275, g: 0.6901961, b: 0.68235296, a: 1}
     m_DisabledColor: {r: 0.10032752, g: 0.2905661, b: 0.28592613, a: 0.5294118}
     m_ColorMultiplier: 1
@@ -3510,6 +3511,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5351584168547069250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4202176333712080893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 165802cdefe338b4bb16641a7aae5470, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIMaterialBoolPropertyToggle
+  targetGraphic: {fileID: 5125919597033429690}
+  propertyName: _Enabled
 --- !u!1 &4346198175471667881
 GameObject:
   m_ObjectHideFlags: 0
@@ -5877,6 +5892,7 @@ MonoBehaviour:
   unitStateManager: {fileID: 0}
   eventBus: {fileID: 0}
   unavailableAlpha: 0.35
+  availabilityMaterialToggle: {fileID: 5351584168547069250}
 --- !u!1 &6553205401166649679
 GameObject:
   m_ObjectHideFlags: 0

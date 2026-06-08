@@ -25,6 +25,9 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
     [SerializeField, Range(0f, 1f), Tooltip("Alpha used while the selected roster unit has no pending upgrade.")]
     private float unavailableAlpha = 0.35f;
 
+    [SerializeField, Tooltip("Optional material property toggle driven by whether the selected unit has a pending upgrade.")]
+    private UIMaterialBoolPropertyToggle availabilityMaterialToggle;
+
     private CanvasGroup selfVisibilityGroup;
     private Coroutine delayedRefreshCoroutine;
     private Color originalDisabledColor;
@@ -68,12 +71,14 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
     {
         StopDelayedRefresh();
         Unsubscribe();
+        SetAvailabilityMaterialEnabled(false);
     }
 
     private void OnDestroy()
     {
         StopDelayedRefresh();
         Unsubscribe();
+        SetAvailabilityMaterialEnabled(false);
     }
 
     private void OnValidate()
@@ -154,6 +159,7 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         bool hasPendingUpgrade = hasManagedSelection && HasPendingUpgrade(unitId);
 
         SetUpgradeVisible(hasManagedSelection);
+        SetAvailabilityMaterialEnabled(hasPendingUpgrade);
 
         if (upgradeButton != null)
         {
@@ -232,6 +238,11 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         if (upgradeButtonRoot == null && upgradeButton != null)
         {
             upgradeButtonRoot = upgradeButton.gameObject;
+        }
+
+        if (availabilityMaterialToggle == null)
+        {
+            availabilityMaterialToggle = GetComponentInChildren<UIMaterialBoolPropertyToggle>(true);
         }
 
         if (playerStateController == null)
@@ -429,6 +440,16 @@ public sealed class UnitDetailsUpgradeButton : MonoBehaviour
         }
 
         upgradeButton.colors = colors;
+    }
+
+    private void SetAvailabilityMaterialEnabled(bool isEnabled)
+    {
+        if (availabilityMaterialToggle == null)
+        {
+            return;
+        }
+
+        availabilityMaterialToggle.SetValue(isEnabled);
     }
 
     private void CacheOriginalButtonColors()
