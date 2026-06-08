@@ -33,6 +33,7 @@ public class ModelViewer : MonoBehaviour, IDragHandler
         renderTexture.Create();
         rawImage.texture = renderTexture;
         rawImage.enabled = true;
+        rawImage.SetNativeSize();
 
         GameObject camObj = new GameObject("Camera_" + gameObject.name);
         camObj.transform.position = new Vector3(0, -9999f, 0); 

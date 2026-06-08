@@ -19,7 +19,11 @@ public class BestiaryManager : MonoBehaviour
     [SerializeField] 
     private ModelViewer modelViewer; 
 
+
+
     [Header("Left Panel")]
+    [SerializeField] private TextMeshProUGUI revealedEnemyCountText;
+
     [SerializeField] private GameObject buttonPrefab;
     [SerializeField] private Transform buttonContainer;
 
@@ -28,11 +32,24 @@ public class BestiaryManager : MonoBehaviour
 
     private HashSet<EnemyType> revealedEnemies = new HashSet<EnemyType>();
     private Dictionary<EnemyType, GameObject> spawnedButtons = new Dictionary<EnemyType, GameObject>();
+    private int revealedEnemyCount = 0;
+
+    private bool openedFromSettings = false;
+
+    private TimeService timeService;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+    }
+
+    private void ResolveTimeService()
+    {
+        if (timeService == null)
+        {
+            ServiceLocator.TryResolve(out timeService);
+        }
     }
 
     private void Start()
@@ -47,8 +64,18 @@ public class BestiaryManager : MonoBehaviour
     public void OpenBestiaryForEnemy(EnemyType type)
     {
         if (bestiaryPanel != null) bestiaryPanel.SetActive(true);
-        Time.timeScale = 0f;
+        ResolveTimeService();
+        if (timeService != null)
+        {
+            timeService.RequestPause(this, true);
+        }
         BestiaryOpenEntry(type);
+    }
+
+    public void OpenBestiary()
+    {
+        openedFromSettings = true;
+        OpenBestiaryForEnemy(EnemyType.Normal);
     }
 
     public void CloseBestiary()
@@ -57,7 +84,19 @@ public class BestiaryManager : MonoBehaviour
         
         if (modelViewer != null) modelViewer.ClearModel();
 
-        Time.timeScale = 1f;
+        if (openedFromSettings)
+        {
+            openedFromSettings = false;
+        }
+        else
+        {
+            ResolveTimeService();
+            if (timeService != null)
+            {
+                timeService.ReleasePause(this);
+            }
+            
+        }
     }
 
     public void BestiaryRevealEnemy(EnemyType type)
@@ -98,11 +137,13 @@ public class BestiaryManager : MonoBehaviour
     private void LoadRevealedEnemies()
     {
         revealedEnemies.Clear();
+        revealedEnemyCount = 0;
         foreach (EnemyDataSO data in enemyDatabase)
         {
             if (PlayerPrefs.GetInt($"Bestiary_Unlocked_{data.enemyType}", 0) == 1)
             {
                 revealedEnemies.Add(data.enemyType);
+                revealedEnemyCount++;
             }
         }
     }
@@ -115,6 +156,7 @@ public class BestiaryManager : MonoBehaviour
             PlayerPrefs.SetInt($"Bestiary_Unlocked_{data.enemyType}", 0);
         }
         PlayerPrefs.Save();
+        revealedEnemyCount = 0;
     }
 
     private void GenerateEnemyList()
@@ -153,6 +195,16 @@ public class BestiaryManager : MonoBehaviour
 
             if (tmpText != null) tmpText.text = displayName;
             else if (legacyText != null) legacyText.text = displayName;
+        }
+
+        RefreshRevealedEnemyCountUI();
+    }
+
+    private void RefreshRevealedEnemyCountUI()
+    {
+        if (revealedEnemyCountText != null)
+        {
+            revealedEnemyCountText.text = $"{revealedEnemyCount} / {enemyDatabase.Count}";
         }
     }
 

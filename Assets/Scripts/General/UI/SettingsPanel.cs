@@ -37,6 +37,8 @@ public class SettingsPanel : MonoBehaviour
         settingsPanelContinueButton.onClick.AddListener(ContinueButtonClicked);
         DisclaimerPanelCancelButton.onClick.AddListener(closeDisclaimerPanel);
         DisclaimerPanelProceedButton.onClick.AddListener(HomeButtonClicked);
+
+        settingsPanel.SetActive(false);
     }
 
     private void OnEnable()
