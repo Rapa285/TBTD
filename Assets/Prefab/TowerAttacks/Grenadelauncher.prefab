@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &207244573522988804
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6181014683191526273}
+  - component: {fileID: 2253173422970491529}
+  m_Layer: 8
+  m_Name: Grenadelauncher
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6181014683191526273
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 207244573522988804}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2253173422970491529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 207244573522988804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffe7a10d8eda42b499ceda6ccb59606d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrenadeLauncherBehaviour
+  baseDamage: 1
+  attacksPerAmmo: 1
+  infiniteAmmo: 0
+  aimModifierVector: {x: 0, y: 0, z: 0}
+  attackFX: {fileID: 0}
+  attackSound: {fileID: 8300000, guid: 09dabced88f6109458cf8413631f6b8c, type: 3}
+  randomizeAttackSoundPitch: 1
+  distanceFactor: 0.05
+  ignoreVerticalAxis: 1
+  verticalAxis: {x: 0, y: 1, z: 0}
+  drawLeadGizmos: 1
+  enemyPositionGizmoRadius: 0.2
+  aimPointGizmoRadius: 0.25
+  enemyPositionGizmoColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  leadDirectionGizmoColor: {r: 0, g: 1, b: 1, a: 1}
+  aimPointGizmoColor: {r: 1, g: 0, b: 1, a: 1}
+  nearestPointResolution: 4
+  nearestPointIterations: 2
+  projectileType: 2
+  firePoint: {fileID: 0}

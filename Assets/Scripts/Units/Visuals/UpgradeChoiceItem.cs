@@ -1,0 +1,249 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+
+/// <summary>
+/// Displays one offered upgrade and reports choice clicks to the owning selection UI.
+/// </summary>
+public class UpgradeChoiceItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
+{
+    [SerializeField, Tooltip("Clickable control used to select this upgrade.")]
+    private Button button;
+
+    [SerializeField, Tooltip("Optional image used to display the upgrade icon.")]
+    private Image iconImage;
+
+    [SerializeField, Tooltip("TMP text element used to display the upgrade name.")]
+    private TMP_Text upgradeNameText;
+
+    [SerializeField, Tooltip("TMP text element used to display the upgrade description.")]
+    private TMP_Text descriptionText;
+
+    [SerializeField, Tooltip("Optional hover data source populated from the bound upgrade choice.")]
+    private UpgradeHoverableItem hoverableItem;
+
+    [SerializeField, Tooltip("Raised with true when hovered or selected, and false when hover/focus ends.")]
+    private UnityEvent<bool> onHovered = new UnityEvent<bool>();
+
+    [SerializeField, Tooltip("Raised after this item is rebound to a valid upgrade choice and its display has refreshed.")]
+    private UnityEvent onRefreshed = new UnityEvent();
+
+    private UpgradeSelectionUI owner;
+    private UnitUpgradeOfferChoice choice;
+    private int choiceIndex = -1;
+    private bool isHovered;
+    private bool isPointerHovered;
+    private bool isSelected;
+
+    public UnitUpgradeOfferChoice Choice => choice;
+    public MultiUpgradeSO MultiUpgrade => choice.MultiUpgrade;
+    public EvolutionSO Evolution => choice.Evolution;
+    public UpgradeSO Upgrade => choice.ResolvedUpgrade;
+    public int ChoiceIndex => choiceIndex;
+    public UnityEvent<bool> OnHovered => onHovered;
+    public UnityEvent OnRefreshed => onRefreshed;
+
+    private void Awake()
+    {
+        ResolveReferences();
+
+        if (button != null)
+        {
+            button.onClick.AddListener(HandleButtonClicked);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (button != null)
+        {
+            button.onClick.RemoveListener(HandleButtonClicked);
+        }
+    }
+
+    private void OnDisable()
+    {
+        ClearHoverState();
+    }
+
+    private void OnValidate()
+    {
+        ResolveReferences();
+    }
+
+    /// <summary>
+    /// Binds this item to one offered upgrade and its UI choice index.
+    /// </summary>
+    public void Bind(UnitUpgradeOfferChoice choice, int choiceIndex, UpgradeSelectionUI owner)
+    {
+        ClearHoverState();
+
+        this.choice = choice;
+        this.choiceIndex = choiceIndex;
+        this.owner = owner;
+
+        RefreshDisplay();
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.Bind(choice);
+        }
+
+        if (button != null)
+        {
+            button.interactable = choice.IsValid && owner != null && choiceIndex >= 0;
+        }
+
+        if (choice.IsValid)
+        {
+            onRefreshed.Invoke();
+        }
+    }
+
+    public void ClearBinding()
+    {
+        ClearHoverState();
+
+        choice = default;
+        choiceIndex = -1;
+        owner = null;
+
+        RefreshDisplay();
+
+        if (hoverableItem != null)
+        {
+            hoverableItem.Clear();
+        }
+
+        if (button != null)
+        {
+            button.interactable = false;
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        isPointerHovered = true;
+        RefreshHoveredState();
+        NotifyFocused();
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        isPointerHovered = false;
+        RefreshHoveredState();
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        isSelected = true;
+        RefreshHoveredState();
+        NotifyFocused();
+    }
+
+    public void OnDeselect(BaseEventData eventData)
+    {
+        isSelected = false;
+        RefreshHoveredState();
+    }
+
+    private void HandleButtonClicked()
+    {
+        if (TryGetComponent(out UpgradeItemFX itemFx) && !itemFx.IsRevealAnimationFinished)
+        {
+            return;
+        }
+
+        if (owner == null || choiceIndex < 0)
+        {
+            return;
+        }
+
+        owner.HandleChoiceSelected(choiceIndex);
+    }
+
+    private void NotifyFocused()
+    {
+        if (owner == null || choiceIndex < 0)
+        {
+            return;
+        }
+
+        owner.HandleChoiceFocused(choiceIndex);
+    }
+
+    private void ClearHoverState()
+    {
+        isPointerHovered = false;
+        isSelected = false;
+        SetHovered(false);
+    }
+
+    private void RefreshHoveredState()
+    {
+        SetHovered(isPointerHovered || isSelected);
+    }
+
+    private void SetHovered(bool hovered)
+    {
+        if (isHovered == hovered)
+        {
+            return;
+        }
+
+        isHovered = hovered;
+        onHovered.Invoke(isHovered);
+    }
+
+    private void RefreshDisplay()
+    {
+        UpgradeSO upgrade = Upgrade;
+        if (upgradeNameText != null)
+        {
+            upgradeNameText.text = GetDisplayName();
+        }
+
+        if (descriptionText != null)
+        {
+            descriptionText.text = upgrade != null ? upgrade.Description : string.Empty;
+        }
+
+        if (iconImage != null)
+        {
+            Sprite icon = upgrade != null ? upgrade.Icon : null;
+            iconImage.sprite = icon;
+            iconImage.enabled = icon != null;
+        }
+    }
+
+    private string GetDisplayName()
+    {
+        UpgradeSO upgrade = Upgrade;
+        if (upgrade == null)
+        {
+            return string.Empty;
+        }
+
+        if (!string.IsNullOrWhiteSpace(upgrade.UpgradeName))
+        {
+            return upgrade.UpgradeName;
+        }
+
+        return upgrade.name;
+    }
+
+    private void ResolveReferences()
+    {
+        if (button == null)
+        {
+            button = GetComponent<Button>();
+        }
+
+        if (hoverableItem == null)
+        {
+            hoverableItem = GetComponent<UpgradeHoverableItem>();
+        }
+    }
+}

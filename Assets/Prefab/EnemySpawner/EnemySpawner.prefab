@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4442613226898015221
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 581515433737996118}
+  - component: {fileID: 4383554748298216789}
+  m_Layer: 0
+  m_Name: EnemySpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &581515433737996118
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4442613226898015221}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4383554748298216789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4442613226898015221}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0059ce25402d1fdd88fd9a4c62f519c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
+  mapSpline: {fileID: 0}
+  gracePeriod: 5
+  waveCount: 3
+  waveDuration: 35
+  waveSpawnDuration: 25
+  waveTimer: 0
+  spawnInterval: 0
+  spawnTimer: 0
+  normalEnemyList: []
+  specialEnemyList:
+  - objectPrefab: {fileID: 0}
+    waveToSpawn: 4
+    difficultyMultiplier: 2
+  - objectPrefab: {fileID: 6627460043982769033, guid: 871a31aacae4d464583a4f2183ac9f55, type: 3}
+    waveToSpawn: 8
+    difficultyMultiplier: 4
+  - objectPrefab: {fileID: 2382283139335368735, guid: 57a75c117713ad343a21eed83207f910, type: 3}
+    waveToSpawn: 12
+    difficultyMultiplier: 6
+  - objectPrefab: {fileID: 7611734589660493741, guid: 8ae8c74e1422d3e408e5d1486a6a11ca, type: 3}
+    waveToSpawn: 16
+    difficultyMultiplier: 6
+  - objectPrefab: {fileID: 4235199249589780513, guid: e7bcf7e72d5d6dd4f8858a3dead49cee, type: 3}
+    waveToSpawn: 20
+    difficultyMultiplier: 8
+  - objectPrefab: {fileID: 1257964433619873752, guid: bc9fbee6af784ff45a51b68c493960b6, type: 3}
+    waveToSpawn: 24
+    difficultyMultiplier: 1
+  baseBudget: 10
+  budgetMultiplier: 10
+  eventBus: {fileID: 0}

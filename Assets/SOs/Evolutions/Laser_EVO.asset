@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a813b00da7d4d6baedc34093f0a288c, type: 3}
+  m_Name: Laser_EVO
+  m_EditorClassIdentifier: Assembly-CSharp::EvolutionSO
+  resolvedUpgrade: {fileID: 11400000, guid: 1d9e78bb312c4c61a0c3c990b2f5dd62, type: 2}
+  prerequisites:
+  - multiUpgrade: {fileID: 11400000, guid: aaf7c5f94b184af19627d8b9ee5d18f4, type: 2}
+    minimumLevel: 2
+  - multiUpgrade: {fileID: 11400000, guid: c66906b601444716a4409795ae18aceb, type: 2}
+    minimumLevel: 2

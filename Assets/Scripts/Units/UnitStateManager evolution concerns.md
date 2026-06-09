@@ -1,0 +1,38 @@
+# UnitStateManager Boundaries
+
+## Current Role
+`UnitStateManager` represents the player's full owned-unit roster. It is a roster state manager, not a replacement for tower runtime behavior.
+
+Each owned unit lives inside a nested serializable `OwnedUnitState` record keyed by a stable `unitId`. The record stores identity, progression config, XP, applied multi-upgrade levels, pending upgrade state, cached deployment cost, and transient references to that unit's deployed runtime tower/root.
+
+The manager applies persistent per-unit state to `TowerEntity` through `ApplyStateTo` by resolving active `MultiUpgradeSO` levels into normal `UpgradeSO` leaves and passing those leaves to `TowerEntity.AddUpgrade`. Stat compilation, weapon override/augment composition, projectile modifier composition, targeting, and attack execution stay inside the tower/combat system. Cached deployment cost is calculated through a side-effect-free `TowerEntity` stat helper rather than by duplicating stat math here.
+
+## Design Smells To Watch
+- God object / manager bloat: avoid letting this class become responsible for every unit-related feature.
+- Feature envy toward `TowerEntity`: do not inspect upgrade stat effects and manually calculate final stats here; call `TowerEntity` helpers for cached stat previews.
+- Roster/per-unit boundary blur: keep roster-wide lookup and per-unit state changes clear through `OwnedUnitState` and `unitId`.
+- Persistent/transient state mixing: keep long-lived unit progression separate from runtime-only tower facts.
+- Economy bloat: `UnitStateManager` may cache deployment cost, but `CurrencyManager` remains the currency balance authority.
+- Deployment coupling: do not move raycasts, placement validity, preview materials, or mouse input into this class.
+- Upgrade-offer bloat: `UpgradesManager` currently owns simple random offers. Complex rarity/prerequisite/synergy rules should be extracted later.
+- Index-only unit lookup: use stable `unitId` values instead of list indexes for UI and deployment calls.
+- Index-only upgrade selection: `UpgradesManager` supports both UI-friendly choice indexes and direct `MultiUpgradeSO` selection.
+- Hidden event chains: events should notify listeners; they should not hide major state transitions behind implicit cascades.
+
+## Hard Boundaries
+- Do not duplicate `TowerEntity.CompileFinalStats()`.
+- Do not duplicate `TowerEntity.CalculateFinalStat(...)`; use it for cost previews instead of rebuilding stat formulas.
+- Do not directly manipulate `UnitVision`, attack cooldowns, targeting, or weapon behavior from `UnitStateManager`.
+- Do not put raycasts, mouse input, placement validation, preview materials, or UI button logic in `UnitStateManager`.
+- Do not make `UnitStateManager` responsible for current currency, rewards, refunds, or UI colors.
+- Treat each `OwnedUnitState.currentRuntimeInstance` as transient. It is a live scene reference, not saved progression state.
+- Do not allow one unit's XP, upgrades, pending choices, or runtime instance to leak into another owned unit's state.
+
+## Extension Direction
+- Think of the class as player roster state instead of a full gameplay hub.
+- Keep `OwnedUnitState` as the per-unit state boundary.
+- Keep `ApplyStateTo(string unitId, TowerEntity tower)` as the main bridge into combat.
+- Keep `Precompile()` limited to cache-style values such as deployment cost that UI and deployment preflight need before instantiation.
+- Keep upgrade offer generation and selection in `UpgradesManager`.
+- Let `TowerEntity` remain the runtime authority for base stats, compiled final stats, deployed state, targeting, active weapons, projectile modifiers, and attacks.
+- Extract upgrade-offer generation later only if the rules become complex enough to justify it.

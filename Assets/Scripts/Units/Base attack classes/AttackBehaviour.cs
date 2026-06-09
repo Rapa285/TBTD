@@ -1,0 +1,387 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// Basic damage receiver interface for targets that only need the final damage value.
+/// </summary>
+public interface IDamageable
+{
+    void TakeDamage(float amount);
+}
+
+/// <summary>
+/// Damage receiver interface for targets that also need hit source context.
+/// </summary>
+public interface IAttackContextDamageable
+{
+    void TakeDamage(float amount, AttackHitContext context);
+}
+
+/// <summary>
+/// Base class for tower weapons called by TowerEntity.
+/// </summary>
+public abstract class AttackBehaviour : MonoBehaviour
+{
+    [SerializeField, Min(0f), Tooltip("Base damage before TowerEntity applies its global damage multiplier.")]
+    private float baseDamage = 1f;
+
+    [SerializeField, Min(0f), Tooltip("How many attacks this weapon can make before consuming one ammo unit. TowerEntity applies AmmoEffectiveness as a multiplier to this value.")]
+    private float attacksPerAmmo = 5f;
+
+    [SerializeField, Tooltip("When enabled, this weapon ignores tower ammo depletion.")]
+    private bool infiniteAmmo;
+
+    [SerializeField, Tooltip("World-space offset added to the final aim point after the target position or weapon-specific aiming calculation is chosen. Use (0, 1, 0) to aim one Unity unit above the target.")]
+    private Vector3 aimModifierVector = Vector3.zero;
+
+    [SerializeField, Tooltip("Optional MonoBehaviour that implements AttackFXComponent. Concrete attacks decide when to play it.")]
+    private MonoBehaviour attackFX;
+
+    [Header("Tower SFX")]
+    [SerializeField, Tooltip("Optional sound played once when this attack behaviour dispatches a real attack.")]
+    private AudioClip attackSound;
+
+    [SerializeField, Tooltip("Randomizes pitch for this attack's one-shot sound.")]
+    private bool randomizeAttackSoundPitch = true;
+
+    private IReadOnlyList<ProjectileModifierBehaviour> activeHitModifiers;
+    private IReadOnlyList<ProjectileModifierBehaviour> projectileModifiers;
+    private TowerEntity ownerTower;
+    private Transform ownerRoot;
+    private float accumulatedAmmoAttackCount;
+    private bool consumesTowerAmmo;
+    private bool warnedMissingProjectilePoolService;
+
+    public float BaseDamage
+    {
+        get => baseDamage;
+        set => baseDamage = Mathf.Max(0f, value);
+    }
+
+    public float AttacksPerAmmo
+    {
+        get => attacksPerAmmo;
+        set => attacksPerAmmo = Mathf.Max(0f, value);
+    }
+
+    public bool InfiniteAmmo
+    {
+        get => infiniteAmmo;
+        set => infiniteAmmo = value;
+    }
+
+    public Vector3 AimModifierVector
+    {
+        get => aimModifierVector;
+        set => aimModifierVector = value;
+    }
+
+    public bool UsesFiniteAmmo => consumesTowerAmmo && !infiniteAmmo;
+    public virtual bool RequiresCooldownWhenTargetsFirstAvailable => false;
+    public AttackFXComponent AttackFX => attackFX as AttackFXComponent;
+
+    protected TowerEntity OwnerTower => ownerTower;
+    protected Transform OwnerRoot => ownerRoot != null ? ownerRoot : transform;
+    protected IReadOnlyList<ProjectileModifierBehaviour> ProjectileModifiers => projectileModifiers;
+
+    /// <summary>
+    /// Configures tower ownership and active modifier hooks for this runtime weapon.
+    /// </summary>
+    public void ConfigureRuntime(
+        TowerEntity tower,
+        Transform root,
+        IReadOnlyList<ProjectileModifierBehaviour> hitModifiers,
+        IReadOnlyList<ProjectileModifierBehaviour> projectileModifierPrefabs,
+        bool usesTowerAmmo)
+    {
+        ownerTower = tower;
+        ownerRoot = root != null ? root : transform;
+        activeHitModifiers = hitModifiers;
+        projectileModifiers = projectileModifierPrefabs;
+        consumesTowerAmmo = usesTowerAmmo;
+
+        if (!UsesFiniteAmmo)
+        {
+            ResetAmmoConsumptionState();
+        }
+    }
+
+    /// <summary>
+    /// Public attack entrypoint. TowerEntity provides the target and compiled damage multiplier.
+    /// </summary>
+    public void Attack(Transform target, float damageMultiplier)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        if (ExecuteAttack(target, baseDamage * Mathf.Max(0f, damageMultiplier)))
+        {
+            PlayAttackSound();
+            HandleAttackDispatched();
+        }
+    }
+
+    protected abstract bool ExecuteAttack(Transform target, float damage);
+
+    internal void NotifyTowerTargetsAvailable()
+    {
+        OnTowerTargetsAvailable();
+    }
+
+    internal void NotifyTowerTargetsUnavailable()
+    {
+        OnTowerTargetsUnavailable();
+    }
+
+    internal void NotifyTowerAttackBehaviourDeactivated()
+    {
+        OnTowerAttackBehaviourDeactivated();
+    }
+
+    protected virtual void OnTowerTargetsAvailable()
+    {
+    }
+
+    protected virtual void OnTowerTargetsUnavailable()
+    {
+    }
+
+    protected virtual void OnTowerAttackBehaviourDeactivated()
+    {
+    }
+
+    protected virtual void OnDisable()
+    {
+        OnTowerAttackBehaviourDeactivated();
+    }
+
+    protected void PlayAttackSound()
+    {
+        PlayTowerSound(attackSound, randomizeAttackSoundPitch);
+    }
+
+    protected void PlayTowerSound(AudioClip clip, bool randomizePitch = true)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        AudioManager audioManager = ResolveAudioManager();
+        if (audioManager == null)
+        {
+            return;
+        }
+
+        audioManager.PlayTowerSFX(clip, randomizePitch);
+    }
+
+    protected AudioSource EnsureTowerSFXSource(AudioSource source)
+    {
+        AudioSource resolvedSource = source != null ? source : gameObject.AddComponent<AudioSource>();
+        ConfigureTowerSFXSource(resolvedSource);
+        return resolvedSource;
+    }
+
+    protected void ConfigureTowerSFXSource(AudioSource source)
+    {
+        if (source == null)
+        {
+            return;
+        }
+
+        AudioManager audioManager = ResolveAudioManager();
+        if (audioManager != null)
+        {
+            audioManager.ConfigureTowerSFXSource(source);
+            return;
+        }
+
+        source.playOnAwake = false;
+    }
+
+    protected bool TryRequestProjectile<T>(
+        ProjectileType projectileType,
+        Vector3 position,
+        Quaternion rotation,
+        out T projectile)
+        where T : BaseProjectile
+    {
+        projectile = null;
+        if (!ServiceLocator.TryResolve(out ProjectilePoolService projectilePoolService)
+            || projectilePoolService == null)
+        {
+            WarnMissingProjectilePoolService(projectileType);
+            return false;
+        }
+
+        return projectilePoolService.TryRequestProjectile(projectileType, position, rotation, out projectile);
+    }
+
+    /// <summary>
+    /// Returns the target's current world position with the final aim offset applied.
+    /// </summary>
+    protected Vector3 GetAimPoint(Transform target)
+    {
+        return target != null ? ApplyAimModifier(target.position) : Vector3.zero;
+    }
+
+    /// <summary>
+    /// Adds the shared final aim offset to weapon-specific aim calculations.
+    /// </summary>
+    protected Vector3 ApplyAimModifier(Vector3 aimPoint)
+    {
+        // Keep this as the final aiming step so direct aim, predictive aim, and future weapons offset consistently.
+        return aimPoint + aimModifierVector;
+    }
+
+    /// <summary>
+    /// Applies damage to a target and dispatches active hit modifiers when the hit resolves.
+    /// </summary>
+    protected bool TryApplyDamage(Transform target, float damage)
+    {
+        return TryApplyDamage(target, damage, null, Vector3.zero, false);
+    }
+
+    protected bool TryApplyDamage(
+        Transform target,
+        float damage,
+        Collider hitCollider,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        if (target == null)
+        {
+            return false;
+        }
+
+        AttackHitContext context = CreateHitContext(target, damage, hitCollider, hitPosition, hasHitPosition);
+
+        CombatDamageUtility.TryApplyDamage(target, damage, context);
+        DispatchHitModifiers(CreateProjectileModifierContext(target, damage, hitCollider, hitPosition, hasHitPosition));
+        return true;
+    }
+
+    /// <summary>
+    /// Dispatches active hit modifiers for custom attack implementations that create their own hit context.
+    /// </summary>
+    protected void DispatchHitModifiers(
+        Transform target,
+        float damage,
+        Collider hitCollider,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        DispatchHitModifiers(CreateProjectileModifierContext(target, damage, hitCollider, hitPosition, hasHitPosition));
+    }
+
+    /// <summary>
+    /// Dispatches active hit modifiers with a prebuilt context.
+    /// </summary>
+    protected void DispatchHitModifiers(ProjectileModifierContext context)
+    {
+        if (activeHitModifiers == null || activeHitModifiers.Count == 0 || context.Target == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < activeHitModifiers.Count; i++)
+        {
+            ProjectileModifierBehaviour modifier = activeHitModifiers[i];
+            if (modifier != null)
+            {
+                modifier.ApplyProjectileHit(context);
+            }
+        }
+    }
+
+    private AttackHitContext CreateHitContext(
+        Transform target,
+        float damage,
+        Collider hitCollider,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        return new AttackHitContext(
+            ownerTower,
+            OwnerRoot,
+            this,
+            null,
+            target,
+            hitCollider,
+            damage,
+            hitPosition,
+            hasHitPosition);
+    }
+
+    private ProjectileModifierContext CreateProjectileModifierContext(
+        Transform target,
+        float damage,
+        Collider hitCollider,
+        Vector3 hitPosition,
+        bool hasHitPosition)
+    {
+        return new ProjectileModifierContext(
+            null,
+            ownerTower,
+            this,
+            OwnerRoot,
+            target,
+            hitCollider,
+            damage,
+            hitPosition,
+            hasHitPosition,
+            0f);
+    }
+
+    internal void ResetAmmoConsumptionState()
+    {
+        accumulatedAmmoAttackCount = 0f;
+    }
+
+    private void HandleAttackDispatched()
+    {
+        if (!UsesFiniteAmmo || ownerTower == null)
+        {
+            return;
+        }
+
+        accumulatedAmmoAttackCount += 1f;
+
+        float effectiveAttacksPerAmmo = Mathf.Max(0.0001f, Mathf.Max(0f, attacksPerAmmo) * ownerTower.AmmoEffectiveness);
+        int ammoUnitsConsumed = Mathf.FloorToInt(accumulatedAmmoAttackCount / effectiveAttacksPerAmmo);
+        if (ammoUnitsConsumed <= 0)
+        {
+            return;
+        }
+
+        accumulatedAmmoAttackCount -= ammoUnitsConsumed * effectiveAttacksPerAmmo;
+        ownerTower.HandlePrimaryAttackAmmoConsumed(this, ammoUnitsConsumed);
+    }
+
+    private void WarnMissingProjectilePoolService(ProjectileType projectileType)
+    {
+        if (warnedMissingProjectilePoolService)
+        {
+            return;
+        }
+
+        warnedMissingProjectilePoolService = true;
+        Debug.LogWarning(
+            $"{GetType().Name} on '{name}' could not find a {nameof(ProjectilePoolService)} for {projectileType}. No projectile was fired.",
+            this);
+    }
+
+    private static AudioManager ResolveAudioManager()
+    {
+        if (AudioManager.Instance != null)
+        {
+            return AudioManager.Instance;
+        }
+
+        ServiceLocator.TryResolve(out AudioManager audioManager);
+        return audioManager;
+    }
+}

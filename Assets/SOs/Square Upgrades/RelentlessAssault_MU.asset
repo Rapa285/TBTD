@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
+  m_Name: RelentlessAssault_MU
+  m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: Relentless Assault
+  description: Sustained fire and pressure at the cost of setup. Supports Machine Gun and Aura evolutions.
+  levelUpgrades:
+  - {fileID: 11400000, guid: af1468a53cb746a09737cea56ce602ff, type: 2}
+  - {fileID: 11400000, guid: 10b0df6001be41f9af9b1a8b6e7d65d4, type: 2}
+  - {fileID: 11400000, guid: 9882f2e810b34f3cbafed9f3de4b7dd5, type: 2}

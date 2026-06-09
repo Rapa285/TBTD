@@ -13,8 +13,6 @@ GameObject:
   - component: {fileID: 1790636632591478769}
   - component: {fileID: 8941033317736104413}
   - component: {fileID: 1796447445288841893}
-  - component: {fileID: 2424506800172572886}
-  - component: {fileID: -4967573414489387432}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -140,46 +138,3 @@ MonoBehaviour:
   m_ObjectForwardAxis: 2
   m_ObjectUpAxis: 1
   m_StartOffset: 0
---- !u!114 &2424506800172572886
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812546137916035668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f7dbceb4d056e64a89fc5fd039644b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  health: 0
-  damage: 0
-  movementSpeed: 0
-  splineAnimate: {fileID: 0}
---- !u!54 &-4967573414489387432
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812546137916035668}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0

@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c42d0d5af10f1004cbc8ab9fc86357ed, type: 3}
+  m_Name: Shotgun_EVO_Upgrade
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
+  upgradeName: Shotgun EVO
+  description: Evolves the pistol into a panic burst weapon with very fast setup and lower ammo capacity.
+  icon: {fileID: 21300000, guid: 851d8c6d213013a4b870f229702940aa, type: 3}
+  weaponUpgradeType: 1
+  weaponBehaviourPrefab: {fileID: 6971942567615480730, guid: 753de46d91a41c447be6f722d240fa70, type: 3}
+  projectileModifierPrefabs: []
+  statEffects:
+  - stat: 3
+    type: 0
+    value: 0.25
+  - stat: 5
+    type: 0
+    value: 0.6
+  - stat: 0
+    type: 0
+    value: 1.2
+  - stat: 1
+    type: 0
+    value: 0.90909
+  - stat: 8
+    type: 0
+    value: 1.15
+  - stat: 2
+    type: 0
+    value: 0.9
+  - stat: 7
+    type: 0
+    value: 0.5

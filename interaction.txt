@@ -1,0 +1,32 @@
+List of stats :
+GlobalDamage (DMG)
+AttackSpeed (ASP) : the frequency of attacks
+VisualRange (VIS)
+AmmoUnits (AMO)
+Setup Time (SET)
+BulletSize (BUL)
+
+High Caliber
+LVL1 : DMG x1.2, ASP x0.95
+LVL2 : DMG x1.5, ASP x0.75
+LVL3 : DMG x2.0, ASP x0.50
+
+Relentless Assault
+LVL1: ASP x1.2, SET +0.5
+LVL2: ASP x1.5, SET +1.0
+LVL3: ASP x2.0, SET +2.0
+
+High Capacity
+LVL1: AMO x1.2, DMG x0.95
+LVL2: AMO x1.5, DMG x0.85
+LVL3: AMO x2.0, DMG x0.70
+
+Far-Reach
+LVL1: VIS x1.1
+LVL2: VIS x1.3
+LVL3: VIS x1.5
+
+Carnage
+LVL1 : BUL x1.2, AMO x0.95
+LVL1 : BUL x1.5, AMO x0.85
+LVL1 : BUL x2.0, AMO x0.70

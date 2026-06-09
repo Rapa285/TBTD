@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80919ec22d9b1794a9cf8d5b8e87ef7c, type: 3}
+  m_Name: HighCaliber_MU
+  m_EditorClassIdentifier: Assembly-CSharp::MultiUpgradeSO
+  upgradeName: High Caliber
+  description: Higher damage with slower attack frequency. Supports Sniper and Grenade Launcher evolutions.
+  levelUpgrades:
+  - {fileID: 11400000, guid: a4736802066c44cfbc0bb4a39862f6fd, type: 2}
+  - {fileID: 11400000, guid: 97eff8fe43a5450095cb3fb9d01f8434, type: 2}
+  - {fileID: 11400000, guid: 7983c91af29c433e987ade098dd9a19b, type: 2}
