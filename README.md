@@ -25,13 +25,8 @@ hold the line, and survive the endless onslaught of clone troopers as long as po
    ```
    TBTD.exe
    ```
-
+   
 ## Development
-
-### Dependencies
-
-* 
-
 ### Installing
 Download the game .exe from releases or alternatively clone the repo and run it in unity
 
@@ -54,9 +49,8 @@ Download the game .exe from releases or alternatively clone the repo and run it 
 
 ## Version History
 
-* 1.X
-    * ...
-    * ...
+* 1.3
+    * First Release
 
 ## Acknowledgments
 
