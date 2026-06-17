@@ -16,29 +16,33 @@ leaving your defenses temporarily vulnerable. As you successfully survive waves 
 powerful roguelike-style upgrades to modify their combat abilities. Your objective is simple: control your troops' rhythm, 
 hold the line, and survive the endless onslaught of clone troopers as long as possible.
 
-## Installing and Executing the Game
-1. Clone the repo or Download the Executable from the Release
-   ```sh
-   git clone https://github.com/Rapa285/TBTD
-   ```
-2. Run the executable
-   ```
-   TBTD.exe
-   ```
+## Playing the Game
+
+If you only want to play Terminal Blitz Tower Defense, download the latest build from the [Releases page](https://github.com/Rapa285/TBTD/releases) instead of cloning the repository.
+
+1. Download the latest release archive for your platform.
+2. Extract the archive.
+3. Run the included executable.
    
 ## Development
 ### Installing
-Download the game .exe from releases or alternatively clone the repo and run it in unity
+For development, clone the repository and open it in Unity.
 
 1. Clone the repo 
    ```sh
    git clone https://github.com/Rapa285/TBTD
    ```
-2. Import the Project into Unity
+2. Open the project in Unity `6000.4.2f1` or a compatible Unity 6 editor.
 
-### Executing program
+### Running in Unity
 
-1. Run the Project from Unity
+To playtest from the editor, open the bootstrap scene:
+
+```text
+Assets/Scenes/Final Scenes/Bootstrap.unity
+```
+
+Then press Play in the Unity Editor.
 
 ## Authors
 
