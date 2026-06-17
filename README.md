@@ -1,4 +1,5 @@
 # Terminal Blitz Tower Defense
+[![Watch the video](https://img.youtube.com/vi/e6wwSH5Wz50/0.jpg)](https://www.youtube.com/watch?v=e6wwSH5Wz50)
 
 ## Description
 
@@ -32,6 +33,7 @@ hold the line, and survive the endless onslaught of clone troopers as long as po
 * 
 
 ### Installing
+Download the game .exe from releases or alternatively clone the repo and run it in unity
 
 1. Clone the repo 
    ```sh
@@ -58,4 +60,4 @@ hold the line, and survive the endless onslaught of clone troopers as long as po
 
 ## Acknowledgments
 
-In Collaboration with ITB and Agate
+This game was made in a collaboration with ITB and Agate Academy
